@@ -17,7 +17,8 @@
             box-sizing: border-box;
         }
 
-        html, body {
+        html,
+        body {
             height: 100%;
             width: 100%;
             overflow-x: hidden;
@@ -175,13 +176,13 @@
 
         .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
 
         .card {
             border: none;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         footer {
@@ -226,6 +227,12 @@
             color: #842029;
         }
     </style>
+
+    <!-- Theme CSS -->
+    @php
+        $theme = Auth::user()->theme ?? 'light';
+    @endphp
+    <link rel="stylesheet" href="{{ asset('css/themes/' . $theme . '.css') }}">
 </head>
 
 <body>
@@ -239,37 +246,45 @@
             </div>
 
             <ul class="sidebar-menu">
-                <li><a href="{{ route('teacher.dashboard') }}" class="{{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-home"></i>
-                    <span>Dashboard</span>
-                </a></li>
-                
-                <li><a href="{{ route('teacher.classes') }}" class="{{ request()->routeIs('teacher.classes*') ? 'active' : '' }}">
-                    <i class="fas fa-door-open"></i>
-                    <span>My Classes</span>
-                </a></li>
+                <li><a href="{{ route('teacher.dashboard') }}"
+                        class="{{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a></li>
 
-                <li><a href="{{ route('teacher.grades') }}" class="{{ request()->routeIs('teacher.grades*') ? 'active' : '' }}">
-                    <i class="fas fa-star"></i>
-                    <span>Grades</span>
-                </a></li>
+                <li><a href="{{ route('teacher.classes') }}"
+                        class="{{ request()->routeIs('teacher.classes*') ? 'active' : '' }}">
+                        <i class="fas fa-door-open"></i>
+                        <span>My Classes</span>
+                    </a></li>
 
-                <li><a href="{{ route('teacher.attendance') }}" class="{{ request()->routeIs('teacher.attendance*') ? 'active' : '' }}">
-                    <i class="fas fa-check-square"></i>
-                    <span>Attendance</span>
-                </a></li>
+                <li><a href="{{ route('teacher.grades') }}"
+                        class="{{ request()->routeIs('teacher.grades*') ? 'active' : '' }}">
+                        <i class="fas fa-star"></i>
+                        <span>Grades</span>
+                    </a></li>
 
-                <li><a href="{{ route('teacher.assignments') }}" class="{{ request()->routeIs('teacher.assignments*') ? 'active' : '' }}">
-                    <i class="fas fa-clipboard"></i>
-                    <span>Assignments</span>
-                </a></li>
+                <li><a href="{{ route('teacher.attendance') }}"
+                        class="{{ request()->routeIs('teacher.attendance*') ? 'active' : '' }}">
+                        <i class="fas fa-check-square"></i>
+                        <span>Attendance</span>
+                    </a></li>
 
-                <li><hr style="border-color: rgba(255,255,255,0.2); margin: 10px 0;"></li>
+                <li><a href="{{ route('teacher.assignments') }}"
+                        class="{{ request()->routeIs('teacher.assignments*') ? 'active' : '' }}">
+                        <i class="fas fa-clipboard"></i>
+                        <span>Assignments</span>
+                    </a></li>
 
-                <li><a href="#">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a></li>
+                <li>
+                    <hr style="border-color: rgba(255,255,255,0.2); margin: 10px 0;">
+                </li>
+
+                <li><a href="{{ route('teacher.settings.index') }}"
+                        class="{{ request()->routeIs('teacher.settings*') ? 'active' : '' }}">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a></li>
             </ul>
         </div>
 
@@ -295,14 +310,19 @@
                     @endphp
                     <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-bell"></i>
-                        @if($unreadCount > 0)
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+                        @if ($unreadCount > 0)
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                style="font-size: 0.7rem;">
                                 {{ $unreadCount > 9 ? '9+' : $unreadCount }}
                             </span>
                         @endif
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" style="width: 350px; max-height: 400px; overflow-y: auto;">
-                        <li><h6 class="dropdown-header">Notifications</h6></li>
+                    <ul class="dropdown-menu dropdown-menu-end"
+                        style="width: 350px; max-height: 400px; overflow-y: auto;">
+                        <li>
+                            <h6 class="dropdown-header">Notifications</h6>
+                        </li>
                         @forelse($notifications as $notif)
                             <li>
                                 <a class="dropdown-item border-bottom py-2" href="{{ $notif->action_url ?? '#' }}">
@@ -321,10 +341,14 @@
                                 </a>
                             </li>
                         @empty
-                            <li><p class="dropdown-item text-center text-muted py-3">No notifications</p></li>
+                            <li>
+                                <p class="dropdown-item text-center text-muted py-3">No notifications</p>
+                            </li>
                         @endforelse
-                        @if(count($notifications) > 0)
-                            <li><hr class="dropdown-divider"></li>
+                        @if (count($notifications) > 0)
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li><a class="dropdown-item text-center small" href="#">View All</a></li>
                         @endif
                     </ul>
@@ -337,9 +361,15 @@
                         <span class="d-none d-sm-inline">{{ auth()->user()->name ?? 'Teacher' }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#">Profile</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="{{ route('logout') }}">Logout</a></li>
+                        <li><a class="dropdown-item" href="{{ route('teacher.settings.index') }}">
+                                <i class="fas fa-cog me-2"></i> Settings
+                            </a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="{{ route('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i> Logout
+                            </a></li>
                     </ul>
                 </div>
             </div>
@@ -362,7 +392,7 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const mainContainer = document.getElementById('mainContainer');
-            
+
             if (window.innerWidth <= 768) {
                 sidebar.classList.toggle('show');
             } else {
@@ -375,7 +405,7 @@
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = event.target.closest('.toggle-btn');
-            
+
             if (window.innerWidth <= 768 && !sidebar.contains(event.target) && !toggleBtn) {
                 sidebar.classList.remove('show');
             }

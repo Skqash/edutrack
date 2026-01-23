@@ -23,15 +23,16 @@
         <!-- Key Metrics -->
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="card shadow-sm border-left-primary">
+                <div class="card shadow-sm" style="border-left: 4px solid #0066cc;">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div>
                                 <p class="text-muted mb-2">Class Average</p>
-                                <h3 class="mb-0 text-primary">{{ number_format($analytics['avg_grade'] ?? 0, 2) }}</h3>
-                                <small class="text-muted">out of 5.0</small>
+                                <h3 class="mb-0" style="color: #0066cc;">
+                                    {{ number_format($analytics['avg_grade'] ?? 0, 2) }}</h3>
+                                <small class="text-muted">out of 100.0</small>
                             </div>
-                            <div class="ms-auto text-primary" style="font-size: 2rem;">
+                            <div class="ms-auto" style="font-size: 2rem; color: #0066cc;">
                                 <i class="fas fa-chart-line"></i>
                             </div>
                         </div>
@@ -40,12 +41,13 @@
             </div>
 
             <div class="col-md-3">
-                <div class="card shadow-sm border-left-success">
+                <div class="card shadow-sm" style="border-left: 4px solid #00a86b;">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div>
-                                <p class="text-muted mb-2">Passed</p>
-                                <h3 class="mb-0 text-success">{{ $analytics['passed_count'] ?? 0 }}/{{ $total_students }}
+                                <p class="text-muted mb-2">Passed (60+)</p>
+                                <h3 class="mb-0" style="color: #00a86b;">
+                                    {{ $analytics['passed_count'] ?? 0 }}/{{ $total_students }}
                                 </h3>
                                 <small class="text-muted">{{ number_format($analytics['pass_percentage'] ?? 0, 1) }}% pass
                                     rate</small>
@@ -63,7 +65,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div>
-                                <p class="text-muted mb-2">Failed</p>
+                                <p class="text-muted mb-2">Failed (Below 60)</p>
                                 <h3 class="mb-0 text-danger">{{ $analytics['failed_count'] ?? 0 }}/{{ $total_students }}
                                 </h3>
                                 <small class="text-muted">{{ number_format($analytics['fail_percentage'] ?? 0, 1) }}% fail
@@ -82,10 +84,10 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div>
-                                <p class="text-muted mb-2">Range</p>
-                                <h3 class="mb-0 text-warning">{{ number_format($analytics['highest_grade'] ?? 0, 2) }}</h3>
-                                <small class="text-muted">Highest:
-                                    {{ number_format($analytics['lowest_grade'] ?? 0, 2) }}</small>
+                                <p class="text-muted mb-2">Score Range</p>
+                                <h3 class="mb-0 text-warning">{{ number_format($analytics['highest_grade'] ?? 0, 1) }}</h3>
+                                <small class="text-muted">Lowest:
+                                    {{ number_format($analytics['lowest_grade'] ?? 0, 1) }}</small>
                             </div>
                             <div class="ms-auto text-warning" style="font-size: 2rem;">
                                 <i class="fas fa-chart-bar"></i>
@@ -181,9 +183,9 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="card shadow-sm">
-                    <div class="card-header bg-gradient"
-                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <h5 class="mb-0 text-white"><i class="fas fa-users"></i> Student Grade Breakdown</h5>
+                    <div class="card-header" style="background-color: #ffffff; border-bottom: 1px solid #e9ecef;">
+                        <h5 class="mb-0" style="color: #1a1a1a;"><i class="fas fa-users me-2"></i>Student Grade
+                            Breakdown</h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -233,7 +235,8 @@
                                                     class="text-primary">{{ number_format($grade->final_grade, 2) }}</strong>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge bg-info">{{ $grade->grade_letter }}</span>
+                                                <span
+                                                    class="badge bg-info">{{ \App\Models\Grade::getGradePoint($grade->final_grade) }}</span>
                                             </td>
                                             <td class="text-center">
                                                 <span class="badge {{ $statusBadge }}">{{ $status }}</span>

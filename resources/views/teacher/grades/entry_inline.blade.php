@@ -258,7 +258,7 @@
                                                 <strong>{{ number_format($grade->final_grade, 2) }}</strong><br>
                                                 <span
                                                     class="badge bg-{{ \App\Models\Grade::getGradeColor($grade->final_grade) }}">
-                                                    {{ $grade->grade_letter }}
+                                                    {{ \App\Models\Grade::getGradePoint($grade->final_grade) }}
                                                 </span>
                                             @else
                                                 <span class="text-white">-</span>
@@ -468,7 +468,8 @@
             // Stats
             statsBtn.addEventListener('click', function() {
                 alert(
-                    'Analytics dashboard coming soon! View grade distribution, trends, and performance metrics.');
+                    'Analytics dashboard coming soon! View grade distribution, trends, and performance metrics.'
+                    );
             });
 
             // Initial stats calculation

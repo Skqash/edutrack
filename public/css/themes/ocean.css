@@ -1,0 +1,190 @@
+/* Ocean Blue Theme */
+:root {
+    --primary: #0066cc;
+    --secondary: #6c757d;
+    --success: #06a84b;
+    --info: #0099ff;
+    --warning: #ffb300;
+    --danger: #ff4444;
+    --bg: #e6f2ff;
+    --bg-secondary: #cce5ff;
+    --text: #001a4d;
+    --text-secondary: #334466;
+    --border: #99ccff;
+    --shadow: rgba(0, 102, 204, 0.15);
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+}
+
+.navbar {
+    background: linear-gradient(135deg, #0066cc 0%, #0099ff 100%);
+    border-bottom: 2px solid var(--primary);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.navbar-light .navbar-brand,
+.navbar-light .navbar-nav .nav-link {
+    color: white;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: #e6f2ff;
+    opacity: 0.9;
+}
+
+.navbar-light .navbar-text {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.card {
+    background-color: #ffffff;
+    border: 2px solid var(--border);
+    color: var(--text);
+    box-shadow: 0 2px 8px var(--shadow);
+    border-radius: 8px;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #e6f2ff 0%, #cce5ff 100%);
+    border-bottom: 2px solid var(--border);
+}
+
+.bg-light {
+    background-color: var(--bg-secondary) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary) !important;
+}
+
+.table {
+    border-color: var(--border);
+}
+
+.table thead {
+    background: linear-gradient(135deg, #cce5ff 0%, #99ccff 100%);
+    border-color: var(--border);
+}
+
+.table thead th {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 102, 204, 0.05);
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-primary:hover {
+    background-color: #0052a3;
+    border-color: #0052a3;
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+.sidebar {
+    background-color: var(--bg-secondary);
+    border-right: 2px solid var(--border);
+}
+
+.sidebar a {
+    color: var(--text);
+}
+
+.sidebar a:hover {
+    background-color: var(--border);
+    border-radius: 4px;
+}
+
+.sidebar a.active {
+    background-color: var(--primary);
+    color: white;
+    border-left: 4px solid white;
+    border-radius: 0;
+}
+
+.form-control,
+.form-select {
+    border-color: var(--border);
+    color: var(--text);
+    border-radius: 6px;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+}
+
+.badge {
+    padding: 0.5em 0.75em;
+    font-size: 0.875em;
+    border-radius: 12px;
+}
+
+.badge-primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.alert {
+    border-radius: 8px;
+    border-left: 4px solid var(--primary);
+}
+
+.alert-info {
+    background-color: var(--bg);
+    border-color: var(--primary);
+    color: var(--text);
+}
+
+.modal-content {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+}
+
+.btn-close {
+    opacity: 1;
+}
+
+.nav-tabs {
+    border-bottom: 2px solid var(--border);
+}
+
+.nav-tabs .nav-link {
+    color: var(--text-secondary);
+    border: none;
+    border-bottom: 3px solid transparent;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary);
+    background-color: transparent;
+    border-bottom-color: var(--primary);
+    font-weight: 600;
+}
+
+.progress {
+    background-color: var(--bg-secondary);
+    border-radius: 10px;
+}
+
+.progress-bar {
+    background-color: var(--primary);
+}

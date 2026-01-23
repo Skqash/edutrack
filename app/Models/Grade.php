@@ -14,9 +14,9 @@ class Grade extends Model
         'class_id',
         'teacher_id',
         'term',
-        // Knowledge Components
-        'q1', 'q2', 'q3', 'q4', 'q5',
-        'prelim_exam', 'midterm_exam', 'final_exam',
+        // Knowledge Components - Quizzes (flexible 1-10)
+        'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10',
+        'midterm_exam', 'final_exam',
         'knowledge_score',
         // Skills Components
         'output_score',
@@ -30,7 +30,7 @@ class Grade extends Model
         'attitude_score',
         // Final Grade
         'final_grade',
-        'grade_letter',
+        'grade_point',
         'remarks',
         'grading_period',
     ];
@@ -41,7 +41,11 @@ class Grade extends Model
         'q3' => 'decimal:2',
         'q4' => 'decimal:2',
         'q5' => 'decimal:2',
-        'prelim_exam' => 'decimal:2',
+        'q6' => 'decimal:2',
+        'q7' => 'decimal:2',
+        'q8' => 'decimal:2',
+        'q9' => 'decimal:2',
+        'q10' => 'decimal:2',
         'midterm_exam' => 'decimal:2',
         'final_exam' => 'decimal:2',
         'knowledge_score' => 'decimal:2',
@@ -88,8 +92,13 @@ class Grade extends Model
 
     /**
      * Calculate Knowledge Score (40% of term grade)
-     * Quizzes (variable count): 40% of Knowledge (configurable items)
-     * Exams (PR, MD, FE): 60% of Knowledge (configurable items)
+     * 
+     * DETAILED BREAKDOWN:
+     * - Knowledge = 40% of total grade
+     * - Within Knowledge:
+     *   - Quizzes: 40% of Knowledge = 16% of total grade
+     *     - 5 quizzes equally distributed, each = 3.2% of total grade
+     *   - Exam: 60% of Knowledge = 24% of total grade
      *
      * @param array $quizzes [q1, q2, q3, q4, q5, ...] - raw scores
      * @param array $exams [prelim, midterm, final] - raw scores
@@ -108,6 +117,7 @@ class Grade extends Model
         $quizMaxScores = $range->getQuizMaxScores();
         
         // Normalize quiz scores based on configured max values
+        // Each quiz: normalize to 0-100 scale, then average
         $quizzes = array_filter(array_map(function($q) { return floatval($q ?? 0); }, $quizzes));
         $normalizedQuizzes = [];
         
@@ -115,30 +125,23 @@ class Grade extends Model
         foreach ($quizzes as $score) {
             $quizKey = 'q' . $quizIndex;
             $maxScore = $quizMaxScores[$quizKey] ?? 20;
-            $normalizedScore = ($score / $maxScore) * 100;
+            $normalizedScore = $maxScore > 0 ? ($score / $maxScore) * 100 : 0;
             $normalizedQuizzes[] = $normalizedScore;
             $quizIndex++;
         }
         
-        // Calculate quiz average
+        // Calculate quiz average (40% of knowledge = 16% of total)
         $quizAverage = count($normalizedQuizzes) > 0 ? array_sum($normalizedQuizzes) / count($normalizedQuizzes) : 0;
-        $quizPart = $quizAverage * 0.40; // 40% of knowledge
+        $quizPart = $quizAverage * 0.40; // 40% of knowledge score
 
-        // Normalize exam scores based on configured max values
-        if ($term === 'midterm') {
-            $prelim = floatval($exams['prelim'] ?? 0);
-            $midterm = floatval($exams['midterm'] ?? 0);
-            $normPrelim = $range->normalizeExamScore($prelim, 'prelim');
-            $normMidterm = $range->normalizeExamScore($midterm, 'midterm');
-            $examAverage = ($normPrelim + $normMidterm) / 2;
-        } else {
-            $midterm = floatval($exams['midterm'] ?? 0);
-            $final = floatval($exams['final'] ?? 0);
-            $normMidterm = $range->normalizeExamScore($midterm, 'midterm');
-            $normFinal = $range->normalizeExamScore($final, 'final');
-            $examAverage = ($normMidterm + $normFinal) / 2;
-        }
-        $examPart = $examAverage * 0.60; // 60% of knowledge
+        // Normalize exam scores and calculate average (60% of knowledge = 24% of total)
+        // We only have 2 exams: Midterm and Final
+        $midterm = floatval($exams['midterm'] ?? 0);
+        $final = floatval($exams['final'] ?? 0);
+        $normMidterm = $range->normalizeExamScore($midterm, 'midterm');
+        $normFinal = $range->normalizeExamScore($final, 'final');
+        $examAverage = ($normMidterm + $normFinal) / 2;
+        $examPart = $examAverage * 0.60; // 60% of knowledge score
 
         $knowledge = $quizPart + $examPart;
         return round($knowledge, 2);
@@ -154,15 +157,10 @@ class Grade extends Model
         $quizAverage = count($quizzes) > 0 ? ($quizTotal / (5 * count($quizzes))) * 100 : 0;
         $quizPart = $quizAverage * 0.40;
 
-        if ($term === 'midterm') {
-            $prelim = floatval($exams['prelim'] ?? 0);
-            $midterm = floatval($exams['midterm'] ?? 0);
-            $examAverage = ($prelim + $midterm) / 2;
-        } else {
-            $midterm = floatval($exams['midterm'] ?? 0);
-            $final = floatval($exams['final'] ?? 0);
-            $examAverage = ($midterm + $final) / 2;
-        }
+        // Only use Midterm and Final exams
+        $midterm = floatval($exams['midterm'] ?? 0);
+        $final = floatval($exams['final'] ?? 0);
+        $examAverage = ($midterm + $final) / 2;
         $examPart = $examAverage * 0.60;
 
         return round($quizPart + $examPart, 2);
@@ -170,26 +168,58 @@ class Grade extends Model
 
     /**
      * Calculate Skills Score (50% of term grade)
-     * Output: 40%
-     * Class Participation: 30%
-     * Activities: 15%
-     * Assignments: 15%
+     * 
+     * DETAILED BREAKDOWN:
+     * - Skills = 50% of total grade
+     * - Within Skills (averaged across 3 periods: Prelim, Midterm, Final):
+     *   - Output: 40% of Skills = 20% of total grade
+     *     - 3 inputs (prelim, midterm, final), each = 6.67% of total grade
+     *   - Class Participation: 30% of Skills = 15% of total grade
+     *     - 3 inputs (prelim, midterm, final), each = 5% of total grade
+     *   - Activities: 15% of Skills = 7.5% of total grade
+     *     - 3 inputs (prelim, midterm, final), each = 2.5% of total grade
+     *   - Assignments: 15% of Skills = 7.5% of total grade
+     *     - 3 inputs (prelim, midterm, final), each = 2.5% of total grade
      *
-     * @param float $output Output score (raw)
-     * @param float $classParticipation Class participation score (raw)
-     * @param float $activities Activities score (raw)
-     * @param float $assignments Assignments score (raw)
-     * @param AssessmentRange|null $range Assessment range config, if null uses defaults
+     * @param array $output Output scores [prelim, midterm, final] - raw scores
+     * @param array $classParticipation Class participation scores [prelim, midterm, final] - raw scores
+     * @param array $activities Activities scores [prelim, midterm, final] - raw scores
+     * @param array $assignments Assignments scores [prelim, midterm, final] - raw scores
+     * @param AssessmentRange|null $range Assessment range config
      * @return float Skills score (0-100)
      */
-    public static function calculateSkills($output, $classParticipation, $activities, $assignments, $range = null)
+    public static function calculateSkills(array|float $output, array|float $classParticipation, array|float $activities, array|float $assignments, $range = null)
     {
         if ($range === null) {
             // Default calculation (backward compatible)
-            $output = max(0, min(100, floatval($output ?? 0)));
-            $classParticipation = max(0, min(100, floatval($classParticipation ?? 0)));
-            $activities = max(0, min(100, floatval($activities ?? 0)));
-            $assignments = max(0, min(100, floatval($assignments ?? 0)));
+            // If inputs are arrays, average them first
+            if (is_array($output)) {
+                $output = array_filter(array_map(function($o) { return floatval($o ?? 0); }, $output));
+                $output = count($output) > 0 ? array_sum($output) / count($output) : 0;
+            } else {
+                $output = max(0, min(100, floatval($output ?? 0)));
+            }
+
+            if (is_array($classParticipation)) {
+                $classParticipation = array_filter(array_map(function($cp) { return floatval($cp ?? 0); }, $classParticipation));
+                $classParticipation = count($classParticipation) > 0 ? array_sum($classParticipation) / count($classParticipation) : 0;
+            } else {
+                $classParticipation = max(0, min(100, floatval($classParticipation ?? 0)));
+            }
+
+            if (is_array($activities)) {
+                $activities = array_filter(array_map(function($a) { return floatval($a ?? 0); }, $activities));
+                $activities = count($activities) > 0 ? array_sum($activities) / count($activities) : 0;
+            } else {
+                $activities = max(0, min(100, floatval($activities ?? 0)));
+            }
+
+            if (is_array($assignments)) {
+                $assignments = array_filter(array_map(function($a) { return floatval($a ?? 0); }, $assignments));
+                $assignments = count($assignments) > 0 ? array_sum($assignments) / count($assignments) : 0;
+            } else {
+                $assignments = max(0, min(100, floatval($assignments ?? 0)));
+            }
 
             $skills = ($output * 0.40) + 
                       ($classParticipation * 0.30) + 
@@ -199,11 +229,42 @@ class Grade extends Model
             return round($skills, 2);
         }
 
-        // Normalize with configured ranges
-        $normOutput = $range->normalizeSkillScore(floatval($output ?? 0), 'output');
-        $normCP = $range->normalizeSkillScore(floatval($classParticipation ?? 0), 'class_participation');
-        $normAct = $range->normalizeSkillScore(floatval($activities ?? 0), 'activities');
-        $normAssign = $range->normalizeSkillScore(floatval($assignments ?? 0), 'assignments');
+        // With range: normalize each period's inputs and average
+        // Output: average of 3 periods
+        $outputPeriods = is_array($output) ? $output : [$output];
+        $outputPeriods = array_filter(array_map(function($o) { return floatval($o ?? 0); }, $outputPeriods));
+        $normOutputs = [];
+        foreach ($outputPeriods as $score) {
+            $normOutputs[] = $range->normalizeSkillScore($score, 'output');
+        }
+        $normOutput = count($normOutputs) > 0 ? array_sum($normOutputs) / count($normOutputs) : 0;
+
+        // Class Participation: average of 3 periods
+        $cpPeriods = is_array($classParticipation) ? $classParticipation : [$classParticipation];
+        $cpPeriods = array_filter(array_map(function($cp) { return floatval($cp ?? 0); }, $cpPeriods));
+        $normCPs = [];
+        foreach ($cpPeriods as $score) {
+            $normCPs[] = $range->normalizeSkillScore($score, 'class_participation');
+        }
+        $normCP = count($normCPs) > 0 ? array_sum($normCPs) / count($normCPs) : 0;
+
+        // Activities: average of 3 periods
+        $actPeriods = is_array($activities) ? $activities : [$activities];
+        $actPeriods = array_filter(array_map(function($a) { return floatval($a ?? 0); }, $actPeriods));
+        $normActs = [];
+        foreach ($actPeriods as $score) {
+            $normActs[] = $range->normalizeSkillScore($score, 'activities');
+        }
+        $normAct = count($normActs) > 0 ? array_sum($normActs) / count($normActs) : 0;
+
+        // Assignments: average of 3 periods
+        $assignPeriods = is_array($assignments) ? $assignments : [$assignments];
+        $assignPeriods = array_filter(array_map(function($a) { return floatval($a ?? 0); }, $assignPeriods));
+        $normAssigns = [];
+        foreach ($assignPeriods as $score) {
+            $normAssigns[] = $range->normalizeSkillScore($score, 'assignments');
+        }
+        $normAssign = count($normAssigns) > 0 ? array_sum($normAssigns) / count($normAssigns) : 0;
 
         $skills = ($normOutput * 0.40) + 
                   ($normCP * 0.30) + 
@@ -215,29 +276,60 @@ class Grade extends Model
 
     /**
      * Calculate Attitude Score (10% of term grade)
-     * Behavior: 50%
-     * Awareness: 50%
+     * 
+     * DETAILED BREAKDOWN:
+     * - Attitude = 10% of total grade
+     * - Within Attitude:
+     *   - Behavior: 50% of Attitude = 5% of total grade
+     *   - Engagement: 50% of Attitude = 5% of total grade
+     *     - Within Engagement:
+     *       - Attendance: 60% of Engagement = 3% of total grade
+     *       - Class Participation & Awareness: 40% of Engagement = 2% of total grade
      *
      * @param float $behavior Behavior score (raw)
-     * @param float $awareness Awareness score (raw)
-     * @param AssessmentRange|null $range Assessment range config, if null uses defaults
+     * @param float $awareness Awareness/Class Participation score (raw)
+     * @param float $attendance Attendance score (raw, optional)
+     * @param AssessmentRange|null $range Assessment range config
      * @return float Attitude score (0-100)
      */
-    public static function calculateAttitude($behavior, $awareness, $range = null)
+    public static function calculateAttitude($behavior, $awareness, $attendance = null, $range = null)
     {
         if ($range === null) {
             // Default calculation (backward compatible)
             $behavior = max(0, min(100, floatval($behavior ?? 0)));
             $awareness = max(0, min(100, floatval($awareness ?? 0)));
-            $attitude = ($behavior * 0.50) + ($awareness * 0.50);
+
+            if ($attendance !== null) {
+                // New calculation with attendance weighting
+                $attendance = max(0, min(100, floatval($attendance ?? 0)));
+                $engagement = ($attendance * 0.60) + ($awareness * 0.40);
+                $attitude = ($behavior * 0.50) + ($engagement * 0.50);
+            } else {
+                // Legacy calculation
+                $attitude = ($behavior * 0.50) + ($awareness * 0.50);
+            }
+
             return round($attitude, 2);
         }
 
-        // Normalize with configured ranges
+        // With range: normalize scores
         $normBehavior = $range->normalizeAttitudeScore(floatval($behavior ?? 0), 'behavior');
-        $normAwareness = $range->normalizeAttitudeScore(floatval($awareness ?? 0), 'awareness');
 
-        $attitude = ($normBehavior * 0.50) + ($normAwareness * 0.50);
+        if ($attendance !== null) {
+            // New calculation with attendance weighting
+            $normAttendance = $range->normalizeAttitudeScore(floatval($attendance ?? 0), 'attendance');
+            $normAwareness = $range->normalizeAttitudeScore(floatval($awareness ?? 0), 'awareness');
+            
+            // Engagement = Attendance (60%) + Awareness (40%)
+            $engagement = ($normAttendance * 0.60) + ($normAwareness * 0.40);
+            
+            // Attitude = Behavior (50%) + Engagement (50%)
+            $attitude = ($normBehavior * 0.50) + ($engagement * 0.50);
+        } else {
+            // Legacy calculation
+            $normAwareness = $range->normalizeAttitudeScore(floatval($awareness ?? 0), 'awareness');
+            $attitude = ($normBehavior * 0.50) + ($normAwareness * 0.50);
+        }
 
         return round(max(0, min(100, $attitude)), 2);
     }
@@ -274,6 +366,7 @@ class Grade extends Model
      *
      * @param float $score Numeric score (0-100)
      * @return string Letter grade (A, B, C, D, F)
+     * @deprecated Use getGradePoint() instead for CHED-compliant grading
      */
     public static function getLetterGrade($score)
     {
@@ -289,6 +382,54 @@ class Grade extends Model
             return 'D';
         } else {
             return 'F';
+        }
+    }
+
+    /**
+     * Convert numeric grade to 4.0 scale grade point (CHED Philippines Standard)
+     *
+     * Grade Point Scale:
+     * 70-74 = 4.00
+     * 75 = 3.00
+     * 76-78 = 2.75
+     * 79-81 = 2.50
+     * 82-84 = 2.25
+     * 85-87 = 2.00
+     * 88-90 = 1.75
+     * 91-93 = 1.50
+     * 94-96 = 1.25
+     * 97-100 = 1.00
+     * Below 70 = INC (Incomplete)
+     *
+     * @param float $score Numeric score (0-100)
+     * @return float|string Grade point (4.00 to 1.00) or 'INC' if below 70
+     */
+    public static function getGradePoint($score)
+    {
+        $score = floatval($score ?? 0);
+
+        if ($score < 70) {
+            return 'INC'; // Incomplete
+        } elseif ($score <= 74) {
+            return 4.00;
+        } elseif ($score <= 75) {
+            return 3.00;
+        } elseif ($score <= 78) {
+            return 2.75;
+        } elseif ($score <= 81) {
+            return 2.50;
+        } elseif ($score <= 84) {
+            return 2.25;
+        } elseif ($score <= 87) {
+            return 2.00;
+        } elseif ($score <= 90) {
+            return 1.75;
+        } elseif ($score <= 93) {
+            return 1.50;
+        } elseif ($score <= 96) {
+            return 1.25;
+        } else { // 97-100
+            return 1.00;
         }
     }
 
@@ -313,6 +454,57 @@ class Grade extends Model
         } else {
             return 'danger'; // F - Red
         }
+    }
+
+    /**
+     * Convert numerical score (0-100) to 4.0 scale grade
+     * Based on the grading scale:
+     * 70-100 = 1.0-4.0
+     * Below 70 = 5.0 (Failed)
+     *
+     * @param float $score The numerical score (0-100)
+     * @return float The converted grade on 4.0 scale
+     */
+    public static function convertToNumericGrade($score)
+    {
+        $score = floatval($score);
+
+        // Grading Scale Mapping (based on provided image)
+        if ($score >= 98.0) return 4.0;
+        elseif ($score >= 95.0) return 4.0;
+        elseif ($score >= 92.0) return 4.0;
+        elseif ($score >= 89.0) return 3.75;
+        elseif ($score >= 86.0) return 3.5;
+        elseif ($score >= 83.0) return 3.25;
+        elseif ($score >= 80.0) return 3.0;
+        elseif ($score >= 77.0) return 2.75;
+        elseif ($score >= 74.0) return 2.5;
+        elseif ($score >= 71.0) return 2.25;
+        elseif ($score >= 70.0) return 2.0;
+        else return 5.0; // Failed
+    }
+
+    /**
+     * Get grading scale table (70-100 to 4.0-2.0, below 70 = 5.0)
+     *
+     * @return array Grading scale mapping
+     */
+    public static function getGradingScale()
+    {
+        return [
+            ['min' => 98.0, 'max' => 100.0, 'grade' => 4.0, 'label' => 'Excellent'],
+            ['min' => 95.0, 'max' => 97.9, 'grade' => 4.0, 'label' => 'Excellent'],
+            ['min' => 92.0, 'max' => 94.9, 'grade' => 4.0, 'label' => 'Excellent'],
+            ['min' => 89.0, 'max' => 91.9, 'grade' => 3.75, 'label' => 'Very Good'],
+            ['min' => 86.0, 'max' => 88.9, 'grade' => 3.5, 'label' => 'Very Good'],
+            ['min' => 83.0, 'max' => 85.9, 'grade' => 3.25, 'label' => 'Good'],
+            ['min' => 80.0, 'max' => 82.9, 'grade' => 3.0, 'label' => 'Good'],
+            ['min' => 77.0, 'max' => 79.9, 'grade' => 2.75, 'label' => 'Satisfactory'],
+            ['min' => 74.0, 'max' => 76.9, 'grade' => 2.5, 'label' => 'Satisfactory'],
+            ['min' => 71.0, 'max' => 73.9, 'grade' => 2.25, 'label' => 'Fair'],
+            ['min' => 70.0, 'max' => 70.9, 'grade' => 2.0, 'label' => 'Fair'],
+            ['min' => 0.0, 'max' => 69.9, 'grade' => 5.0, 'label' => 'Failed'],
+        ];
     }
 
     /**

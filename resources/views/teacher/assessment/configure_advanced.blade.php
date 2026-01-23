@@ -110,18 +110,6 @@
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <tr>
-                                        <td width="40%"><strong>Prelim Exam (if midterm term)</strong></td>
-                                        <td width="30%">
-                                            <input type="number" class="form-control form-control-sm"
-                                                name="prelim_exam_max"
-                                                value="{{ old('prelim_exam_max', $range->prelim_exam_max ?? 60) }}"
-                                                min="10" max="200" id="prelimMax">
-                                        </td>
-                                        <td width="30%">
-                                            <span class="badge bg-secondary">30% of Knowledge</span>
-                                        </td>
-                                    </tr>
-                                    <tr>
                                         <td><strong>Midterm Exam</strong></td>
                                         <td>
                                             <input type="number" class="form-control form-control-sm"
@@ -130,19 +118,18 @@
                                                 min="10" max="200" id="midtermMax">
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">30% of Knowledge</span>
+                                            <span class="badge bg-secondary">50% of Knowledge</span>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td><strong>Final Exam</strong></td>
                                         <td>
-                                            <input type="number" class="form-control form-control-sm"
-                                                name="final_exam_max"
+                                            <input type="number" class="form-control form-control-sm" name="final_exam_max"
                                                 value="{{ old('final_exam_max', $range->final_exam_max ?? 60) }}"
                                                 min="10" max="200" id="finalMax">
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">40% of Knowledge</span>
+                                            <span class="badge bg-secondary">50% of Knowledge</span>
                                         </td>
                                     </tr>
                                 </table>

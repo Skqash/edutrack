@@ -16,6 +16,7 @@ class StudentAttendance extends Model
         'student_id',
         'class_id',
         'subject_id',
+        'teacher_id',
         'term',
         'attendance_score',
         'total_classes',
@@ -34,6 +35,14 @@ class StudentAttendance extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
+    }
+
+    /**
+     * Get the teacher associated with this attendance record.
+     */
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
     }
 
     /**

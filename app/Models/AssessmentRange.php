@@ -21,7 +21,6 @@ class AssessmentRange extends Model
         'quiz_3_max',
         'quiz_4_max',
         'quiz_5_max',
-        'prelim_exam_max',
         'midterm_exam_max',
         'final_exam_max',
         'output_max',
@@ -37,6 +36,23 @@ class AssessmentRange extends Model
         'equal_quiz_distribution',
         'quiz_distribution',
         'notes',
+        // Two-term period-based columns for skills (Midterm & Final only)
+        'class_participation_midterm',
+        'class_participation_final',
+        'activities_midterm',
+        'activities_final',
+        'assignments_midterm',
+        'assignments_final',
+        'output_midterm',
+        'output_final',
+        // Two-term period-based columns for attitude (Midterm & Final only)
+        'behavior_midterm',
+        'behavior_final',
+        'awareness_midterm',
+        'awareness_final',
+        'quiz_max',
+        'exam_max',
+        'attendance_min_percentage',
     ];
 
     protected $casts = [
@@ -189,7 +205,6 @@ class AssessmentRange extends Model
     public function getExamMaxScores(): array
     {
         return [
-            'prelim' => $this->prelim_exam_max,
             'midterm' => $this->midterm_exam_max,
             'final' => $this->final_exam_max,
         ];
