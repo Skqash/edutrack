@@ -59,21 +59,23 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'role' => 'required|in:admin,teacher,student',
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6|confirmed',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
+        ], [
+            'password.regex' => 'Password must contain uppercase, lowercase, and numbers.',
         ]);
 
         User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-            'password' => $request->password,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+            'password' => Hash::make($validated['password']),
         ]);
 
-        return redirect('/login')->with('success', 'Account created successfully.');
+        return redirect('/login')->with('success', 'Account created successfully. Please log in.');
     }
 
     /* ---------- LOGOUT ---------- */
