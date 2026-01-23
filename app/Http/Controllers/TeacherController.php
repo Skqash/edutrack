@@ -21,8 +21,10 @@ class TeacherController extends Controller
     {
         $teacherId = Auth::id();
         
-        // Get teacher's classes count
-        $myClasses = ClassModel::where('teacher_id', $teacherId)->count();
+        // Get teacher's classes
+        $myClasses = ClassModel::where('teacher_id', $teacherId)
+            ->with('subject', 'students')
+            ->get();
         
         // Get total students in teacher's classes
         $totalStudents = Student::whereIn('class_id', 
@@ -33,8 +35,7 @@ class TeacherController extends Controller
         $gradesPosted = Grade::where('teacher_id', $teacherId)->count();
         
         // Get pending grade submissions
-        $pendingTasks = ClassModel::where('teacher_id', $teacherId)
-            ->sum('capacity'); // This would be customized based on actual pending logic
+        $pendingTasks = ClassModel::where('teacher_id', $teacherId)->count();
 
         return view('teacher.dashboard', compact(
             'myClasses',
@@ -699,4 +700,86 @@ class TeacherController extends Controller
             'attendance_score' => $record->attendance_score,
         ]);
     }
-}
+
+    /**
+     * Show inline grade entry form (NEW ENHANCED GRADING)
+     */
+    public function showGradeEntryInline($classId)
+    {
+        $teacherId = Auth::id();
+        $class = ClassModel::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->with('students.user', 'subject')
+            ->firstOrFail();
+
+        $range = AssessmentRange::where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+
+        $grades = Grade::where('class_id', $classId)->get();
+
+        return view('teacher.grades.entry_inline', compact('class', 'range', 'grades'));
+    }
+
+    /**
+     * Store grades via inline entry (NEW ENHANCED GRADING)
+     */
+    public function storeGradesInline(Request $request, $classId)
+    {
+        $teacherId = Auth::id();
+        ClassModel::where('id', $classId)->where('teacher_id', $teacherId)->firstOrFail();
+
+        $validated = $request->validate([
+            'grades' => 'required|array',
+            'grades.*.student_id' => 'required|exists:students,id',
+            'grades.*.component' => 'required|string',
+            'grades.*.score' => 'required|numeric|min:0',
+        ]);
+
+        foreach ($validated['grades'] as $gradeData) {
+            Grade::updateOrCreate(
+                [
+                    'student_id' => $gradeData['student_id'],
+                    'class_id' => $classId,
+                    'component' => $gradeData['component'],
+                ],
+                [
+                    'teacher_id' => $teacherId,
+                    'score' => $gradeData['score'],
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Grades saved successfully',
+        ]);
+    }
+
+    /**
+     * Show grade analytics dashboard (NEW ENHANCED GRADING)
+     */
+    public function showGradeAnalytics($classId)
+    {
+        $teacherId = Auth::id();
+        $class = ClassModel::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->with('students.user', 'subject')
+            ->firstOrFail();
+
+        $grades = Grade::where('class_id', $classId)->with('student')->get();
+
+        // Calculate analytics
+        $analytics = [
+            'total_students' => $class->students->count(),
+            'class_average' => $grades->avg('score') ?? 0,
+            'highest_score' => $grades->max('score') ?? 0,
+            'lowest_score' => $grades->min('score') ?? 0,
+            'grades_count' => $grades->count(),
+            'knowledge_avg' => $grades->where('component', 'Knowledge')->avg('score') ?? 0,
+            'skills_avg' => $grades->where('component', 'Skills')->avg('score') ?? 0,
+            'attitude_avg' => $grades->where('component', 'Attitude')->avg('score') ?? 0,
+        ];
+
+        return view('teacher.grades.analytics_dashboard', compact('class', 'grades', 'analytics'));
+    }

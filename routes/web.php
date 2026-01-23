@@ -101,6 +101,11 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'configureAssessmentRanges'])->name('assessment.configure');
     Route::post('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeAssessmentRanges'])->name('assessment.store');
     
+    // NEW ENHANCED GRADING SYSTEM ROUTES
+    Route::get('/grades/entry-inline/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryInline'])->name('grades.entry.inline');
+    Route::post('/grades/store-inline/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradesInline'])->name('grades.store.inline');
+    Route::get('/grades/analytics/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeAnalytics'])->name('grades.analytics');
+    
     // Attendance Management
     Route::get('/attendance/manage/{classId}', [\App\Http\Controllers\TeacherController::class, 'manageAttendance'])->name('attendance.manage');
     Route::post('/attendance/record/{classId}', [\App\Http\Controllers\TeacherController::class, 'recordAttendance'])->name('attendance.record');

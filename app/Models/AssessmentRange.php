@@ -32,6 +32,10 @@ class AssessmentRange extends Model
         'awareness_max',
         'attendance_max',
         'attendance_required',
+        'total_quiz_items',
+        'num_quizzes',
+        'equal_quiz_distribution',
+        'quiz_distribution',
         'notes',
     ];
 
@@ -129,6 +133,22 @@ class AssessmentRange extends Model
      */
     public function getQuizMaxScores(): array
     {
+        // If using total quiz items with equal distribution
+        if ($this->equal_quiz_distribution && $this->total_quiz_items) {
+            $perQuiz = (int)($this->total_quiz_items / $this->num_quizzes);
+            $distribution = [];
+            for ($i = 1; $i <= $this->num_quizzes; $i++) {
+                $distribution['q' . $i] = $perQuiz;
+            }
+            return $distribution;
+        }
+
+        // If using custom distribution (JSON)
+        if ($this->quiz_distribution) {
+            return json_decode($this->quiz_distribution, true);
+        }
+
+        // Fall back to individual quiz max values
         return [
             'q1' => $this->quiz_1_max,
             'q2' => $this->quiz_2_max,
@@ -136,6 +156,31 @@ class AssessmentRange extends Model
             'q4' => $this->quiz_4_max,
             'q5' => $this->quiz_5_max,
         ];
+    }
+
+    /**
+     * Get total quiz items (for display).
+     */
+    public function getTotalQuizItems(): int
+    {
+        return $this->total_quiz_items ?? 100;
+    }
+
+    /**
+     * Get number of quizzes.
+     */
+    public function getNumQuizzes(): int
+    {
+        return $this->num_quizzes ?? 5;
+    }
+
+    /**
+     * Calculate per-quiz percentage of total quizzes.
+     * Each quiz = 100% / num_quizzes
+     */
+    public function getQuizPercentage(): float
+    {
+        return 100 / $this->getNumQuizzes();
     }
 
     /**

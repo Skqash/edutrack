@@ -88,10 +88,10 @@ class Grade extends Model
 
     /**
      * Calculate Knowledge Score (40% of term grade)
-     * Quizzes (Q1-Q5): 40% of Knowledge (configurable items)
+     * Quizzes (variable count): 40% of Knowledge (configurable items)
      * Exams (PR, MD, FE): 60% of Knowledge (configurable items)
      *
-     * @param array $quizzes [q1, q2, q3, q4, q5] - raw scores
+     * @param array $quizzes [q1, q2, q3, q4, q5, ...] - raw scores
      * @param array $exams [prelim, midterm, final] - raw scores
      * @param AssessmentRange|null $range Assessment range config, if null uses defaults
      * @param string $term 'midterm' or 'final'
@@ -104,16 +104,23 @@ class Grade extends Model
             return self::calculateKnowledgeDefault($quizzes, $exams, $term);
         }
 
+        // Get quiz max scores (handles both equal distribution and custom)
+        $quizMaxScores = $range->getQuizMaxScores();
+        
         // Normalize quiz scores based on configured max values
         $quizzes = array_filter(array_map(function($q) { return floatval($q ?? 0); }, $quizzes));
         $normalizedQuizzes = [];
         
-        foreach ($quizzes as $i => $score) {
-            $quizNum = $i + 1;
-            $normalizedScore = $range->normalizeQuizScore($score, $quizNum);
+        $quizIndex = 1;
+        foreach ($quizzes as $score) {
+            $quizKey = 'q' . $quizIndex;
+            $maxScore = $quizMaxScores[$quizKey] ?? 20;
+            $normalizedScore = ($score / $maxScore) * 100;
             $normalizedQuizzes[] = $normalizedScore;
+            $quizIndex++;
         }
         
+        // Calculate quiz average
         $quizAverage = count($normalizedQuizzes) > 0 ? array_sum($normalizedQuizzes) / count($normalizedQuizzes) : 0;
         $quizPart = $quizAverage * 0.40; // 40% of knowledge
 

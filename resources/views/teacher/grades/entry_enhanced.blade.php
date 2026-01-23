@@ -45,13 +45,13 @@
                 <h6><i class="fas fa-cog"></i> Active Assessment Ranges</h6>
                 <div class="row mt-2">
                     <div class="col-md-3">
-                        <small><strong>Quizzes:</strong> Q1-{{ $range->quiz_1_max }}, Q2-{{ $range->quiz_2_max }}, Q3-{{ $range->quiz_3_max }}, Q4-{{ $range->quiz_4_max }}, Q5-{{ $range->quiz_5_max }}</small>
-                    </div>
-                    <div class="col-md-3">
-                        <small><strong>Exams:</strong> Prelim-{{ $range->prelim_exam_max }}, Midterm-{{ $range->midterm_exam_max }}, Final-{{ $range->final_exam_max }}</small>
-                    </div>
-                    <div class="col-md-3">
-                        <small><strong>Skills Max:</strong> Output-{{ $range->output_max }}, CP-{{ $range->class_participation_max }}, Activities-{{ $range->activities_max }}, Assign-{{ $range->assignments_max }}</small>
+                                        <small><strong>Quizzes:</strong> 
+                                            @if ($range->equal_quiz_distribution && $range->total_quiz_items)
+                                                {{ $range->num_quizzes }} quizzes × {{ (int)($range->total_quiz_items / $range->num_quizzes) }} items ({{ $range->total_quiz_items }} total)
+                                            @else
+                                                Q1-{{ $range->quiz_1_max }}, Q2-{{ $range->quiz_2_max }}, Q3-{{ $range->quiz_3_max }}, Q4-{{ $range->quiz_4_max }}, Q5-{{ $range->quiz_5_max }}
+                                            @endif
+                                        </small>
                     </div>
                     <div class="col-md-3">
                         <small><strong>Attitude Max:</strong> Behavior-{{ $range->behavior_max }}, Awareness-{{ $range->awareness_max }}</small>
@@ -74,7 +74,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 25%;">Student Name</th>
-                                <th colspan="5" class="text-center"><small>Knowledge (40%)</small></th>
+                                <th colspan="{{ ($range->num_quizzes ?? 5) + 2 }}" class="text-center"><small>Knowledge (40%)</small></th>
                                 <th colspan="5" class="text-center"><small>Skills (50%)</small></th>
                                 <th colspan="3" class="text-center"><small>Attitude (10%)</small></th>
                                 <th colspan="2" class="text-center"><small>Attendance</small></th>
@@ -82,10 +82,10 @@
                             </tr>
                             <tr>
                                 <th>Student</th>
-                                <!-- Knowledge -->
-                                <th class="text-center"><small>Q1</small></th>
-                                <th class="text-center"><small>Q2</small></th>
-                                <th class="text-center"><small>Q3</small></th>
+                                <!-- Knowledge - Dynamic Quizzes -->
+                                @for($q = 1; $q <= ($range->num_quizzes ?? 5); $q++)
+                                    <th class="text-center"><small>Q{{ $q }}</small></th>
+                                @endfor
                                 <th class="text-center"><small>Exam(M)</small></th>
                                 <th class="text-center" style="background-color: #e8f4f8;"><small>K.Score</small></th>
                                 <!-- Skills -->
@@ -124,25 +124,19 @@
                                         </div>
                                     </td>
 
-                                    <!-- Knowledge Inputs -->
-                                    <td class="text-center">
-                                        <input type="number" name="grades[{{ $index }}][q1]" class="form-control form-control-sm text-center" 
-                                            value="{{ old("grades.$index.q1", $grade->q1 ?? '') }}"
-                                            min="0" max="{{ $range->quiz_1_max ?? 20 }}" 
-                                            placeholder="0" step="0.5">
-                                    </td>
-                                    <td class="text-center">
-                                        <input type="number" name="grades[{{ $index }}][q2]" class="form-control form-control-sm text-center"
-                                            value="{{ old("grades.$index.q2", $grade->q2 ?? '') }}"
-                                            min="0" max="{{ $range->quiz_2_max ?? 15 }}"
-                                            placeholder="0" step="0.5">
-                                    </td>
-                                    <td class="text-center">
-                                        <input type="number" name="grades[{{ $index }}][q3]" class="form-control form-control-sm text-center"
-                                            value="{{ old("grades.$index.q3", $grade->q3 ?? '') }}"
-                                            min="0" max="{{ $range->quiz_3_max ?? 25 }}"
-                                            placeholder="0" step="0.5">
-                                    </td>
+                                    <!-- Knowledge Inputs - Dynamic Quizzes -->
+                                    @php
+                                        $numQuizzes = $range->num_quizzes ?? 5;
+                                        $quizMaxScores = $range->getQuizMaxScores();
+                                    @endphp
+                                    @for($q = 1; $q <= $numQuizzes; $q++)
+                                        <td class="text-center">
+                                            <input type="number" name="grades[{{ $index }}][q{{ $q }}]" class="form-control form-control-sm text-center" 
+                                                value="{{ old("grades.$index.q$q", $grade->{"q$q"} ?? '') }}"
+                                                min="0" max="{{ $quizMaxScores['q' . $q] ?? 20 }}" 
+                                                placeholder="0" step="0.5" title="Max: {{ $quizMaxScores['q' . $q] ?? 20 }}">
+                                        </td>
+                                    @endfor
                                     <td class="text-center">
                                         <input type="number" name="grades[{{ $index }}][midterm_exam]" class="form-control form-control-sm text-center"
                                             value="{{ old("grades.$index.midterm_exam", $grade->midterm_exam ?? '') }}"

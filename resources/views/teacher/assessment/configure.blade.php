@@ -48,6 +48,62 @@
                                 <i class="fas fa-brain"></i> Knowledge Assessment Ranges (40% of Term Grade)
                             </h5>
 
+                            <!-- Quiz Total Configuration -->
+                            <div class="alert alert-light border border-info mb-4">
+                                <h6 class="text-info mb-3"><i class="fas fa-dice"></i> Quiz Configuration</h6>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Total Quiz Items <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="total_quiz_items" 
+                                                id="total_quiz_items"
+                                                value="{{ old('total_quiz_items', $range->total_quiz_items ?? 100) }}" 
+                                                min="10" max="500" required>
+                                            <span class="input-group-text">items</span>
+                                        </div>
+                                        <small class="form-text text-muted">Total pool of quiz items to distribute</small>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Number of Quizzes <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" name="num_quizzes" 
+                                                id="num_quizzes"
+                                                value="{{ old('num_quizzes', $range->num_quizzes ?? 5) }}" 
+                                                min="1" max="10" required>
+                                            <span class="input-group-text">quizzes</span>
+                                        </div>
+                                        <small class="form-text text-muted">How many quizzes to create (Q1-Qn)</small>
+                                    </div>
+
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Per-Quiz Items</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control bg-light" 
+                                                id="per_quiz_items"
+                                                value="" readonly>
+                                            <span class="input-group-text">items/quiz</span>
+                                        </div>
+                                        <small class="form-text text-muted">Auto-calculated (total ÷ number)</small>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="equal_quiz_distribution" 
+                                                id="equal_quiz_distribution" value="1"
+                                                {{ old('equal_quiz_distribution', $range->equal_quiz_distribution ?? true) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="equal_quiz_distribution">
+                                                <strong>Equal Distribution</strong> - Automatically divide total items equally among all quizzes
+                                                <small class="d-block text-muted mt-1">When unchecked, use individual quiz max values below</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Individual Quiz Configuration (Fallback) -->
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Quiz 1 - Max Items <span class="text-danger">*</span></label>
@@ -316,4 +372,43 @@
     font-weight: 500;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const totalQuizItemsInput = document.getElementById('total_quiz_items');
+    const numQuizzesInput = document.getElementById('num_quizzes');
+    const perQuizItemsDisplay = document.getElementById('per_quiz_items');
+    const equalDistributionCheckbox = document.getElementById('equal_quiz_distribution');
+
+    function updatePerQuizItems() {
+        const total = parseInt(totalQuizItemsInput.value) || 100;
+        const num = parseInt(numQuizzesInput.value) || 5;
+        const perQuiz = Math.floor(total / num);
+        perQuizItemsDisplay.value = perQuiz + ' items/quiz';
+    }
+
+    function toggleIndividualQuizFields() {
+        const isEqual = equalDistributionCheckbox.checked;
+        const quizInputs = document.querySelectorAll('input[name^="quiz_"][name$="_max"]');
+        quizInputs.forEach(input => {
+            const label = input.closest('.col-md-6')?.querySelector('label');
+            if (label) {
+                label.style.opacity = isEqual ? '0.5' : '1';
+                input.disabled = isEqual;
+            }
+        });
+    }
+
+    // Update calculation on input change
+    totalQuizItemsInput.addEventListener('change', updatePerQuizItems);
+    numQuizzesInput.addEventListener('change', updatePerQuizItems);
+    
+    // Toggle individual quiz fields based on distribution mode
+    equalDistributionCheckbox.addEventListener('change', toggleIndividualQuizFields);
+
+    // Initial calculation
+    updatePerQuizItems();
+    toggleIndividualQuizFields();
+});
+</script>
 @endsection
