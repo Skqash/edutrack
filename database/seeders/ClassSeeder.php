@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Classes;
+use App\Models\ClassModel;
 use Illuminate\Database\Seeder;
 
 class ClassSeeder extends Seeder
@@ -61,7 +61,7 @@ class ClassSeeder extends Seeder
         ];
 
         foreach ($classes as $class) {
-            Classes::create([
+            ClassModel::create([
                 'class_code' => $class['class_code'],
                 'class_name' => $class['class_name'],
                 'capacity' => $class['capacity'],

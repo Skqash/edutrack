@@ -14,50 +14,191 @@ class Grade extends Model
         'class_id',
         'teacher_id',
         'term',
-        // Knowledge Components - Quizzes (flexible 1-10)
-        'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'q9', 'q10',
-        'midterm_exam', 'final_exam',
-        'knowledge_score',
-        // Skills Components
-        'output_score',
-        'class_participation_score',
-        'activities_score',
-        'assignments_score',
-        'skills_score',
-        // Attitude Components
-        'behavior_score',
-        'awareness_score',
-        'attitude_score',
-        // Final Grade
-        'final_grade',
+        'assessment_period',
+        // Traditional grading
+        'marks_obtained',
+        'total_marks',
+        'grade',  // Now decimal (0-100) instead of enum
+        'semester',
+        'academic_year',
+        // Knowledge Components - Exams
+        'exam_prelim', 'exam_midterm', 'exam_final',
+        // Knowledge Components - Quizzes (5 standard quizzes)
+        'quiz_1', 'quiz_2', 'quiz_3', 'quiz_4', 'quiz_5',
+        // Skills Individual Entries
+        'output_1', 'output_2', 'output_3',
+        'class_participation_1', 'class_participation_2', 'class_participation_3',
+        'activities_1', 'activities_2', 'activities_3',
+        'assignments_1', 'assignments_2', 'assignments_3',
+        // Attitude Individual Entries
+        'behavior_1', 'behavior_2', 'behavior_3',
+        'awareness_1', 'awareness_2', 'awareness_3',
+        // Skills Component Totals
+        'output_total',
+        'class_participation_total',
+        'activities_total',
+        'assignments_total',
+        // Attitude Component Totals
+        'behavior_total',
+        'awareness_total',
+        // Component Averages
+        'knowledge_average',
+        'skills_average',
+        'attitude_average',
+        // Midterm and Final grades
+        'midterm_grade',
+        'final_grade_value',
+        // Overall grade
+        'overall_grade',
         'grade_point',
+        'letter_grade',
+        'decimal_grade',
         'remarks',
         'grading_period',
+        
+        // NEW: MIDTERM PERIOD - Knowledge Component
+        'mid_exam_pr', 'mid_exam_md',
+        'mid_quiz_1', 'mid_quiz_2', 'mid_quiz_3', 'mid_quiz_4', 'mid_quiz_5',
+        // MIDTERM PERIOD - Skills Component
+        'mid_output_1', 'mid_output_2', 'mid_output_3',
+        'mid_classpart_1', 'mid_classpart_2', 'mid_classpart_3',
+        'mid_activity_1', 'mid_activity_2', 'mid_activity_3',
+        'mid_assignment_1', 'mid_assignment_2', 'mid_assignment_3',
+        // MIDTERM PERIOD - Attitude Component
+        'mid_behavior_1', 'mid_behavior_2', 'mid_behavior_3',
+        'mid_awareness_1', 'mid_awareness_2', 'mid_awareness_3',
+        // FINAL PERIOD - Knowledge Component
+        'final_exam_pr', 'final_exam_md',
+        'final_quiz_1', 'final_quiz_2', 'final_quiz_3', 'final_quiz_4', 'final_quiz_5',
+        // FINAL PERIOD - Skills Component
+        'final_output_1', 'final_output_2', 'final_output_3',
+        'final_classpart_1', 'final_classpart_2', 'final_classpart_3',
+        'final_activity_1', 'final_activity_2', 'final_activity_3',
+        'final_assignment_1', 'final_assignment_2', 'final_assignment_3',
+        // FINAL PERIOD - Attitude Component
+        'final_behavior_1', 'final_behavior_2', 'final_behavior_3',
+        'final_awareness_1', 'final_awareness_2', 'final_awareness_3',
+        // COMPUTED AVERAGES BY PERIOD
+        'mid_knowledge_average', 'mid_skills_average', 'mid_attitude_average', 'mid_final_grade',
+        'final_knowledge_average', 'final_skills_average', 'final_attitude_average', 'final_final_grade',
+        // OVERALL AND SCALE
+        'grade_5pt_scale', 'grade_remarks',
     ];
 
     protected $casts = [
-        'q1' => 'decimal:2',
-        'q2' => 'decimal:2',
-        'q3' => 'decimal:2',
-        'q4' => 'decimal:2',
-        'q5' => 'decimal:2',
-        'q6' => 'decimal:2',
-        'q7' => 'decimal:2',
-        'q8' => 'decimal:2',
-        'q9' => 'decimal:2',
-        'q10' => 'decimal:2',
-        'midterm_exam' => 'decimal:2',
-        'final_exam' => 'decimal:2',
-        'knowledge_score' => 'decimal:2',
-        'output_score' => 'decimal:2',
-        'class_participation_score' => 'decimal:2',
-        'activities_score' => 'decimal:2',
-        'assignments_score' => 'decimal:2',
-        'skills_score' => 'decimal:2',
-        'behavior_score' => 'decimal:2',
-        'awareness_score' => 'decimal:2',
-        'attitude_score' => 'decimal:2',
-        'final_grade' => 'decimal:2',
+        // Traditional grading columns
+        'marks_obtained' => 'decimal:2',
+        'total_marks' => 'decimal:2',
+        'grade' => 'decimal:2',  // Changed from enum to decimal (0-100 numeric grade)
+        // Knowledge Components - Exams
+        'exam_prelim' => 'decimal:2',
+        'exam_midterm' => 'decimal:2',
+        'exam_final' => 'decimal:2',
+        // Knowledge Components - Quizzes
+        'quiz_1' => 'decimal:2',
+        'quiz_2' => 'decimal:2',
+        'quiz_3' => 'decimal:2',
+        'quiz_4' => 'decimal:2',
+        'quiz_5' => 'decimal:2',
+        // Skills Individual Entries
+        'output_1' => 'decimal:2',
+        'output_2' => 'decimal:2',
+        'output_3' => 'decimal:2',
+        'class_participation_1' => 'decimal:2',
+        'class_participation_2' => 'decimal:2',
+        'class_participation_3' => 'decimal:2',
+        'activities_1' => 'decimal:2',
+        'activities_2' => 'decimal:2',
+        'activities_3' => 'decimal:2',
+        'assignments_1' => 'decimal:2',
+        'assignments_2' => 'decimal:2',
+        'assignments_3' => 'decimal:2',
+        // Attitude Individual Entries
+        'behavior_1' => 'decimal:2',
+        'behavior_2' => 'decimal:2',
+        'behavior_3' => 'decimal:2',
+        'awareness_1' => 'decimal:2',
+        'awareness_2' => 'decimal:2',
+        'awareness_3' => 'decimal:2',
+        // Component Totals
+        'output_total' => 'decimal:2',
+        'class_participation_total' => 'decimal:2',
+        'activities_total' => 'decimal:2',
+        'assignments_total' => 'decimal:2',
+        'behavior_total' => 'decimal:2',
+        'awareness_total' => 'decimal:2',
+        // Component Averages
+        'knowledge_average' => 'decimal:2',
+        'skills_average' => 'decimal:2',
+        'attitude_average' => 'decimal:2',
+        // Grades
+        'midterm_grade' => 'decimal:2',
+        'final_grade_value' => 'decimal:2',
+        'overall_grade' => 'decimal:2',
+        'grade_point' => 'decimal:2',
+        'decimal_grade' => 'decimal:2',
+        
+        // NEW: MIDTERM PERIOD
+        'mid_exam_pr' => 'decimal:2',
+        'mid_exam_md' => 'decimal:2',
+        'mid_quiz_1' => 'decimal:2',
+        'mid_quiz_2' => 'decimal:2',
+        'mid_quiz_3' => 'decimal:2',
+        'mid_quiz_4' => 'decimal:2',
+        'mid_quiz_5' => 'decimal:2',
+        'mid_output_1' => 'decimal:2',
+        'mid_output_2' => 'decimal:2',
+        'mid_output_3' => 'decimal:2',
+        'mid_classpart_1' => 'decimal:2',
+        'mid_classpart_2' => 'decimal:2',
+        'mid_classpart_3' => 'decimal:2',
+        'mid_activity_1' => 'decimal:2',
+        'mid_activity_2' => 'decimal:2',
+        'mid_activity_3' => 'decimal:2',
+        'mid_assignment_1' => 'decimal:2',
+        'mid_assignment_2' => 'decimal:2',
+        'mid_assignment_3' => 'decimal:2',
+        'mid_behavior_1' => 'decimal:2',
+        'mid_behavior_2' => 'decimal:2',
+        'mid_behavior_3' => 'decimal:2',
+        'mid_awareness_1' => 'decimal:2',
+        'mid_awareness_2' => 'decimal:2',
+        'mid_awareness_3' => 'decimal:2',
+        'mid_knowledge_average' => 'decimal:2',
+        'mid_skills_average' => 'decimal:2',
+        'mid_attitude_average' => 'decimal:2',
+        'mid_final_grade' => 'decimal:2',
+        
+        // NEW: FINAL PERIOD
+        'final_exam_pr' => 'decimal:2',
+        'final_exam_md' => 'decimal:2',
+        'final_quiz_1' => 'decimal:2',
+        'final_quiz_2' => 'decimal:2',
+        'final_quiz_3' => 'decimal:2',
+        'final_quiz_4' => 'decimal:2',
+        'final_quiz_5' => 'decimal:2',
+        'final_output_1' => 'decimal:2',
+        'final_output_2' => 'decimal:2',
+        'final_output_3' => 'decimal:2',
+        'final_classpart_1' => 'decimal:2',
+        'final_classpart_2' => 'decimal:2',
+        'final_classpart_3' => 'decimal:2',
+        'final_activity_1' => 'decimal:2',
+        'final_activity_2' => 'decimal:2',
+        'final_activity_3' => 'decimal:2',
+        'final_assignment_1' => 'decimal:2',
+        'final_assignment_2' => 'decimal:2',
+        'final_assignment_3' => 'decimal:2',
+        'final_behavior_1' => 'decimal:2',
+        'final_behavior_2' => 'decimal:2',
+        'final_behavior_3' => 'decimal:2',
+        'final_awareness_1' => 'decimal:2',
+        'final_awareness_2' => 'decimal:2',
+        'final_awareness_3' => 'decimal:2',
+        'final_knowledge_average' => 'decimal:2',
+        'final_skills_average' => 'decimal:2',
+        'final_attitude_average' => 'decimal:2',
+        'final_final_grade' => 'decimal:2',
     ];
 
     /**
@@ -357,35 +498,6 @@ class Grade extends Model
     }
 
     /**
-     * Get letter grade from numeric score
-     * 90-100: A
-     * 80-89: B
-     * 70-79: C
-     * 60-69: D
-     * Below 60: F
-     *
-     * @param float $score Numeric score (0-100)
-     * @return string Letter grade (A, B, C, D, F)
-     * @deprecated Use getGradePoint() instead for CHED-compliant grading
-     */
-    public static function getLetterGrade($score)
-    {
-        $score = floatval($score ?? 0);
-
-        if ($score >= 90) {
-            return 'A';
-        } elseif ($score >= 80) {
-            return 'B';
-        } elseif ($score >= 70) {
-            return 'C';
-        } elseif ($score >= 60) {
-            return 'D';
-        } else {
-            return 'F';
-        }
-    }
-
-    /**
      * Convert numeric grade to 4.0 scale grade point (CHED Philippines Standard)
      *
      * Grade Point Scale:
@@ -470,17 +582,17 @@ class Grade extends Model
         $score = floatval($score);
 
         // Grading Scale Mapping (based on provided image)
-        if ($score >= 98.0) return 4.0;
-        elseif ($score >= 95.0) return 4.0;
-        elseif ($score >= 92.0) return 4.0;
-        elseif ($score >= 89.0) return 3.75;
-        elseif ($score >= 86.0) return 3.5;
-        elseif ($score >= 83.0) return 3.25;
-        elseif ($score >= 80.0) return 3.0;
+        if ($score >= 98.0) return 1.0;
+        elseif ($score >= 95.0) return 1.25;
+        elseif ($score >= 92.0) return 1.50;
+        elseif ($score >= 89.0) return 1.75;
+        elseif ($score >= 86.0) return 2.0;
+        elseif ($score >= 83.0) return 2.25;
+        elseif ($score >= 80.0) return 2.5;
         elseif ($score >= 77.0) return 2.75;
-        elseif ($score >= 74.0) return 2.5;
-        elseif ($score >= 71.0) return 2.25;
-        elseif ($score >= 70.0) return 2.0;
+        elseif ($score >= 74.0) return 3.0;
+        elseif ($score >= 71.0) return 3.25;
+        elseif ($score >= 70.0) return 3.5;
         else return 5.0; // Failed
     }
 
@@ -492,24 +604,153 @@ class Grade extends Model
     public static function getGradingScale()
     {
         return [
-            ['min' => 98.0, 'max' => 100.0, 'grade' => 4.0, 'label' => 'Excellent'],
-            ['min' => 95.0, 'max' => 97.9, 'grade' => 4.0, 'label' => 'Excellent'],
-            ['min' => 92.0, 'max' => 94.9, 'grade' => 4.0, 'label' => 'Excellent'],
-            ['min' => 89.0, 'max' => 91.9, 'grade' => 3.75, 'label' => 'Very Good'],
-            ['min' => 86.0, 'max' => 88.9, 'grade' => 3.5, 'label' => 'Very Good'],
-            ['min' => 83.0, 'max' => 85.9, 'grade' => 3.25, 'label' => 'Good'],
-            ['min' => 80.0, 'max' => 82.9, 'grade' => 3.0, 'label' => 'Good'],
+            ['min' => 98.0, 'max' => 100.0, 'grade' => 1.0, 'label' => 'Excellent'],
+            ['min' => 95.0, 'max' => 97.9, 'grade' => 1.25, 'label' => 'Excellent'],
+            ['min' => 92.0, 'max' => 94.9, 'grade' => 1.50, 'label' => 'Excellent'],
+            ['min' => 89.0, 'max' => 91.9, 'grade' => 1.75, 'label' => 'Very Good'],
+            ['min' => 86.0, 'max' => 88.9, 'grade' => 2.0, 'label' => 'Very Good'],
+            ['min' => 83.0, 'max' => 85.9, 'grade' => 2.25, 'label' => 'Good'],
+            ['min' => 80.0, 'max' => 82.9, 'grade' => 2.50, 'label' => 'Good'],
             ['min' => 77.0, 'max' => 79.9, 'grade' => 2.75, 'label' => 'Satisfactory'],
-            ['min' => 74.0, 'max' => 76.9, 'grade' => 2.5, 'label' => 'Satisfactory'],
-            ['min' => 71.0, 'max' => 73.9, 'grade' => 2.25, 'label' => 'Fair'],
-            ['min' => 70.0, 'max' => 70.9, 'grade' => 2.0, 'label' => 'Fair'],
+            ['min' => 74.0, 'max' => 76.9, 'grade' => 3.0, 'label' => 'Satisfactory'],
+            ['min' => 71.0, 'max' => 73.9, 'grade' => 3.25, 'label' => 'Fair'],
+            ['min' => 70.0, 'max' => 70.9, 'grade' => 3.5, 'label' => 'Fair'],
             ['min' => 0.0, 'max' => 69.9, 'grade' => 5.0, 'label' => 'Failed'],
         ];
     }
 
     /**
-     * Scope to filter grades by teacher
+     * Calculate Knowledge Average from Exams and Quizzes
+     * Knowledge = 40% weight
+     * 
+     * @param array $quizzes Quiz scores: quiz_1 through quiz_5
+     * @param array $exams Exam scores: exam_prelim, exam_midterm, exam_final
+     * @return float Knowledge average (0-100)
      */
+    public static function calculateKnowledgeAverage($quizzes, $exams)
+    {
+        // Average the quizzes
+        $quizArray = array_filter([
+            floatval($quizzes['quiz_1'] ?? 0),
+            floatval($quizzes['quiz_2'] ?? 0),
+            floatval($quizzes['quiz_3'] ?? 0),
+            floatval($quizzes['quiz_4'] ?? 0),
+            floatval($quizzes['quiz_5'] ?? 0),
+        ], fn($v) => $v > 0);
+
+        $quizAverage = count($quizArray) > 0 ? array_sum($quizArray) / count($quizArray) : 0;
+
+        // Average the relevant exams based on period
+        $examArray = array_filter([
+            floatval($exams['exam_prelim'] ?? 0),
+            floatval($exams['exam_midterm'] ?? 0),
+            floatval($exams['exam_final'] ?? 0),
+        ], fn($v) => $v > 0);
+
+        $examAverage = count($examArray) > 0 ? array_sum($examArray) / count($examArray) : 0;
+
+        // Knowledge = (Quiz Average * 0.40) + (Exam Average * 0.60)
+        $knowledge = ($quizAverage * 0.40) + ($examAverage * 0.60);
+        return round($knowledge, 2);
+    }
+
+    /**
+     * Calculate Skills Average from all skill components with totals
+     * Skills = 50% weight
+     * 
+     * @param array $output Output scores (3 entries)
+     * @param array $classParticipation Class participation scores (3 entries)
+     * @param array $activities Activities scores (3 entries)
+     * @param array $assignments Assignment scores (3 entries)
+     * @return array ['average' => float, 'totals' => array of component totals]
+     */
+    public static function calculateSkillsAverage($output, $classParticipation, $activities, $assignments)
+    {
+        // Calculate totals for each component
+        $outputTotal = self::getComponentTotal($output);
+        $cpTotal = self::getComponentTotal($classParticipation);
+        $actTotal = self::getComponentTotal($activities);
+        $assTotal = self::getComponentTotal($assignments);
+
+        // Calculate average for each component (divide total by 3)
+        $outputAvg = $outputTotal > 0 ? $outputTotal / 3 : 0;
+        $cpAvg = $cpTotal > 0 ? $cpTotal / 3 : 0;
+        $actAvg = $actTotal > 0 ? $actTotal / 3 : 0;
+        $assAvg = $assTotal > 0 ? $assTotal / 3 : 0;
+
+        // Skills breakdown with weighting:
+        // Output: 40%, Class Participation: 30%, Activities: 15%, Assignments: 15%
+        $skillsAverage = ($outputAvg * 0.40) + ($cpAvg * 0.30) + ($actAvg * 0.15) + ($assAvg * 0.15);
+        
+        return [
+            'average' => round($skillsAverage, 2),
+            'totals' => [
+                'output_total' => round($outputTotal, 2),
+                'class_participation_total' => round($cpTotal, 2),
+                'activities_total' => round($actTotal, 2),
+                'assignments_total' => round($assTotal, 2),
+            ]
+        ];
+    }
+
+    /**
+     * Calculate Attitude Average from behavior and awareness components with totals
+     * Attitude = 10% weight
+     * 
+     * @param array $behavior Behavior scores (3 entries)
+     * @param array $awareness Awareness scores (3 entries)
+     * @return array ['average' => float, 'totals' => array of component totals]
+     */
+    public static function calculateAttitudeAverage($behavior, $awareness)
+    {
+        // Calculate totals for each component
+        $behaviorTotal = self::getComponentTotal($behavior);
+        $awarenessTotal = self::getComponentTotal($awareness);
+
+        // Calculate average for each component (divide total by 3)
+        $behaviorAvg = $behaviorTotal > 0 ? $behaviorTotal / 3 : 0;
+        $awarenessAvg = $awarenessTotal > 0 ? $awarenessTotal / 3 : 0;
+
+        // Attitude breakdown: Behavior 50%, Awareness 50%
+        $attitudeAverage = ($behaviorAvg * 0.50) + ($awarenessAvg * 0.50);
+        
+        return [
+            'average' => round($attitudeAverage, 2),
+            'totals' => [
+                'behavior_total' => round($behaviorTotal, 2),
+                'awareness_total' => round($awarenessTotal, 2),
+            ]
+        ];
+    }
+
+    /**
+     * Helper method to get total from component entries
+     * 
+     * @param array $scores Array of score values
+     * @return float Total score
+     */
+    private static function getComponentTotal($scores)
+    {
+        $filteredScores = array_filter((array)$scores, fn($v) => $v > 0 || $v === '0');
+        return count($filteredScores) > 0 ? array_sum($filteredScores) : 0;
+    }
+
+    /**
+     * Calculate overall grade with Midterm (40%) and Final (60%) weight
+     * 
+     * @param float $midtermGrade Midterm grade
+     * @param float $finalGrade Final grade
+     * @return float Overall grade
+     */
+    public static function calculateOverallGrade($midtermGrade, $finalGrade)
+    {
+        $midterm = floatval($midtermGrade ?? 0);
+        $final = floatval($finalGrade ?? 0);
+        
+        $overall = ($midterm * 0.40) + ($final * 0.60);
+        return round($overall, 2);
+    }
+
     public function scopeByTeacher($query, $teacherId)
     {
         return $query->where('teacher_id', $teacherId);

@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property string $course_code
+ * @property string|null $department_code
  * @property string $course_name
  * @property string|null $description
  * @property int $instructor_id
+ * @property int|null $head_id
  * @property string $status
  * @property int $credit_hours
  */
@@ -20,9 +22,11 @@ class Course extends Model
 
     protected $fillable = [
         'course_code',
+        'department_code',
         'course_name',
         'description',
         'instructor_id',
+        'head_id',
         'status',
         'credit_hours'
     ];
@@ -30,6 +34,11 @@ class Course extends Model
     public function instructor()
     {
         return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function head()
+    {
+        return $this->belongsTo(User::class, 'head_id');
     }
 
     public function subjects()

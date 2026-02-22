@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Attendance;
 use App\Models\Student;
-use App\Models\Classes;
+use App\Models\ClassModel;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -13,7 +13,7 @@ class AttendanceSeeder extends Seeder
     public function run(): void
     {
         $students = Student::limit(30)->get();
-        $classes = Classes::all();
+        $classes = ClassModel::all();
         $statuses = ['Present', 'Absent', 'Late', 'Leave'];
 
         // Create attendance records for the last 10 days

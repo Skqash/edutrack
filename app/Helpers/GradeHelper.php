@@ -266,4 +266,188 @@ class GradeHelper
             return ['→', 'No change', 'neutral'];
         }
     }
+
+    /**
+     * Format NEW grading system component breakdown
+     * @param $grade Grade model instance
+     * @return array Formatted breakdown for display
+     */
+    public static function formatNewGradingBreakdown($grade)
+    {
+        return [
+            'knowledge' => [
+                'average' => round($grade->knowledge_average ?? 0, 2),
+                'weight' => 40,
+                'contribution' => round(($grade->knowledge_average ?? 0) * 0.40, 2),
+            ],
+            'skills' => [
+                'average' => round($grade->skills_average ?? 0, 2),
+                'weight' => 50,
+                'contribution' => round(($grade->skills_average ?? 0) * 0.50, 2),
+            ],
+            'attitude' => [
+                'average' => round($grade->attitude_average ?? 0, 2),
+                'weight' => 10,
+                'contribution' => round(($grade->attitude_average ?? 0) * 0.10, 2),
+            ],
+            'grades' => [
+                'midterm' => round($grade->midterm_grade ?? 0, 2),
+                'final' => round($grade->final_grade_value ?? 0, 2),
+                'overall' => round($grade->overall_grade ?? 0, 2),
+            ],
+        ];
+    }
+
+    /**
+     * Get grade status badge for NEW system
+     * @param float $score Overall grade score
+     * @return array Badge properties [color, label, icon]
+     */
+    public static function getGradeStatusBadgeNew($score)
+    {
+        $score = floatval($score);
+
+        if ($score >= 98.0) {
+            return ['success', 'A+', '⭐⭐⭐'];
+        } elseif ($score >= 95.0) {
+            return ['success', 'A', '⭐⭐'];
+        } elseif ($score >= 92.0) {
+            return ['success', 'A-', '⭐'];
+        } elseif ($score >= 89.0) {
+            return ['info', 'B+', '✓✓✓'];
+        } elseif ($score >= 86.0) {
+            return ['info', 'B', '✓✓'];
+        } elseif ($score >= 83.0) {
+            return ['info', 'B-', '✓'];
+        } elseif ($score >= 80.0) {
+            return ['warning', 'C+', '⚠'];
+        } elseif ($score >= 77.0) {
+            return ['warning', 'C', '⚠⚠'];
+        } elseif ($score >= 74.0) {
+            return ['warning', 'C-', '⚠⚠⚠'];
+        } elseif ($score >= 71.0) {
+            return ['secondary', 'D+', '→'];
+        } elseif ($score >= 70.0) {
+            return ['secondary', 'D', '→→'];
+        } elseif ($score >= 60.0) {
+            return ['secondary', 'D-', '→→→'];
+        } else {
+            return ['danger', 'F', '✗'];
+        }
+    }
+
+    /**
+     * Validate NEW grading system data
+     * @param array $gradeData Grade data to validate
+     * @return array ['valid' => bool, 'errors' => array]
+     */
+    public static function validateNewGradingData($gradeData)
+    {
+        $errors = [];
+
+        // Check exams
+        $exams = [
+            'exam_prelim' => $gradeData['exam_prelim'] ?? null,
+            'exam_midterm' => $gradeData['exam_midterm'] ?? null,
+            'exam_final' => $gradeData['exam_final'] ?? null,
+        ];
+
+        foreach ($exams as $name => $value) {
+            if ($value !== null && ($value < 0 || $value > 100)) {
+                $errors[] = "{$name} must be between 0 and 100";
+            }
+        }
+
+        // Check quizzes
+        for ($i = 1; $i <= 5; $i++) {
+            $value = $gradeData["quiz_{$i}"] ?? null;
+            if ($value !== null && ($value < 0 || $value > 100)) {
+                $errors[] = "quiz_{$i} must be between 0 and 100";
+            }
+        }
+
+        // Check skill components
+        $skillComponents = ['output', 'class_participation', 'activities', 'assignments'];
+        foreach ($skillComponents as $component) {
+            for ($i = 1; $i <= 3; $i++) {
+                $value = $gradeData["{$component}_{$i}"] ?? null;
+                if ($value !== null && ($value < 0 || $value > 100)) {
+                    $errors[] = "{$component}_{$i} must be between 0 and 100";
+                }
+            }
+        }
+
+        // Check attitude components
+        $attitudeComponents = ['behavior', 'awareness'];
+        foreach ($attitudeComponents as $component) {
+            for ($i = 1; $i <= 3; $i++) {
+                $value = $gradeData["{$component}_{$i}"] ?? null;
+                if ($value !== null && ($value < 0 || $value > 100)) {
+                    $errors[] = "{$component}_{$i} must be between 0 and 100";
+                }
+            }
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Generate NEW grading system report for a class
+     * @param $classId Class ID
+     * @param $teacherId Teacher ID
+     * @return array Report data
+     */
+    public static function generateNewGradingReport($classId, $teacherId)
+    {
+        $grades = Grade::where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->with('student')
+            ->get();
+
+        if ($grades->isEmpty()) {
+            return [
+                'total_students' => 0,
+                'grades_entered' => 0,
+                'completion_percentage' => 0,
+                'statistics' => [],
+            ];
+        }
+
+        // Calculate statistics
+        $knowledgeScores = $grades->pluck('knowledge_average')->filter()->toArray();
+        $skillsScores = $grades->pluck('skills_average')->filter()->toArray();
+        $attitudeScores = $grades->pluck('attitude_average')->filter()->toArray();
+        $overallScores = $grades->pluck('overall_grade')->filter()->toArray();
+
+        return [
+            'total_students' => $grades->count(),
+            'grades_entered' => count($overallScores),
+            'completion_percentage' => count($overallScores) > 0 ? (count($overallScores) / $grades->count() * 100) : 0,
+            'statistics' => [
+                'knowledge' => [
+                    'average' => !empty($knowledgeScores) ? array_sum($knowledgeScores) / count($knowledgeScores) : 0,
+                    'highest' => !empty($knowledgeScores) ? max($knowledgeScores) : 0,
+                    'lowest' => !empty($knowledgeScores) ? min($knowledgeScores) : 0,
+                ],
+                'skills' => [
+                    'average' => !empty($skillsScores) ? array_sum($skillsScores) / count($skillsScores) : 0,
+                    'highest' => !empty($skillsScores) ? max($skillsScores) : 0,
+                    'lowest' => !empty($skillsScores) ? min($skillsScores) : 0,
+                ],
+                'attitude' => [
+                    'average' => !empty($attitudeScores) ? array_sum($attitudeScores) / count($attitudeScores) : 0,
+                    'highest' => !empty($attitudeScores) ? max($attitudeScores) : 0,
+                    'lowest' => !empty($attitudeScores) ? min($attitudeScores) : 0,
+                ],
+                'overall' => [
+                    'average' => !empty($overallScores) ? array_sum($overallScores) / count($overallScores) : 0,
+                    'highest' => !empty($overallScores) ? max($overallScores) : 0,
+                    'lowest' => !empty($overallScores) ? min($overallScores) : 0,
+                ],
+            ],
+        ];
+    }
 }

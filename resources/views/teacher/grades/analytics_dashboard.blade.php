@@ -7,7 +7,7 @@
                 <h2 class="mb-2">
                     <i class="fas fa-chart-line"></i> Grading Analytics Dashboard
                 </h2>
-                <p class="text-muted">{{ $class->class_name }} - {{ $class->subject->name ?? 'N/A' }} | {{ ucfirst($term) }}
+                <p class="text-muted">{{ $class->class_name }} - {{ $class->course->course_name ?? 'N/A' }} | {{ ucfirst($term) }}
                     Term</p>
             </div>
             <div class="col-md-4 text-end">
@@ -304,94 +304,92 @@
             // Calculate distribution
             @foreach ($grades as $grade)
                 @php
-                $finalGrade = $grade - > final_grade;
-                if ($finalGrade <= 1.5) {
-                    $bucket = '1.0-1.5';
-                }
-                elseif($finalGrade <= 2.0) {
-                    $bucket = '1.5-2.0';
-                }
-                elseif($finalGrade <= 2.5) {
-                    $bucket = '2.0-2.5';
-                }
-                elseif($finalGrade <= 3.0) {
-                    $bucket = '2.5-3.0';
-                } else {
-                    $bucket = '3.0+';
-                }
-                echo "gradeBuckets['$bucket']++;";
+                    $finalGrade = $grade->final_grade;
+                    if ($finalGrade <= 1.5) {
+                        $bucket = '1.0-1.5';
+                    } elseif ($finalGrade <= 2.0) {
+                        $bucket = '1.5-2.0';
+                    } elseif ($finalGrade <= 2.5) {
+                        $bucket = '2.0-2.5';
+                    } elseif ($finalGrade <= 3.0) {
+                        $bucket = '2.5-3.0';
+                    } else {
+                        $bucket = '3.0+';
+                    }
+                @endphp
+                gradeBuckets['{{ $bucket }}']++;
             @endforeach
-        @endforeach
 
-        new Chart(distCtx, {
-            type: 'bar',
-            data: {
-                labels: ['1.0-1.5 (Excellent)', '1.5-2.0 (Very Good)', '2.0-2.5 (Good)', '2.5-3.0 (Passing)',
-                    '3.0+ (Failed)'
-                ],
-                datasets: [{
-                    label: 'Number of Students',
-                    data: [
-                        gradeBuckets['1.0-1.5'],
-                        gradeBuckets['1.5-2.0'],
-                        gradeBuckets['2.0-2.5'],
-                        gradeBuckets['2.5-3.0'],
-                        gradeBuckets['3.0+']
+            new Chart(distCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1.0-1.5 (Excellent)', '1.5-2.0 (Very Good)', '2.0-2.5 (Good)',
+                        '2.5-3.0 (Passing)',
+                        '3.0+ (Failed)'
                     ],
-                    backgroundColor: [
-                        '#28a745',
-                        '#20c997',
-                        '#17a2b8',
-                        '#ffc107',
-                        '#dc3545'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+                    datasets: [{
+                        label: 'Number of Students',
+                        data: [
+                            gradeBuckets['1.0-1.5'],
+                            gradeBuckets['1.5-2.0'],
+                            gradeBuckets['2.0-2.5'],
+                            gradeBuckets['2.5-3.0'],
+                            gradeBuckets['3.0+']
+                        ],
+                        backgroundColor: [
+                            '#28a745',
+                            '#20c997',
+                            '#17a2b8',
+                            '#ffc107',
+                            '#dc3545'
+                        ]
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // Pass vs Fail Chart
-        const pfCtx = document.getElementById('passfailChart').getContext('2d');
-        const passCount = {{ $analytics['passed_count'] ?? 0 }};
-        const failCount = {{ $analytics['failed_count'] ?? 0 }};
+            // Pass vs Fail Chart
+            const pfCtx = document.getElementById('passfailChart').getContext('2d');
+            const passCount = {{ $analytics['passed_count'] ?? 0 }};
+            const failCount = {{ $analytics['failed_count'] ?? 0 }};
 
-        new Chart(pfCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Passed', 'Failed'],
-                datasets: [{
-                    data: [passCount, failCount],
-                    backgroundColor: ['#28a745', '#dc3545'],
-                    borderColor: ['#fff', '#fff'],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
+            new Chart(pfCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Passed', 'Failed'],
+                    datasets: [{
+                        data: [passCount, failCount],
+                        backgroundColor: ['#28a745', '#dc3545'],
+                        borderColor: ['#fff', '#fff'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        // Export PDF
-        document.getElementById('exportPdf').addEventListener('click', function() {
-            alert('PDF export coming soon!');
-        });
+            // Export PDF
+            document.getElementById('exportPdf').addEventListener('click', function() {
+                alert('PDF export coming soon!');
+            });
         });
     </script>
 @endsection

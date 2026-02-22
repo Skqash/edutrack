@@ -34,12 +34,12 @@
                         <h4 class="mb-0">{{ $class->students->count() }}</h4>
                     </div>
 
-                    @if($class->subject)
+                    @if($class->course)
                         <div class="mb-3">
                             <small class="text-muted d-block mb-1">
-                                <i class="fas fa-book me-1"></i> Subject
+                                <i class="fas fa-book me-1"></i> Course
                             </small>
-                            <p class="mb-0">{{ $class->subject->subject_name }}</p>
+                            <p class="mb-0">{{ $class->course->course_name }}</p>
                         </div>
                     @endif
 
@@ -56,10 +56,19 @@
                         <small class="text-muted">{{ $class->students->count() }}/{{ $class->capacity }} students</small>
                     </div>
                 </div>
-                <div class="card-footer bg-light border-top-0">
-                    <a href="{{ route('teacher.classes.show', $class->id) }}" class="btn btn-sm btn-outline-primary w-100">
+                <div class="card-footer bg-light border-top-0 d-flex gap-2">
+                    <a href="{{ route('teacher.classes.show', $class->id) }}" class="btn btn-sm btn-outline-primary flex-grow-1">
                         <i class="fas fa-eye me-1"></i> View Details
                     </a>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-keyboard me-1"></i> Enter Grades
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ route('teacher.grades.entry', $class->id) }}?term=midterm">Midterm</a></li>
+                            <li><a class="dropdown-item" href="{{ route('teacher.grades.entry', $class->id) }}?term=final">Final</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>

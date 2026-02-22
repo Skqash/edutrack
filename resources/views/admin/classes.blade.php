@@ -1,7 +1,6 @@
 @extends('layouts.admin')
 
 @section('content')
-
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
@@ -12,54 +11,6 @@
                 <a href="{{ route('admin.classes.create') }}" class="btn btn-primary">
                     <i class="fas fa-plus me-2"></i> Add New Class
                 </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Classes Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #3498db;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Total Classes</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #3498db;">{{ $classes->count() }}</h2>
-                        </div>
-                        <i class="fas fa-school" style="font-size: 40px; color: rgba(52, 152, 219, 0.1);"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #27ae60;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Total Capacity</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #27ae60;">{{ $classes->sum('capacity') }}</h2>
-                        </div>
-                        <i class="fas fa-users" style="font-size: 40px; color: rgba(39, 174, 96, 0.1);"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #f39c12;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Active Classes</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #f39c12;">{{ $classes->where('status', 'Active')->count() }}</h2>
-                        </div>
-                        <i class="fas fa-chart-pie" style="font-size: 40px; color: rgba(243, 156, 18, 0.1);"></i>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -132,37 +83,40 @@
                     </thead>
                     <tbody>
                         @forelse($classes as $class)
-                        <tr>
-                            <td><strong>{{ $class->class_name }}</strong></td>
-                            <td><span class="badge bg-light text-dark">{{ $class->class_level }}</span></td>
-                            <td>{{ $class->section }}</td>
-                            <td><span class="badge bg-info">{{ $class->students()->count() }}</span></td>
-                            <td>{{ $class->teacher->name ?? 'N/A' }}</td>
-                            <td>
-                                <div class="progress" style="height: 20px; width: 100px;">
-                                    <div class="progress-bar {{ $class->utilizationPercentage() > 85 ? 'bg-danger' : ($class->utilizationPercentage() > 70 ? 'bg-warning' : 'bg-success') }}" style="width: {{ $class->utilizationPercentage() }}%;"></div>
-                                </div>
-                            </td>
-                            <td>
-                                <a href="{{ route('admin.classes.edit', $class->id) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                <form action="{{ route('admin.classes.destroy', $class->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td><strong>{{ $class->class_name }}</strong></td>
+                                <td><span class="badge bg-light text-dark">{{ $class->class_level }}</span></td>
+                                <td>{{ $class->section }}</td>
+                                <td><span class="badge bg-info">{{ $class->students()->count() }}</span></td>
+                                <td>{{ $class->teacher->name ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="progress" style="height: 20px; width: 100px;">
+                                        <div class="progress-bar {{ $class->utilizationPercentage() > 85 ? 'bg-danger' : ($class->utilizationPercentage() > 70 ? 'bg-warning' : 'bg-success') }}"
+                                            style="width: {{ $class->utilizationPercentage() }}%;"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.classes.edit', $class->id) }}"
+                                        class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                    <form action="{{ route('admin.classes.destroy', $class->id) }}" method="POST"
+                                        style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="7" class="text-center py-4">
-                                <p class="text-muted">No classes found</p>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <p class="text-muted">No classes found</p>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
-
 @endsection

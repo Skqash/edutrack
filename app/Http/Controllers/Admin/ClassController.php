@@ -12,7 +12,11 @@ class ClassController extends Controller
     public function index()
     {
         $classes = ClassModel::with('teacher')->get();
-        return view('admin.classes', compact('classes'));
+        $totalStudents = User::where('role', 'student')->count();
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalClasses = ClassModel::count();
+        $totalSubjects = \App\Models\Subject::count();
+        return view('admin.classes', compact('classes', 'totalStudents', 'totalTeachers', 'totalClasses', 'totalSubjects'));
     }
 
     public function create()

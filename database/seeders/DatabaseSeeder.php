@@ -9,7 +9,6 @@ use App\Models\ClassModel;
 use App\Models\SuperAdmin;
 use App\Models\Admin;
 use App\Models\Teacher;
-use App\Models\Department;
 use App\Models\Student;
 use App\Models\Grade;
 use App\Models\Attendance;
@@ -47,16 +46,6 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
-        /* ============= DEPARTMENTS ============= */
-        $departments = [];
-        $departmentData = [
-            ['code' => 'CS', 'name' => 'Computer Science', 'desc' => 'Department of Computer Science and Engineering'],
-            ['code' => 'ECE', 'name' => 'Electronics & Communication', 'desc' => 'Department of Electronics and Communication Engineering'],
-            ['code' => 'ME', 'name' => 'Mechanical Engineering', 'desc' => 'Department of Mechanical Engineering'],
-            ['code' => 'CE', 'name' => 'Civil Engineering', 'desc' => 'Department of Civil Engineering'],
-            ['code' => 'EE', 'name' => 'Electrical Engineering', 'desc' => 'Department of Electrical Engineering'],
-        ];
-
         /* ============= TEACHERS ============= */
         $teachers = [];
         $teacherData = [
@@ -78,18 +67,6 @@ class DatabaseSeeder extends Seeder
                 'role' => 'teacher',
             ]);
             $teachers[] = $teacher;
-        }
-
-        // Create departments with heads
-        foreach ($departmentData as $index => $dData) {
-            $dept = Department::create([
-                'department_code' => $dData['code'],
-                'department_name' => $dData['name'],
-                'head_id' => $teachers[$index]->id,
-                'description' => $dData['desc'],
-                'status' => 'Active',
-            ]);
-            $departments[] = $dept;
         }
 
         /* ============= COURSES ============= */

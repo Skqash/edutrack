@@ -13,7 +13,11 @@ class SubjectController extends Controller
     public function index()
     {
         $subjects = Subject::with('course', 'instructor')->get();
-        return view('admin.subjects', compact('subjects'));
+        $totalStudents = User::where('role', 'student')->count();
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalClasses = \App\Models\ClassModel::count();
+        $totalSubjects = Subject::count();
+        return view('admin.subjects', compact('subjects', 'totalStudents', 'totalTeachers', 'totalClasses', 'totalSubjects'));
     }
 
     public function create()

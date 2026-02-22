@@ -40,7 +40,7 @@
         <!-- Main Configuration Form -->
         <div class="row">
             <div class="col-md-12">
-                <form method="POST" action="{{ route('teacher.assessment.store', $class->id) }}" id="configForm">
+                <form method="POST" action="{{ route('teacher.assessment.configure.store', $class->id) }}" id="configForm">
                     @csrf
 
                     <!-- Grading Scale Reference Card -->

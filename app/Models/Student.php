@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property int $user_id
- * @property string $student_id
- * @property string $admission_number
- * @property string $roll_number
+ * @property string $student_id           Format: YYYY-XXXX-S (e.g., 2022-0233-V)
+ * @property int $year                    1, 2, 3, or 4
+ * @property string $section              A, B, C, etc.
  * @property int $class_id
  * @property float $gpa
  * @property string $status
@@ -21,8 +21,8 @@ class Student extends Model
     protected $fillable = [
         'user_id',
         'student_id',
-        'admission_number',
-        'roll_number',
+        'year',
+        'section',
         'class_id',
         'gpa',
         'status'
@@ -67,6 +67,28 @@ class Student extends Model
     public function getEmailAttribute()
     {
         return $this->user?->email ?? 'N/A';
+    }
+
+    /**
+     * Get year display (1st, 2nd, 3rd, 4th year)
+     */
+    public function getYearDisplayAttribute()
+    {
+        $yearMap = [
+            1 => '1st Year',
+            2 => '2nd Year',
+            3 => '3rd Year',
+            4 => '4th Year'
+        ];
+        return $yearMap[$this->year] ?? 'Unknown';
+    }
+
+    /**
+     * Get full section display (e.g., "Year 1, Section A")
+     */
+    public function getSectionDisplayAttribute()
+    {
+        return "Year {$this->year}, Section {$this->section}";
     }
 
     /**

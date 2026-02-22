@@ -24,7 +24,7 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = ['name', 'email', 'phone', 'password', 'role', 'theme'];
+    protected $fillable = ['name', 'email', 'phone', 'password', 'role', 'theme', 'grading_scheme', 'grading_weights'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -44,6 +44,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'grading_weights' => 'array',
     ];
 
     /**
@@ -52,6 +53,16 @@ class User extends Authenticatable
     public function student()
     {
         return $this->hasOne(Student::class);
+    }
+
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class, 'user_id');
+    }
+
+    public function admin()
+    {
+        return $this->hasOne(Admin::class, 'user_id');
     }
 
     public function notifications()

@@ -20,9 +20,10 @@ class ClassModel extends Model
         'year',
         'capacity',
         'teacher_id',
-        'subject_id',
+        'course_id',
         'description',
-        'status'
+        'status',
+        'current_term'
     ];
 
     public function teacher()
@@ -30,9 +31,9 @@ class ClassModel extends Model
         return $this->belongsTo(User::class, 'teacher_id');
     }
 
-    public function subject()
+    public function course()
     {
-        return $this->belongsTo(Subject::class, 'subject_id');
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     public function students()
@@ -48,6 +49,11 @@ class ClassModel extends Model
     public function grades()
     {
         return $this->hasMany(Grade::class, 'class_id');
+    }
+
+    public function gradeEntries()
+    {
+        return $this->hasMany(GradeEntry::class, 'class_id');
     }
 
     public function studentCount()

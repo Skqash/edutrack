@@ -18,15 +18,18 @@ class CourseController extends Controller
     public function create()
     {
         $instructors = User::where('role', 'teacher')->get();
-        return view('admin.courses.create', compact('instructors'));
+        $heads = User::where('role', 'teacher')->get();
+        return view('admin.courses.create', compact('instructors', 'heads'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'course_code' => 'required|unique:courses',
+            'department_code' => 'nullable|string|max:50',
             'course_name' => 'required|string',
             'instructor_id' => 'required|exists:users,id',
+            'head_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
             'credit_hours' => 'required|integer|min:1',
             'status' => 'required|in:Active,Inactive'
@@ -39,15 +42,18 @@ class CourseController extends Controller
     public function edit(Course $course)
     {
         $instructors = User::where('role', 'teacher')->get();
-        return view('admin.courses.edit', compact('course', 'instructors'));
+        $heads = User::where('role', 'teacher')->get();
+        return view('admin.courses.edit', compact('course', 'instructors', 'heads'));
     }
 
     public function update(Request $request, Course $course)
     {
         $validated = $request->validate([
             'course_code' => 'required|unique:courses,course_code,' . $course->id,
+            'department_code' => 'nullable|string|max:50',
             'course_name' => 'required|string',
             'instructor_id' => 'required|exists:users,id',
+            'head_id' => 'nullable|exists:users,id',
             'description' => 'nullable|string',
             'credit_hours' => 'required|integer|min:1',
             'status' => 'required|in:Active,Inactive'

@@ -33,6 +33,51 @@
                             class="badge bg-primary">{{ ucfirst($user->role) }}</span></p>
                 </div>
             </div>
+            <!-- Grading Scheme -->
+            <div class="card mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i> Grading Scheme
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('teacher.settings.update') }}" method="POST">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Default Grading Scheme</strong></label>
+                            <select name="grading_scheme" class="form-select mb-2" id="settingsSchemeSelect">
+                                <option value="">-- Use system default --</option>
+                                @foreach(($schemes ?? []) as $key => $s)
+                                    <option value="{{ $key }}" {{ (isset($userScheme) && $userScheme === $key) ? 'selected' : '' }}>{{ $s['label'] ?? $key }}</option>
+                                @endforeach
+                                <option value="custom" {{ (isset($userScheme) && $userScheme === 'custom') ? 'selected' : '' }}>Custom</option>
+                            </select>
+                        </div>
+
+                        <div id="settingsCustomWeights" style="display: none;">
+                            <div class="row g-2">
+                                <div class="col-sm-4">
+                                    <label class="form-label">Knowledge %</label>
+                                    <input type="number" name="grading_weights[knowledge]" class="form-control" min="0" max="100" value="{{ $userWeights['knowledge'] ?? 40 }}">
+                                </div>
+                                <div class="col-sm-4">
+                                    <label class="form-label">Skills %</label>
+                                    <input type="number" name="grading_weights[skills]" class="form-control" min="0" max="100" value="{{ $userWeights['skills'] ?? 50 }}">
+                                </div>
+                                <div class="col-sm-4">
+                                    <label class="form-label">Attitude %</label>
+                                    <input type="number" name="grading_weights[attitude]" class="form-control" min="0" max="100" value="{{ $userWeights['attitude'] ?? 10 }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end mt-3">
+                            <button type="submit" class="btn btn-primary">Save Scheme</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- Theme Selection -->
             <div class="card">
@@ -175,4 +220,15 @@
             margin-top: 0.5rem;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function(){
+            const select = document.getElementById('settingsSchemeSelect');
+            const custom = document.getElementById('settingsCustomWeights');
+            function toggle(){
+                if(!select) return;
+                if(select.value === 'custom') custom.style.display = 'block'; else custom.style.display = 'none';
+            }
+            if(select){ select.addEventListener('change', toggle); toggle(); }
+        });
+    </script>
 @endsection

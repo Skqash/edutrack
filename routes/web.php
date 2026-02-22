@@ -7,7 +7,6 @@ use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TeacherController;
-use App\Http\Controllers\AdminDepartmentController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\AdminGradeController;
 use App\Http\Controllers\AdminUserController;
@@ -41,8 +40,82 @@ Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showForm
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 /* -------- SUPER ADMIN ONLY -------- */
-Route::middleware(['role:super'])->group(function () {
-    Route::get('/super/dashboard', [SuperDashboardController::class, 'index'])->name('super.dashboard');
+Route::middleware(['role:super'])->prefix('super')->name('super.')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [SuperDashboardController::class, 'index'])->name('dashboard');
+    
+    // User Management (CRUD + Import/Export)
+    Route::get('/users', [SuperDashboardController::class, 'listUsers'])->name('users.index');
+    Route::get('/users/create', [SuperDashboardController::class, 'createUser'])->name('users.create');
+    Route::get('/users/{id}', [SuperDashboardController::class, 'showUser'])->name('users.show');
+    Route::post('/users', [SuperDashboardController::class, 'createUser'])->name('users.store');
+    Route::put('/users/{id}', [SuperDashboardController::class, 'updateUser'])->name('users.update');
+    Route::delete('/users/{id}', [SuperDashboardController::class, 'deleteUser'])->name('users.destroy');
+    Route::post('/users/{id}/role', [SuperDashboardController::class, 'toggleRole'])->name('users.toggle-role');
+    Route::get('/users/export/csv', [SuperDashboardController::class, 'exportUsersCSV'])->name('users.export');
+    Route::post('/users/import/csv', [SuperDashboardController::class, 'importUsersCSV'])->name('users.import');
+    
+    // Course Management
+    Route::get('/courses', [SuperDashboardController::class, 'manageCourses'])->name('courses.index');
+    Route::get('/courses/create', [SuperDashboardController::class, 'createCourse'])->name('courses.create');
+    Route::post('/courses', [SuperDashboardController::class, 'storeCourse'])->name('courses.store');
+    Route::get('/courses/{id}', [SuperDashboardController::class, 'showCourse'])->name('courses.show');
+    Route::put('/courses/{id}', [SuperDashboardController::class, 'updateCourse'])->name('courses.update');
+    Route::delete('/courses/{id}', [SuperDashboardController::class, 'deleteCourse'])->name('courses.destroy');
+    Route::delete('/courses/delete-all', [SuperDashboardController::class, 'deleteAllCourses'])->name('courses.delete-all');
+    
+    // Class Management
+    Route::get('/classes', [SuperDashboardController::class, 'manageClasses'])->name('classes.index');
+    Route::get('/classes/create', [SuperDashboardController::class, 'createClass'])->name('classes.create');
+    Route::post('/classes', [SuperDashboardController::class, 'storeClass'])->name('classes.store');
+    Route::get('/classes/{id}', [SuperDashboardController::class, 'showClass'])->name('classes.show');
+    Route::put('/classes/{id}', [SuperDashboardController::class, 'updateClass'])->name('classes.update');
+    Route::delete('/classes/{id}', [SuperDashboardController::class, 'deleteClass'])->name('classes.destroy');
+    Route::delete('/classes/delete-all', [SuperDashboardController::class, 'deleteAllClasses'])->name('classes.delete-all');
+    
+    // Student Management
+    Route::get('/students', [SuperDashboardController::class, 'manageStudents'])->name('students.index');
+    Route::get('/students/create', [SuperDashboardController::class, 'createStudent'])->name('students.create');
+    Route::post('/students', [SuperDashboardController::class, 'createStudent'])->name('students.store');
+    Route::get('/students/{id}', [SuperDashboardController::class, 'showStudent'])->name('students.show');
+    Route::put('/students/{id}', [SuperDashboardController::class, 'updateStudent'])->name('students.update');
+    Route::delete('/students/{id}', [SuperDashboardController::class, 'deleteStudent'])->name('students.destroy');
+    Route::delete('/students/delete-all', [SuperDashboardController::class, 'deleteAllStudents'])->name('students.delete-all');
+    
+    // Grade Management
+    Route::get('/grades', [SuperDashboardController::class, 'manageGrades'])->name('grades.index');
+    Route::get('/grades/{id}', [SuperDashboardController::class, 'showGrade'])->name('grades.show');
+    Route::put('/grades/{id}', [SuperDashboardController::class, 'updateGrade'])->name('grades.update');
+    Route::delete('/grades/{id}', [SuperDashboardController::class, 'deleteGrade'])->name('grades.destroy');
+    Route::delete('/grades/delete-all', [SuperDashboardController::class, 'deleteAllGrades'])->name('grades.delete-all');
+    
+    // Attendance Management
+    Route::get('/attendance', [SuperDashboardController::class, 'manageAttendance'])->name('attendance.index');
+    Route::get('/attendance/{id}', [SuperDashboardController::class, 'showAttendance'])->name('attendance.show');
+    Route::put('/attendance/{id}', [SuperDashboardController::class, 'updateAttendance'])->name('attendance.update');
+    Route::delete('/attendance/{id}', [SuperDashboardController::class, 'deleteAttendance'])->name('attendance.destroy');
+    Route::delete('/attendance/delete-all', [SuperDashboardController::class, 'deleteAllAttendance'])->name('attendance.delete-all');
+    
+    // Database Tools
+    Route::get('/tools/query', function () { return view('super.tools.query'); })->name('tools.query');
+    Route::post('/tools/query', [SuperDashboardController::class, 'runSafeQuery'])->name('tools.query.run');
+    Route::get('/tools/database', [SuperDashboardController::class, 'databaseStats'])->name('tools.database');
+    Route::get('/tools/backup', [SuperDashboardController::class, 'backupDatabase'])->name('tools.backup');
+    
+    // System Management
+    Route::post('/system/cache-clear', [SuperDashboardController::class, 'clearCaches'])->name('system.cache-clear');
+    Route::post('/system/migrate', [SuperDashboardController::class, 'runMigrations'])->name('system.migrate');
+    Route::post('/system/seed', [SuperDashboardController::class, 'runSeeders'])->name('system.seed');
+    
+    // Logs & Monitoring
+    Route::get('/logs', [SuperDashboardController::class, 'viewLogs'])->name('logs.view');
+    Route::get('/health', [SuperDashboardController::class, 'systemHealth'])->name('health');
+    Route::post('/health/refresh', [SuperDashboardController::class, 'systemHealth'])->name('health.refresh');
+    
+    // Database Cleanup
+    Route::get('/cleanup', [SuperDashboardController::class, 'databaseCleanup'])->name('cleanup');
+    Route::post('/cleanup', [SuperDashboardController::class, 'cleanupDatabase'])->name('cleanup.perform');
+    Route::post('/cleanup/logs', [SuperDashboardController::class, 'cleanupLogs'])->name('cleanup.logs');
 });
 
 /* -------- ADMIN (ADMIN + SUPER CAN ACCESS) -------- */
@@ -64,47 +137,71 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
     // Teachers Routes
     Route::resource('teachers', TeacherController::class);
     
-    // Departments Routes
-    Route::resource('departments', AdminDepartmentController::class);
-    
     // Attendance Routes
     Route::resource('attendance', AdminAttendanceController::class);
-    
+    Route::get('/attendance-by-class', [DashboardController::class, 'getAttendanceByClass'])->name('attendance.by-class');
+
     // Grades Routes
     Route::resource('grades', AdminGradeController::class);
-    
+    Route::get('/grades-by-class', [DashboardController::class, 'getGradesByClass'])->name('grades.by-class');
+    Route::get('/class/{classId}/details', [DashboardController::class, 'getClassDetails'])->name('class.details');
+    Route::post('/grades/export-class/{classId}', [AdminGradeController::class, 'exportClass'])->name('grades.export-class');
+    Route::get('/grades/print-student/{classId}/{studentId}', [AdminGradeController::class, 'printStudent'])->name('grades.print-student');
     // User Management Routes
     Route::resource('users', AdminUserController::class);
+    
+    // Profile routes
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'showAdminProfile'])->name('profile.show');
+    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'editAdminProfile'])->name('profile.edit');
+    Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'updateAdminProfile'])->name('profile.update');
+    Route::get('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
+    Route::post('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.change-password.update');
 });
 
 /* -------- TEACHER (TEACHER + SUPER CAN ACCESS) -------- */
 Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\TeacherController::class, 'dashboard'])->name('dashboard');
     Route::get('/classes', [\App\Http\Controllers\TeacherController::class, 'classes'])->name('classes');
+    Route::get('/subjects', [\App\Http\Controllers\TeacherController::class, 'subjectsIndex'])->name('subjects');
+    Route::get('/classes/create', [\App\Http\Controllers\TeacherController::class, 'createClass'])->name('classes.create');
+    Route::post('/classes', [\App\Http\Controllers\TeacherController::class, 'storeClass'])->name('classes.store');
     Route::get('/classes/{classId}', [\App\Http\Controllers\TeacherController::class, 'classDetail'])->name('classes.show');
+    Route::get('/classes/{classId}/edit', [\App\Http\Controllers\TeacherController::class, 'editClass'])->name('classes.edit');
+    Route::put('/classes/{classId}', [\App\Http\Controllers\TeacherController::class, 'updateClass'])->name('classes.update');
+    Route::delete('/classes/{classId}', [\App\Http\Controllers\TeacherController::class, 'destroyClass'])->name('classes.destroy');
     
     // Students
     Route::get('/students/add', [\App\Http\Controllers\TeacherController::class, 'showAddStudent'])->name('students.add');
     Route::post('/students', [\App\Http\Controllers\TeacherController::class, 'storeStudent'])->name('students.store');
     Route::post('/students/import', [\App\Http\Controllers\TeacherController::class, 'importStudents'])->name('students.import');
+    Route::get('/classes/{classId}/students', [\App\Http\Controllers\TeacherController::class, 'indexStudents'])->name('students.index');
+    Route::get('/students/{studentId}/edit', [\App\Http\Controllers\TeacherController::class, 'editStudent'])->name('students.edit');
+    Route::put('/students/{studentId}', [\App\Http\Controllers\TeacherController::class, 'updateStudent'])->name('students.update');
+    Route::delete('/students/{studentId}', [\App\Http\Controllers\TeacherController::class, 'destroyStudent'])->name('students.destroy');
     
-    // Grades (CHED System)
+    // Grades Management - KSA Grading System (Knowledge 40%, Skills 50%, Attitude 10%)
+    // Grades Management
     Route::get('/grades', [\App\Http\Controllers\TeacherController::class, 'grades'])->name('grades');
-    Route::get('/grades/entry/{classId}/{term?}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryChed'])->name('grades.entry');
-    Route::post('/grades/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradesChed'])->name('grades.store');
+    Route::get('/grades/index', [\App\Http\Controllers\TeacherController::class, 'grades'])->name('grades.index');
     
-    // Enhanced Grading with Configurable Ranges
-    Route::get('/grades/entry-enhanced/{classId}/{term?}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryEnhanced'])->name('grades.entry.enhanced');
-    Route::post('/grades/store-enhanced/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradesEnhanced'])->name('grades.store.enhanced');
+    // Grade Entry Form with Term Parameter (Simplified Dropdown Approach)
+    Route::get('/grades/entry/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryByTerm'])->name('grades.entry');
+    Route::post('/grades/entry/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradeEntryByTerm'])->name('grades.store');
+    Route::post('/grades/entry/{classId}/upload', [\App\Http\Controllers\TeacherController::class, 'uploadGradeEntry'])->name('grades.upload');
     
-    // Assessment Range Configuration
-    Route::get('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'configureAssessmentRanges'])->name('assessment.configure');
-    Route::post('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeAssessmentRanges'])->name('assessment.store');
+    // Legacy Routes (kept for backward compatibility)
+    Route::post('/grades/store-new/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradeEntryAdvanced'])->name('grades.store.new');
+    Route::get('/grades/grade-entry/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryAdvanced'])->name('grades.grade_entry');
+    Route::post('/grades/grade-entry/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradeEntryAdvanced'])->name('grades.grade_entry.store');
     
-    // NEW ENHANCED GRADING SYSTEM ROUTES
-    Route::get('/grades/entry-inline/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryInline'])->name('grades.entry.inline');
-    Route::post('/grades/store-inline/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradesInline'])->name('grades.store.inline');
+    // Utility Routes
+    Route::post('/grades/save-field', [\App\Http\Controllers\TeacherController::class, 'saveGradeField'])->name('grades.save-field');
+    Route::get('/grades/scores/{studentId}/{classId}/{term}', [\App\Http\Controllers\TeacherController::class, 'getStudentScores'])->name('grades.scores');
     Route::get('/grades/analytics/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeAnalytics'])->name('grades.analytics');
+    
+    // Assessment Configuration
+    Route::get('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'configureAssessmentRanges'])->name('assessment.configure');
+    Route::post('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeAssessmentRanges'])->name('assessment.configure.store');
     
     // Attendance Management
     Route::get('/attendance/manage/{classId}', [\App\Http\Controllers\TeacherController::class, 'manageAttendance'])->name('attendance.manage');
@@ -134,6 +231,13 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/theme', [\App\Http\Controllers\SettingsController::class, 'changeTheme'])->name('settings.theme');
+    
+    // Profile routes
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'showTeacherProfile'])->name('profile.show');
+    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'editTeacherProfile'])->name('profile.edit');
+    Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'updateTeacherProfile'])->name('profile.update');
+    Route::get('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
+    Route::post('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.change-password.update');
 });
 
 /* -------- STUDENT (STUDENT + SUPER CAN ACCESS) -------- */

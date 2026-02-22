@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Student;
-use App\Models\Classes;
+use App\Models\ClassModel;
 
 class Attendance extends Model
 {
@@ -29,6 +29,6 @@ class Attendance extends Model
 
     public function class()
     {
-        return $this->belongsTo(Classes::class);
+        return $this->belongsTo(ClassModel::class);
     }
 }

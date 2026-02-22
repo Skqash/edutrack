@@ -12,7 +12,11 @@ class TeacherController extends Controller
     public function index()
     {
         $teachers = User::where('role', 'teacher')->paginate(20);
-        return view('admin.teachers', compact('teachers'));
+        $totalStudents = User::where('role', 'student')->count();
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalClasses = \App\Models\ClassModel::count();
+        $totalSubjects = \App\Models\Subject::count();
+        return view('admin.teachers', compact('teachers', 'totalStudents', 'totalTeachers', 'totalClasses', 'totalSubjects'));
     }
 
     public function create()

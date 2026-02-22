@@ -7,10 +7,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Models\User;
-use App\Models\Admin;
-use App\Models\Teacher;
-use App\Models\Student;
-use App\Models\SuperAdmin;
 
 class ForgotPasswordController extends Controller
 {
@@ -23,12 +19,8 @@ class ForgotPasswordController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        // Check if email exists in any user table
-        $userExists = User::where('email', $request->email)->exists() ||
-                      Admin::where('email', $request->email)->exists() ||
-                      Teacher::where('email', $request->email)->exists() ||
-                      Student::where('email', $request->email)->exists() ||
-                      SuperAdmin::where('email', $request->email)->exists();
+        // Check if email exists in the unified users table
+        $userExists = User::where('email', $request->email)->exists();
 
         if (!$userExists) {
             return back()->with('error', 'Email not found in our system.');

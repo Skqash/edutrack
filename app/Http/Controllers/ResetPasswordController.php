@@ -6,10 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use App\Models\Admin;
-use App\Models\Teacher;
-use App\Models\Student;
-use App\Models\SuperAdmin;
 
 class ResetPasswordController extends Controller
 {
@@ -47,43 +43,9 @@ class ResetPasswordController extends Controller
             return back()->with('error', 'Invalid or expired token.');
         }
 
-        $updated = false;
+        // Update password in the unified users table
         $hashedPassword = Hash::make($request->password);
-
-        // Update password in User table
-        if (User::where('email', $request->email)->exists()) {
-            User::where('email', $request->email)
-                ->update(['password' => $hashedPassword]);
-            $updated = true;
-        }
-
-        // Update password in Admin table
-        if (Admin::where('email', $request->email)->exists()) {
-            Admin::where('email', $request->email)
-                ->update(['password' => $hashedPassword]);
-            $updated = true;
-        }
-
-        // Update password in Teacher table
-        if (Teacher::where('email', $request->email)->exists()) {
-            Teacher::where('email', $request->email)
-                ->update(['password' => $hashedPassword]);
-            $updated = true;
-        }
-
-        // Update password in Student table
-        if (Student::where('email', $request->email)->exists()) {
-            Student::where('email', $request->email)
-                ->update(['password' => $hashedPassword]);
-            $updated = true;
-        }
-
-        // Update password in SuperAdmin table
-        if (SuperAdmin::where('email', $request->email)->exists()) {
-            SuperAdmin::where('email', $request->email)
-                ->update(['password' => $hashedPassword]);
-            $updated = true;
-        }
+        $updated = User::where('email', $request->email)->update(['password' => $hashedPassword]);
 
         if (!$updated) {
             return back()->with('error', 'Email not found in our system.');

@@ -39,7 +39,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('teacher.assessment.store.advanced', $class->id) }}" id="configForm">
+        <form method="POST" action="{{ route('teacher.assessment.configure.store', $class->id) }}" id="configForm">
             @csrf
 
             <div class="row">

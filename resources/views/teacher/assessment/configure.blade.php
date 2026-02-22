@@ -1,425 +1,349 @@
 @extends('layouts.teacher')
 
 @section('content')
-    <div class="container-fluid my-4">
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <h2 class="mb-2">
-                    <i class="fas fa-sliders-h"></i> Configure Assessment Ranges
-                </h2>
-                <p class="text-muted">Set the maximum item ranges for quizzes, exams, skills, and attitude components</p>
+<div class="container-fluid py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">⚙️ Grade Configuration</h4>
+                <small class="text-muted">Configure assessment limits for {{ $class->name ?? $class->class_name }}</small>
+            </div>
+            <div>
+                <a href="{{ route('teacher.grades') }}" class="btn btn-sm btn-outline-secondary">← Back</a>
             </div>
         </div>
 
         @if ($errors->any())
-            <div class="alert alert-danger">
+            <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
                 <strong>Errors:</strong>
-                <ul>
+                <ul class="mb-0 mt-2">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
-            </div>
-        @endif
-
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-gradient"
-                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <h5 class="mb-0 text-white">
-                            <i class="fas fa-book"></i> {{ $class->class_name }} - {{ $class->subject->name ?? 'N/A' }}
-                        </h5>
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                <strong>✅ Success!</strong> Configuration saved successfully.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('teacher.assessment.configure.store', $class->id) }}" class="card-body">
+            @csrf
+
+            <style>
+                .config-section {
+                    background-color: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                    border-left: 4px solid #0c5aa0;
+                    margin-bottom: 25px;
+                }
+                .config-section h5 {
+                    color: #0c5aa0;
+                    margin-bottom: 20px;
+                    font-weight: 600;
+                }
+            </style>
+
+            <!-- KNOWLEDGE ASSESSMENT (40% of Term Grade) -->
+            <div class="config-section">
+                <h5>📚 KNOWLEDGE ASSESSMENT (40% of Term Grade)</h5>
+
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-3">📖 Exams</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Preliminary Exam (PR) - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="exam_pr_max" 
+                                    value="{{ old('exam_pr_max', $range->exam_pr_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
+                            </div>
+                            <small class="form-text text-muted">Default: 100</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Midterm Exam (MD) - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="exam_md_max" 
+                                    value="{{ old('exam_md_max', $range->exam_md_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
+                            </div>
+                            <small class="form-text text-muted">Default: 100</small>
+                        </div>
                     </div>
 
-                    <div class="card-body">
-                        <form method="POST" action="{{ route('teacher.assessment.store', $class->id) }}">
-                            @csrf
-
-                            <!-- Knowledge Components -->
-                            <div class="section mb-4">
-                                <h5 class="text-primary mb-3">
-                                    <i class="fas fa-brain"></i> Knowledge Assessment Ranges (40% of Term Grade)
-                                </h5>
-
-                                <!-- Quiz Total Configuration -->
-                                <div class="alert alert-light border border-info mb-4">
-                                    <h6 class="text-info mb-3"><i class="fas fa-dice"></i> Quiz Configuration</h6>
-                                    <div class="row">
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Total Quiz Items <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" name="total_quiz_items"
-                                                    id="total_quiz_items"
-                                                    value="{{ old('total_quiz_items', $range->total_quiz_items ?? 100) }}"
-                                                    min="10" max="500" required>
-                                                <span class="input-group-text">items</span>
-                                            </div>
-                                            <small class="form-text text-muted">Total pool of quiz items to
-                                                distribute</small>
-                                        </div>
-
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Number of Quizzes <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control" name="num_quizzes"
-                                                    id="num_quizzes"
-                                                    value="{{ old('num_quizzes', $range->num_quizzes ?? 5) }}"
-                                                    min="1" max="10" required>
-                                                <span class="input-group-text">quizzes</span>
-                                            </div>
-                                            <small class="form-text text-muted">How many quizzes to create (Q1-Qn)</small>
-                                        </div>
-
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Per-Quiz Items</label>
-                                            <div class="input-group">
-                                                <input type="text" class="form-control bg-light" id="per_quiz_items"
-                                                    value="" readonly>
-                                                <span class="input-group-text">items/quiz</span>
-                                            </div>
-                                            <small class="form-text text-muted">Auto-calculated (total ÷ number)</small>
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox"
-                                                    name="equal_quiz_distribution" id="equal_quiz_distribution"
-                                                    value="1"
-                                                    {{ old('equal_quiz_distribution', $range->equal_quiz_distribution ?? true) ? 'checked' : '' }}>
-                                                <label class="form-check-label" for="equal_quiz_distribution">
-                                                    <strong>Equal Distribution</strong> - Automatically divide total items
-                                                    equally among all quizzes
-                                                    <small class="d-block text-muted mt-1">When unchecked, use individual
-                                                        quiz max values below</small>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Individual Quiz Configuration (Fallback) -->
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Quiz 1 - Max Items <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="quiz_1_max"
-                                                value="{{ old('quiz_1_max', $range->quiz_1_max) }}" min="5"
-                                                max="100" required>
-                                            <span class="input-group-text">items</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 20</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Quiz 2 - Max Items <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="quiz_2_max"
-                                                value="{{ old('quiz_2_max', $range->quiz_2_max) }}" min="5"
-                                                max="100" required>
-                                            <span class="input-group-text">items</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 15</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Quiz 3 - Max Items <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="quiz_3_max"
-                                                value="{{ old('quiz_3_max', $range->quiz_3_max) }}" min="5"
-                                                max="100" required>
-                                            <span class="input-group-text">items</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 25</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Quiz 4 - Max Items <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="quiz_4_max"
-                                                value="{{ old('quiz_4_max', $range->quiz_4_max) }}" min="5"
-                                                max="100" required>
-                                            <span class="input-group-text">items</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 20</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Quiz 5 - Max Items <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="quiz_5_max"
-                                                value="{{ old('quiz_5_max', $range->quiz_5_max) }}" min="5"
-                                                max="100" required>
-                                            <span class="input-group-text">items</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 20</small>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Midterm Exam - Max Items <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="midterm_exam_max"
-                                                value="{{ old('midterm_exam_max', $range->midterm_exam_max) }}"
-                                                min="20" max="200" required>
-                                            <span class="input-group-text">items</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 60</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Final Exam - Max Items <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="final_exam_max"
-                                                value="{{ old('final_exam_max', $range->final_exam_max) }}"
-                                                min="20" max="200" required>
-                                            <span class="input-group-text">items</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 60</small>
-                                    </div>
-                                </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary mb-3">✏️ Quizzes (Q1-Q5)</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Number of Quizzes</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="numQuizzes" name="num_quizzes" 
+                                    value="{{ old('num_quizzes', $range->num_quizzes ?? 5) }}" 
+                                    min="1" max="10" required>
+                                <span class="input-group-text">quizzes</span>
                             </div>
+                            <small class="form-text text-muted">Fixed: Always 5 (Q1, Q2, Q3, Q4, Q5)</small>
+                        </div>
 
-                            <hr>
-
-                            <!-- Skills Components -->
-                            <div class="section mb-4">
-                                <h5 class="text-info mb-3">
-                                    <i class="fas fa-toolbox"></i> Skills Assessment Ranges (50% of Term Grade)
-                                </h5>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Output - Max Score <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="output_max"
-                                                value="{{ old('output_max', $range->output_max) }}" min="10"
-                                                max="200" required>
-                                            <span class="input-group-text">points</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 100 (40% of Skills)</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Class Participation - Max Score <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="class_participation_max"
-                                                value="{{ old('class_participation_max', $range->class_participation_max) }}"
-                                                min="10" max="200" required>
-                                            <span class="input-group-text">points</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 100 (30% of Skills)</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Activities - Max Score <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="activities_max"
-                                                value="{{ old('activities_max', $range->activities_max) }}"
-                                                min="10" max="200" required>
-                                            <span class="input-group-text">points</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 100 (15% of Skills)</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Assignments - Max Score <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="assignments_max"
-                                                value="{{ old('assignments_max', $range->assignments_max) }}"
-                                                min="10" max="200" required>
-                                            <span class="input-group-text">points</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 100 (15% of Skills)</small>
-                                    </div>
-                                </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Each Quiz - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="quiz_max" 
+                                    value="{{ old('quiz_max', $range->quiz_max ?? 25) }}" 
+                                    min="5" max="100" required>
+                                <span class="input-group-text">points</span>
                             </div>
+                            <small class="form-text text-muted">Default: 25 (applies to all quizzes)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Knowledge Weight Breakdown:</strong> Exams (60%) + Quizzes (40%)
+                </div>
+            </div>
 
-                            <hr>
-
-                            <!-- Attitude Components -->
-                            <div class="section mb-4">
-                                <h5 class="text-warning mb-3">
-                                    <i class="fas fa-heart"></i> Attitude Assessment Ranges (10% of Term Grade)
-                                </h5>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Behavior - Max Score <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="behavior_max"
-                                                value="{{ old('behavior_max', $range->behavior_max) }}" min="10"
-                                                max="200" required>
-                                            <span class="input-group-text">points</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 100 (50% of Attitude)</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Awareness - Max Score <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="awareness_max"
-                                                value="{{ old('awareness_max', $range->awareness_max) }}" min="10"
-                                                max="200" required>
-                                            <span class="input-group-text">points</span>
-                                        </div>
-                                        <small class="form-text text-muted">Default: 100 (50% of Attitude)</small>
-                                    </div>
-                                </div>
+            <!-- SKILLS ASSESSMENT (50% of Term Grade) -->
+            <div class="config-section">
+                <h5>🎯 SKILLS ASSESSMENT (50% of Term Grade)</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success mb-3">🏆 Output (O1, O2, O3)</h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Each Output Item - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="output_max" 
+                                    value="{{ old('output_max', $range->output_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
                             </div>
+                            <small class="form-text text-muted">Default: 100 per item (40% of Skills)</small>
+                        </div>
+                    </div>
 
-                            <hr>
-
-                            <!-- Attendance Configuration -->
-                            <div class="section mb-4">
-                                <h5 class="text-success mb-3">
-                                    <i class="fas fa-clipboard-list"></i> Attendance Configuration
-                                </h5>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Attendance Max - Total Classes <span
-                                                class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <input type="number" class="form-control" name="attendance_max"
-                                                value="{{ old('attendance_max', $range->attendance_max) }}"
-                                                min="1" max="500" required>
-                                            <span class="input-group-text">classes</span>
-                                        </div>
-                                        <small class="form-text text-muted">Total class meetings for the term</small>
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Attendance Required? <span
-                                                class="text-danger">*</span></label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="attendance_required"
-                                                id="attendanceRequired" value="1"
-                                                {{ old('attendance_required', $range->attendance_required) ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="attendanceRequired">
-                                                Track attendance for this class
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success mb-3">👥 Class Participation (C1, C2, C3)</h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Each Class Part Item - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="classpart_max" 
+                                    value="{{ old('classpart_max', $range->classpart_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
                             </div>
+                            <small class="form-text text-muted">Default: 100 per item (30% of Skills)</small>
+                        </div>
+                    </div>
+                </div>
 
-                            <hr>
-
-                            <!-- Notes -->
-                            <div class="section mb-4">
-                                <label class="form-label">Notes</label>
-                                <textarea class="form-control" name="notes" rows="3"
-                                    placeholder="Add any special notes about assessment ranges...">{{ old('notes', $range->notes) }}</textarea>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6 class="text-success mb-3">⚡ Activities (A1, A2, A3)</h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Each Activity Item - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="activity_max" 
+                                    value="{{ old('activity_max', $range->activity_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
                             </div>
+                            <small class="form-text text-muted">Default: 100 per item (15% of Skills)</small>
+                        </div>
+                    </div>
 
-                            <!-- Buttons -->
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save Configuration
-                                </button>
-                                <a href="{{ route('teacher.grades') }}" class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left"></i> Back
-                                </a>
+                    <div class="col-md-6">
+                        <h6 class="text-success mb-3">📋 Assignments (As1, As2, As3)</h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Each Assignment Item - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="assignment_max" 
+                                    value="{{ old('assignment_max', $range->assignment_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
                             </div>
-                        </form>
+                            <small class="form-text text-muted">Default: 100 per item (15% of Skills)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Skills Weight Breakdown:</strong> Output (40%) + Class Part (30%) + Activities (15%) + Assignments (15%)
+                </div>
+            </div>
+
+            <!-- ATTITUDE ASSESSMENT (10% of Term Grade) -->
+            <div class="config-section">
+                <h5>😊 ATTITUDE ASSESSMENT (10% of Term Grade)</h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-3">✨ Behavior (B1, B2, B3)</h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Each Behavior Item - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="behavior_max" 
+                                    value="{{ old('behavior_max', $range->behavior_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
+                            </div>
+                            <small class="form-text text-muted">Default: 100 per item (50% of Attitude)</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6 class="text-warning mb-3">👁️ Awareness (Aw1, Aw2, Aw3)</h6>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Each Awareness Item - Max Score</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="awareness_max" 
+                                    value="{{ old('awareness_max', $range->awareness_max ?? 100) }}" 
+                                    min="10" max="500" required>
+                                <span class="input-group-text">points</span>
+                            </div>
+                            <small class="form-text text-muted">Default: 100 per item (50% of Attitude)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Attitude Weight Breakdown:</strong> Behavior (50%) + Awareness (50%)
+                </div>
+            </div>
+
+            <!-- NOTES -->
+            <div class="config-section">
+                <h5>📝 Additional Notes</h5>
+                <textarea class="form-control" name="notes" rows="4" 
+                    placeholder="Add any special notes about assessment ranges for this class...">{{ old('notes', $range->notes ?? '') }}</textarea>
+            </div>
+
+            <!-- SUMMARY TABLE -->
+            <div class="card border-info mb-4">
+                <div class="card-header bg-info bg-opacity-10">
+                    <h6 class="mb-0 text-info"><i class="fas fa-table me-2"></i>Configuration Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Component</th>
+                                    <th>Items</th>
+                                    <th>Per Item Max</th>
+                                    <th>Weight</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="fw-bold bg-light">📚 KNOWLEDGE (40%)</td>
+                                </tr>
+                                <tr>
+                                    <td>Exams (PR + MD)</td>
+                                    <td>2</td>
+                                    <td>100 points each</td>
+                                    <td>60% of Knowledge</td>
+                                </tr>
+                                <tr>
+                                    <td>Quizzes (Q1-Q5)</td>
+                                    <td>5</td>
+                                    <td>25 points each</td>
+                                    <td>40% of Knowledge</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="fw-bold bg-light">🎯 SKILLS (50%)</td>
+                                </tr>
+                                <tr>
+                                    <td>Output (O1-O3)</td>
+                                    <td>3</td>
+                                    <td>100 points each</td>
+                                    <td>40% of Skills</td>
+                                </tr>
+                                <tr>
+                                    <td>Class Participation (C1-C3)</td>
+                                    <td>3</td>
+                                    <td>100 points each</td>
+                                    <td>30% of Skills</td>
+                                </tr>
+                                <tr>
+                                    <td>Activities (A1-A3)</td>
+                                    <td>3</td>
+                                    <td>100 points each</td>
+                                    <td>15% of Skills</td>
+                                </tr>
+                                <tr>
+                                    <td>Assignments (As1-As3)</td>
+                                    <td>3</td>
+                                    <td>100 points each</td>
+                                    <td>15% of Skills</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="fw-bold bg-light">😊 ATTITUDE (10%)</td>
+                                </tr>
+                                <tr>
+                                    <td>Behavior (B1-B3)</td>
+                                    <td>3</td>
+                                    <td>100 points each</td>
+                                    <td>50% of Attitude</td>
+                                </tr>
+                                <tr>
+                                    <td>Awareness (Aw1-Aw3)</td>
+                                    <td>3</td>
+                                    <td>100 points each</td>
+                                    <td>50% of Attitude</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4" class="fw-bold bg-light">📌 FINAL GRADE</td>
+                                </tr>
+                                <tr>
+                                    <td>Final Grade = (K × 40%) + (S × 50%) + (A × 10%)</td>
+                                    <td colspan="3"></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Info Card -->
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="alert alert-info">
-                    <strong><i class="fas fa-info-circle"></i> How It Works:</strong>
-                    <ul class="mb-0 mt-2">
-                        <li>Set maximum item counts for each quiz and exam type</li>
-                        <li>Scores are automatically normalized to 0-100 scale</li>
-                        <li>Percentage weighting remains fixed: Knowledge 40%, Skills 50%, Attitude 10%</li>
-                        <li>All component weightings are maintained regardless of max item counts</li>
-                        <li>Changes only affect this class and subject combination</li>
-                    </ul>
-                </div>
+            <!-- BUTTONS -->
+            <div class="d-flex gap-2 justify-content-between mb-4">
+                <a href="{{ route('teacher.grades') }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Save Configuration
+                </button>
             </div>
-        </div>
+
+        </form>
     </div>
 
-    <style>
-        .section {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .input-group-text {
-            background-color: #e9ecef;
-            font-weight: 500;
-        }
-    </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const totalQuizItemsInput = document.getElementById('total_quiz_items');
-            const numQuizzesInput = document.getElementById('num_quizzes');
-            const perQuizItemsDisplay = document.getElementById('per_quiz_items');
-            const equalDistributionCheckbox = document.getElementById('equal_quiz_distribution');
-
-            function updatePerQuizItems() {
-                const total = parseInt(totalQuizItemsInput.value) || 100;
-                const num = parseInt(numQuizzesInput.value) || 5;
-                const perQuiz = Math.floor(total / num);
-                perQuizItemsDisplay.value = perQuiz + ' items/quiz';
-            }
-
-            function toggleIndividualQuizFields() {
-                const isEqual = equalDistributionCheckbox.checked;
-                const quizInputs = document.querySelectorAll('input[name^="quiz_"][name$="_max"]');
-                quizInputs.forEach(input => {
-                    const label = input.closest('.col-md-6')?.querySelector('label');
-                    if (label) {
-                        label.style.opacity = isEqual ? '0.5' : '1';
-                        input.disabled = isEqual;
-                    }
-                });
-            }
-
-            // Update calculation on input change
-            totalQuizItemsInput.addEventListener('change', updatePerQuizItems);
-            numQuizzesInput.addEventListener('change', updatePerQuizItems);
-
-            // Toggle individual quiz fields based on distribution mode
-            equalDistributionCheckbox.addEventListener('change', toggleIndividualQuizFields);
-
-            // Initial calculation
-            updatePerQuizItems();
-            toggleIndividualQuizFields();
-        });
-    </script>
-@endsection
+    <!-- INFO CARD -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>How It Works</h5>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li><strong>All scores are normalized to 0-100 scale</strong> - Your configured maximums are automatically converted</li>
+                <li><strong>Component weights are fixed</strong> - Knowledge 40%, Skills 50%, Attitude 10%</li>
+                <li><strong>Calculations are automatic</strong> - Grade entry form automatically computes all averages</li>
+                <li><strong>Changes apply to this class only</strong> - Each class can have different configuration</li>
+                <li><strong>3 items per component</strong> - Each skill/attitude component has 3 assessment entry points per term</li>
+            </ul>
+        </div>
+    </div>
+</div>

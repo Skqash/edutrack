@@ -1,7 +1,6 @@
 @extends('layouts.admin')
 
 @section('content')
-
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
@@ -16,53 +15,6 @@
         </div>
     </div>
 
-    <!-- Subjects Statistics -->
-    <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #3498db;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Total Subjects</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #3498db;">{{ $subjects->count() }}</h2>
-                        </div>
-                        <i class="fas fa-book-open" style="font-size: 40px; color: rgba(52, 152, 219, 0.1);"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #27ae60;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Categories</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #27ae60;">{{ $subjects->pluck('category')->unique()->count() }}</h2>
-                        </div>
-                        <i class="fas fa-star" style="font-size: 40px; color: rgba(39, 174, 96, 0.1);"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #f39c12;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Total Credits</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #f39c12;">{{ $subjects->sum('credit_hours') }}</h2>
-                        </div>
-                        <i class="fas fa-graduation-cap" style="font-size: 40px; color: rgba(243, 156, 18, 0.1);"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Subjects by Category Chart -->
     <div class="row mb-4">
@@ -139,27 +91,30 @@
                     </thead>
                     <tbody>
                         @forelse($subjects as $subject)
-                        <tr>
-                            <td><strong>{{ $subject->subject_code }}</strong></td>
-                            <td>{{ $subject->subject_name }}</td>
-                            <td><span class="badge bg-light text-dark">{{ $subject->category }}</span></td>
-                            <td>{{ $subject->credit_hours }}</td>
-                            <td>{{ $subject->instructor->name ?? 'N/A' }}</td>
-                            <td>
-                                <a href="{{ route('admin.subjects.edit', $subject->id) }}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                <form action="{{ route('admin.subjects.destroy', $subject->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
-                                </form>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td><strong>{{ $subject->subject_code }}</strong></td>
+                                <td>{{ $subject->subject_name }}</td>
+                                <td><span class="badge bg-light text-dark">{{ $subject->category }}</span></td>
+                                <td>{{ $subject->credit_hours }}</td>
+                                <td>{{ $subject->instructor->name ?? 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ route('admin.subjects.edit', $subject->id) }}"
+                                        class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                    <form action="{{ route('admin.subjects.destroy', $subject->id) }}" method="POST"
+                                        style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-4">
-                                <p class="text-muted">No subjects found</p>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <p class="text-muted">No subjects found</p>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -177,8 +132,7 @@
                 </div>
                 <div class="modal-body">
                     <form>
+                </div>
             </div>
         </div>
-    </div>
-
-@endsection
+    @endsection

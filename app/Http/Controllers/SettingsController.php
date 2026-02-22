@@ -22,7 +22,11 @@ class SettingsController extends Controller
             'sunset' => 'Sunset Orange',
         ];
 
-        return view('settings.index', compact('user', 'themes'));
+        $schemes = config('grade_schemes.schemes') ?? [];
+        $userScheme = $user->grading_scheme ?? null;
+        $userWeights = $user->grading_weights ?? null;
+
+        return view('settings.index', compact('user', 'themes', 'schemes', 'userScheme', 'userWeights'));
     }
 
     /**
@@ -32,11 +36,21 @@ class SettingsController extends Controller
     {
         $validated = $request->validate([
             'theme' => 'required|in:light,dark,ocean,forest,sunset',
+            'grading_scheme' => 'nullable|string',
+            'grading_weights.knowledge' => 'nullable|numeric|min:0|max:100',
+            'grading_weights.skills' => 'nullable|numeric|min:0|max:100',
+            'grading_weights.attitude' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $user = User::find(Auth::id());
         if ($user) {
-            $user->fill($validated);
+            $user->theme = $validated['theme'];
+            if ($request->has('grading_scheme')) {
+                $user->grading_scheme = $request->input('grading_scheme');
+            }
+            if ($request->has('grading_weights')) {
+                $user->grading_weights = $request->input('grading_weights');
+            }
             $user->save();
         }
 

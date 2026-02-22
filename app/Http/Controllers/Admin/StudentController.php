@@ -11,7 +11,11 @@ class StudentController extends Controller
     public function index()
     {
         $students = User::where('role', 'student')->paginate(20);
-        return view('admin.students', compact('students'));
+        $totalStudents = User::where('role', 'student')->count();
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalClasses = \App\Models\ClassModel::count();
+        $totalSubjects = \App\Models\Subject::count();
+        return view('admin.students', compact('students', 'totalStudents', 'totalTeachers', 'totalClasses', 'totalSubjects'));
     }
 
     public function create()

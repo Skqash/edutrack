@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>EduTrack | Teacher Panel</title>
 
     <!-- Bootstrap CSS -->
@@ -17,18 +18,36 @@
             box-sizing: border-box;
         }
 
-        html,
-        body {
+        html {
             height: 100%;
             width: 100%;
             overflow-x: hidden;
         }
 
         body {
+            height: 100%;
+            width: 100%;
+            overflow-x: hidden;
             background-color: #f4f8fb;
             font-family: 'Segoe UI', Tahoma, sans-serif;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Method: body left padding reserves space so content CANNOT overlap sidebar */
+        body.teacher-panel {
+            padding-left: 260px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        body.teacher-panel.sidebar-collapsed {
+            padding-left: 80px;
+        }
+        @media (max-width: 768px) {
+            body.teacher-panel {
+                padding-left: 0;
+            }
         }
 
         /* Sidebar */
@@ -105,17 +124,29 @@
         }
 
         .main-wrapper {
-            margin-left: 260px;
+            margin-left: 0;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
             transition: all 0.3s ease;
+            overflow-x: hidden;
+            position: relative;
         }
 
-        .main-wrapper.sidebar-collapsed {
-            margin-left: 80px;
+        .main-wrapper.sidebar-collapsed .topbar {
+            left: 80px;
         }
 
         .topbar {
             background: white;
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
+            z-index: 1000;
             border-bottom: 2px solid #e8f0f8;
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
             padding: 15px 20px;
@@ -127,6 +158,28 @@
 
         .content-wrapper {
             padding: 20px;
+            padding-top: 80px;
+            flex: 1;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            overflow-x: hidden;
+            overflow-y: auto;
+            display: block;
+        }
+        .content-wrapper > * {
+            min-width: 0;
+            max-width: 100%;
+        }
+        .content-wrapper .card {
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .content-wrapper .table-responsive {
+            max-width: 100%;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .toggle-btn {
@@ -158,12 +211,14 @@
                 margin-left: 0;
             }
 
-            .content-wrapper {
-                padding: 15px;
+            .topbar {
+                left: 0;
+                padding: 10px 15px;
             }
 
-            .topbar {
-                flex-wrap: wrap;
+            .content-wrapper {
+                padding: 15px;
+                padding-top: 70px;
             }
         }
 
@@ -235,7 +290,7 @@
     <link rel="stylesheet" href="{{ asset('css/themes/' . $theme . '.css') }}">
 </head>
 
-<body>
+<body class="teacher-panel">
 
     <div id="mainContainer" class="main-wrapper">
         <!-- SIDEBAR -->
@@ -258,6 +313,12 @@
                         <span>My Classes</span>
                     </a></li>
 
+                <li><a href="{{ route('teacher.subjects') }}"
+                        class="{{ request()->routeIs('teacher.subjects') ? 'active' : '' }}">
+                        <i class="fas fa-book"></i>
+                        <span>Courses</span>
+                    </a></li>
+
                 <li><a href="{{ route('teacher.grades') }}"
                         class="{{ request()->routeIs('teacher.grades*') ? 'active' : '' }}">
                         <i class="fas fa-star"></i>
@@ -269,16 +330,6 @@
                         <i class="fas fa-check-square"></i>
                         <span>Attendance</span>
                     </a></li>
-
-                <li><a href="{{ route('teacher.assignments') }}"
-                        class="{{ request()->routeIs('teacher.assignments*') ? 'active' : '' }}">
-                        <i class="fas fa-clipboard"></i>
-                        <span>Assignments</span>
-                    </a></li>
-
-                <li>
-                    <hr style="border-color: rgba(255,255,255,0.2); margin: 10px 0;">
-                </li>
 
                 <li><a href="{{ route('teacher.settings.index') }}"
                         class="{{ request()->routeIs('teacher.settings*') ? 'active' : '' }}">
@@ -361,6 +412,15 @@
                         <span class="d-none d-sm-inline">{{ auth()->user()->name ?? 'Teacher' }}</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ route('teacher.profile.show') }}">
+                                <i class="fas fa-user me-2"></i> My Profile
+                            </a></li>
+                        <li><a class="dropdown-item" href="{{ route('teacher.profile.edit') }}">
+                                <i class="fas fa-edit me-2"></i> Edit Profile
+                            </a></li>
+                        <li><a class="dropdown-item" href="{{ route('teacher.profile.change-password') }}">
+                                <i class="fas fa-key me-2"></i> Change Password
+                            </a></li>
                         <li><a class="dropdown-item" href="{{ route('teacher.settings.index') }}">
                                 <i class="fas fa-cog me-2"></i> Settings
                             </a></li>
@@ -398,6 +458,7 @@
             } else {
                 sidebar.classList.toggle('collapsed');
                 mainContainer.classList.toggle('sidebar-collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
             }
         }
 

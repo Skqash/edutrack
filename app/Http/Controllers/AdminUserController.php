@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\ClassModel;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -13,7 +15,14 @@ class AdminUserController extends Controller
     {
         $users = User::whereIn('role', ['teacher', 'student'])
                      ->paginate(15);
-        return view('admin.users.index', compact('users'));
+        
+        // Get total counts
+        $totalStudents = User::where('role', 'student')->count();
+        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalClasses = ClassModel::count();
+        $totalSubjects = Subject::count();
+        
+        return view('admin.users.index', compact('users', 'totalStudents', 'totalTeachers', 'totalClasses', 'totalSubjects'));
     }
 
     public function create()
