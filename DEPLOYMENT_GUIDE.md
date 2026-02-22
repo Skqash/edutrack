@@ -4,7 +4,7 @@
 **EduTrack** is a Laravel 10 web application for academic management and grading system.
 
 ### Tech Stack
-- **Backend:** Laravel 10.10+ (PHP 8.1+)
+- **Backend:** Laravel 10.10+ (PHP 8.3+)
 - **Frontend:** Bootstrap 5, Blade templates, Vite (CSS/JS bundling)
 - **Database:** MySQL 8.0+
 - **Package Managers:** Composer (PHP), NPM (Node.js)
@@ -131,12 +131,12 @@ php artisan serve
 #### Prerequisites Installation (One-time Setup)
 1. **Download & Install Laragon** (Complete Package)
    - Download from: https://laragon.org
-   - Includes: PHP 8.1+, MySQL 8.0+, Apache, Node.js, Git
+   - Includes: PHP 8.3+, MySQL 8.0+, Apache, Node.js, Git
    - Installation: Run installer, choose default location `C:\laragon`
 
 2. **Verify Installations**
 ```bash
-php --version          # Should show PHP 8.1+
+php --version          # Should show PHP 8.3+
 mysql --version        # Should show MySQL 8.0+
 composer --version     # Should be included with Laragon
 node --version         # Should be included with Laragon
@@ -238,11 +238,11 @@ Password: password
 sudo apt update && sudo apt upgrade -y
 ```
 
-**Step 2: Install PHP 8.1**
+**Step 2: Install PHP 8.3**
 ```bash
-sudo apt install php8.1 php8.1-cli php8.1-fpm \
-  php8.1-mysql php8.1-mbstring php8.1-xml \
-  php8.1-curl php8.1-zip php8.1-gd -y
+sudo apt install php8.3 php8.3-cli php8.3-fpm \
+  php8.3-mysql php8.3-mbstring php8.3-xml \
+  php8.3-curl php8.3-zip php8.3-gd -y
 ```
 
 **Step 3: Install MySQL 8.0**
@@ -254,13 +254,13 @@ sudo mysql_secure_installation
 **Step 4: Install Apache (or Nginx)**
 ```bash
 # Apache (easier for beginners):
-sudo apt install apache2 libapache2-mod-php8.1 -y
-sudo a2enmod php8.1
+sudo apt install apache2 libapache2-mod-php8.3 -y
+sudo a2enmod php8.3
 sudo a2enmod rewrite
 sudo systemctl restart apache2
 
 # OR Nginx (better performance but more complex):
-sudo apt install nginx php8.1-fpm -y
+sudo apt install nginx php8.3-fpm -y
 ```
 
 **Step 5: Install Node.js & Composer**
@@ -372,7 +372,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
     }
 
     error_log /var/log/nginx/edutrack-error.log;
@@ -481,7 +481,7 @@ https://yourdomain.com/edutrack
 
 | Component | Windows (Laragon) | Ubuntu/Debian | cPanel |
 |-----------|------------------|---------------|--------|
-| PHP | 8.1+ | 8.1+ | 8.1+ |
+| PHP | 8.3+ | 8.3+ | 8.3+ |
 | MySQL | 8.0+ | 8.0+ | 8.0+ |
 | Composer | Included | Manual | Via Terminal |
 | Node.js | Included | npm install | Via Terminal |

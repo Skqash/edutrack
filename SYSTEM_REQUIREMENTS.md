@@ -26,7 +26,7 @@
 | Component | Minimum Version | Recommended |
 |-----------|-----------------|------------|
 | Windows OS | Windows 10 | Windows 11 |
-| PHP | 8.1 | 8.2 or 8.3 |
+| PHP | 8.3 | 8.2 or 8.3 |
 | MySQL | 5.7 | 8.0+ |
 | Node.js | 16.x | 18.x or 20.x |
 | npm | 8.x | 9.x+ |
@@ -55,7 +55,7 @@
 |-----------|---------|
 | Ubuntu | 20.04 LTS or newer |
 | Debian | 11 or newer |
-| PHP-FPM | 8.1+ |
+| PHP-FPM | 8.3+ |
 | MySQL/MariaDB | 8.0+ |
 | Nginx/Apache | Latest |
 | Node.js | 18.x+ |
@@ -65,7 +65,7 @@
 ### For cPanel/Shared Hosting
 
 #### Requirements (Provided by Host)
-- **PHP Version:** 8.1+
+- **PHP Version:** 8.3+
 - **MySQL Version:** 5.7+ (usually 8.0+)
 - **Disk Space:** Minimum 1 GB
 - **Bandwidth:** Unlimited or high limit
@@ -288,22 +288,21 @@ sudo apt install -y curl wget git zip unzip build-essential \
     gnupg lsb-release ubuntu-keyring
 ```
 
-#### Step 3: Install PHP 8.1
+#### Step 3: Install PHP 8.3
 
 ```bash
 # Add PHP repository
-sudo add-apt-repository ppa:ondrej/php -y
 sudo apt update
 
 # Install PHP and extensions
-sudo apt install -y php8.1 php8.1-cli php8.1-fpm \
-    php8.1-mysql php8.1-mbstring php8.1-xml php8.1-curl \
-    php8.1-zip php8.1-gd php8.1-bcmath php8.1-imagick
+sudo apt install -y php8.3 php8.3-cli php8.3-fpm \
+    php8.3-mysql php8.3-mbstring php8.3-xml php8.3-curl \
+    php8.3-zip php8.3-gd php8.3-bcmath php8.3-imagick
 
 # Verify installation
 php --version
 
-# Expected: PHP 8.1.x (cli)
+# Expected: PHP 8.3.x (cli)
 ```
 
 #### Step 4: Install MySQL 8.0
@@ -328,10 +327,10 @@ mysql --version
 
 **Option A: Apache (Simpler)**
 ```bash
-sudo apt install -y apache2 libapache2-mod-php8.1
+sudo apt install -y apache2 libapache2-mod-php8.3
 
 # Enable required modules
-sudo a2enmod php8.1
+sudo a2enmod php8.3
 sudo a2enmod rewrite
 sudo a2enmod headers
 
@@ -341,7 +340,7 @@ sudo apache2ctl -v
 
 **Option B: Nginx (Better Performance)**
 ```bash
-sudo apt install -y nginx php8.1-fpm
+sudo apt install -y nginx php8.3-fpm
 
 # Enable service
 sudo systemctl enable nginx
@@ -515,7 +514,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
     }
 
     location ~ /\.ht {
@@ -817,7 +816,7 @@ zip -r edutrack_backup_$(date +%Y%m%d).zip /var/www/edutrack
 
 ## TESTING CHECKLIST
 
-- [ ] PHP version correct (8.1+)
+- [ ] PHP version correct (8.3+)
 - [ ] MySQL running and accessible
 - [ ] All PHP extensions installed
 - [ ] Composer installed and working

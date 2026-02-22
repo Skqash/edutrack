@@ -22,7 +22,7 @@ This guide will teach you how to deploy your EduTrack Laravel application using 
 
 ### Your EduTrack Application Stack
 - **Framework**: Laravel 10.10+
-- **PHP Version**: 8.1+
+- **PHP Version**: 8.3+
 - **Database**: MySQL 8.0+
 - **Frontend**: Bootstrap 5 + Blade Templates
 - **Build Tools**: Vite
@@ -216,7 +216,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
+        php-version: '8.3'
         extensions: mbstring, xml, mysql, bcmath, curl, zip, gd
         coverage: none
     
@@ -248,7 +248,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.1'
+        php-version: '8.3'
         extensions: mbstring, xml, mysql, bcmath, curl, zip, gd
     
     - name: Install Composer dependencies
@@ -361,9 +361,9 @@ apt install -y software-properties-common
 add-apt-repository -y ppa:ondrej/php
 apt update
 
-# Install PHP 8.1 and extensions
-apt install -y php8.1 php8.1-fpm php8.1-mysql php8.1-mbstring \
-  php8.1-xml php8.1-curl php8.1-zip php8.1-gd php8.1-bcmath
+# Install PHP 8.3 and extensions
+apt install -y php8.3 php8.3-fpm php8.3-mysql php8.3-mbstring \
+  php8.3-xml php8.3-curl php8.3-zip php8.3-gd php8.3-bcmath
 
 # Install Nginx
 apt install -y nginx
@@ -417,7 +417,7 @@ server {
     }
 
     location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
@@ -564,7 +564,7 @@ php artisan view:cache
 
 # Restart services (Ubuntu)
 sudo systemctl restart nginx
-sudo systemctl restart php8.1-fpm
+sudo systemctl restart php8.3-fpm
 sudo systemctl restart redis
 ```
 

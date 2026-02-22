@@ -74,7 +74,7 @@ Use this checklist to track your deployment progress.
 
 ### PHP Installation
 - [ ] Added PHP repository: `sudo add-apt-repository ppa:ondrej/php`
-- [ ] Installed PHP 8.1 and extensions
+- [ ] Installed PHP 8.3 and extensions
 - [ ] Verified PHP: `php --version`
 - [ ] Enabled PHP modules if using Apache
 
@@ -86,7 +86,7 @@ Use this checklist to track your deployment progress.
 
 ### Web Server Configuration
 **For Apache:**
-- [ ] Installed: `sudo apt install apache2 libapache2-mod-php8.1`
+- [ ] Installed: `sudo apt install apache2 libapache2-mod-php8.3`
 - [ ] Enabled modules: `a2enmod rewrite`, `a2enmod headers`
 - [ ] Created virtual host config
 - [ ] Enabled site: `a2ensite edutrack.conf`
@@ -94,7 +94,7 @@ Use this checklist to track your deployment progress.
 - [ ] Restarted Apache: `sudo systemctl restart apache2`
 
 **For Nginx:**
-- [ ] Installed: `sudo apt install nginx php8.1-fpm`
+- [ ] Installed: `sudo apt install nginx php8.3-fpm`
 - [ ] Created Nginx config in `/etc/nginx/sites-available/`
 - [ ] Created symlink to `sites-enabled/`
 - [ ] Tested: `sudo nginx -t`

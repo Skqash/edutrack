@@ -678,14 +678,16 @@
    ```bash
    # SSH into server
    cd /var/www/edutrack
-   composer install  # Install PHP packages
+   - [ ] Installed PHP 8.3 and extensions
+  - [ ] Installed: `sudo apt install apache2 libapache2-mod-php8.3`
+   composer install
    npm install       # Install Node packages
    npm run build     # Build assets
    ```
 
 3. **Check PHP version:**
    ```bash
-   php --version  # Should be 8.1+
+   php --version  # Should be 8.3+
    ```
 
 4. **Verify web server rewrite rules:**

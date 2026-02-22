@@ -12,7 +12,7 @@
     <img src="https://img.shields.io/badge/Laravel-10.10+-red" alt="Laravel Version">
   </a>
   <a href="https://php.net">
-    <img src="https://img.shields.io/badge/PHP-8.1+-blue" alt="PHP Version">
+    <img src="https://img.shields.io/badge/PHP-8.3+-blue" alt="PHP Version">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
@@ -52,7 +52,7 @@ A comprehensive Laravel-based academic management system designed for educationa
 ## 🚀 Quick Start
 
 ### Prerequisites
-- PHP 8.1+
+- PHP 8.3+
 - MySQL 8.0+
 - Composer
 - Node.js & NPM
@@ -127,7 +127,7 @@ This guide covers:
 
 | Component | Minimum | Recommended |
 |-----------|---------|-------------|
-| PHP | 8.1 | 8.2 |
+| PHP | 8.3 | 8.3 |
 | MySQL | 8.0 | 8.0+ |
 | RAM | 2GB | 4GB |
 | Storage | 5GB | 20GB |
