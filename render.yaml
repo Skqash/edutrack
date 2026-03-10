@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: edutrack
+    runtime: docker
+    buildCommand: |
+      apt-get update && apt-get install -y php php-cli php-mbstring php-xml php-bcmath php-curl unzip curl
+      curl -sS https://getcomposer.org/installer | php
+      php composer.phar install --no-dev --optimize-autoloader
+    startCommand: php -S 0.0.0.0:$PORT -t public
