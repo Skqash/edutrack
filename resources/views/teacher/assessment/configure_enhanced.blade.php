@@ -158,7 +158,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="quiz_1_max"
-                                                value="{{ old('quiz_1_max', $range->quiz_1_max ?? 50) }}" min="5"
+                                                value="{{ old('quiz_1_max', $range->quiz_1_max ?? 25) }}" min="5"
                                                 max="100" required style="border-color: #0066cc;">
                                             <span class="input-group-text"
                                                 style="background-color: #f0f7ff; border-color: #0066cc;">Pts</span>
@@ -169,7 +169,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="quiz_2_max"
-                                                value="{{ old('quiz_2_max', $range->quiz_2_max ?? 50) }}" min="5"
+                                                value="{{ old('quiz_2_max', $range->quiz_2_max ?? 25) }}" min="5"
                                                 max="100" required style="border-color: #0066cc;">
                                             <span class="input-group-text"
                                                 style="background-color: #f0f7ff; border-color: #0066cc;">Pts</span>
@@ -180,7 +180,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="quiz_3_max"
-                                                value="{{ old('quiz_3_max', $range->quiz_3_max ?? 50) }}" min="5"
+                                                value="{{ old('quiz_3_max', $range->quiz_3_max ?? 25) }}" min="5"
                                                 max="100" required style="border-color: #0066cc;">
                                             <span class="input-group-text"
                                                 style="background-color: #f0f7ff; border-color: #0066cc;">Pts</span>
@@ -191,7 +191,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="quiz_4_max"
-                                                value="{{ old('quiz_4_max', $range->quiz_4_max ?? 50) }}" min="5"
+                                                value="{{ old('quiz_4_max', $range->quiz_4_max ?? 25) }}" min="5"
                                                 max="100" required style="border-color: #0066cc;">
                                             <span class="input-group-text"
                                                 style="background-color: #f0f7ff; border-color: #0066cc;">Pts</span>
@@ -202,7 +202,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="quiz_5_max"
-                                                value="{{ old('quiz_5_max', $range->quiz_5_max ?? 50) }}" min="5"
+                                                value="{{ old('quiz_5_max', $range->quiz_5_max ?? 25) }}" min="5"
                                                 max="100" required style="border-color: #0066cc;">
                                             <span class="input-group-text"
                                                 style="background-color: #f0f7ff; border-color: #0066cc;">Pts</span>
@@ -225,7 +225,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="midterm_exam_max"
-                                                value="{{ old('midterm_exam_max', $range->midterm_exam_max ?? 100) }}"
+                                                value="{{ old('midterm_exam_max', $range->midterm_exam_max ?? 70) }}"
                                                 min="20" max="200" required style="border-color: #0066cc;">
                                             <span class="input-group-text"
                                                 style="background-color: #f0f7ff; border-color: #0066cc;">Points</span>
@@ -236,7 +236,7 @@
                                                 class="text-danger">*</span></label>
                                         <div class="input-group">
                                             <input type="number" class="form-control" name="final_exam_max"
-                                                value="{{ old('final_exam_max', $range->final_exam_max ?? 100) }}"
+                                                value="{{ old('final_exam_max', $range->final_exam_max ?? 80) }}"
                                                 min="20" max="200" required style="border-color: #0066cc;">
                                             <span class="input-group-text"
                                                 style="background-color: #f0f7ff; border-color: #0066cc;">Points</span>

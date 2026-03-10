@@ -248,178 +248,161 @@
         </div>
     </div>
 
-    <!-- Statistics Cards - Enhanced with gradients and improved spacing -->
-    <div class="row mb-4 g-3">
-        <div class="col-12 col-sm-6 col-lg-2-4">
-            <div class="card stat-card h-100" style="border-left: 4px solid #0066cc;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2 small fw-semibold">Classes</h6>
-                            <h2 class="mb-0 text-primary fw-bold">{{ $myClasses ? $myClasses->count() : 0 }}</h2>
-                        </div>
-                        <i class="fas fa-door-open fa-3x text-primary opacity-15"></i>
+<!-- Statistics Cards - Enhanced with gradients and improved spacing -->
+<div class="row mb-4 g-3">
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card stat-card h-100" style="border-left: 4px solid #0066cc;">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2 small fw-semibold">Classes</h6>
+                        <h2 class="mb-0 text-primary fw-bold">{{ $myClasses ? $myClasses->count() : 0 }}</h2>
                     </div>
-                    <small class="text-muted d-block mt-2">Active classes assigned</small>
+                    <i class="fas fa-door-open fa-3x text-primary opacity-15"></i>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-lg-2-4">
-            <div class="card stat-card h-100" style="border-left: 4px solid #6f42c1;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2 small fw-semibold">Courses</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #6f42c1;">{{ $myCourses ? $myCourses->count() : 0 }}</h2>
-                        </div>
-                        <i class="fas fa-book fa-3x opacity-15" style="color: #6f42c1;"></i>
-                    </div>
-                    <small class="text-muted d-block mt-2">Total courses</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-lg-2-4">
-            <div class="card stat-card h-100" style="border-left: 4px solid #00a86b;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2 small fw-semibold">Students</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #00a86b;">{{ $totalStudents ?? 0 }}</h2>
-                        </div>
-                        <i class="fas fa-users fa-3x opacity-15" style="color: #00a86b;"></i>
-                    </div>
-                    <small class="text-muted d-block mt-2">Total enrolled</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-lg-2-4">
-            <div class="card stat-card h-100" style="border-left: 4px solid #ff8c00;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2 small fw-semibold">Grades Posted</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #ff8c00;">{{ $gradesPosted ?? 0 }}</h2>
-                        </div>
-                        <i class="fas fa-star fa-3x opacity-15" style="color: #ff8c00;"></i>
-                    </div>
-                    <small class="text-muted d-block mt-2">Recently added</small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-lg-2-4">
-            <div class="card stat-card h-100" style="border-left: 4px solid #6c757d;">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h6 class="text-muted mb-2 small fw-semibold">Attendance Rate</h6>
-                            <h2 class="mb-0 fw-bold text-muted">
-                                {{ round($totalStudents > 0 ? ($gradesPosted / $totalStudents) * 100 : 0, 0) }}%</h2>
-                        </div>
-                        <i class="fas fa-chart-line fa-3x opacity-15" style="color: #6c757d;"></i>
-                    </div>
-                    <small class="text-muted d-block mt-2">Data completeness</small>
-                </div>
+                <small class="text-muted d-block mt-2">Total classes</small>
             </div>
         </div>
     </div>
 
-    <!-- Feature Cards - 4 Core Functions (Optimized Layout) -->
-    <div class="row mb-4 g-3">
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card feature-card h-100 shadow-sm">
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="mb-3" style="font-size: 2.5rem; color: #495057;">
-                        <i class="fas fa-plus-circle"></i>
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card stat-card h-100" style="border-left: 4px solid #6f42c1;">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2 small fw-semibold">Courses</h6>
+                        <h2 class="mb-0 fw-bold" style="color: #6f42c1;">{{ $myCourses ? $myCourses->count() : 0 }}</h2>
                     </div>
-                    <h5 class="card-title text-dark fw-bold mb-2">Create Class</h5>
-                    <p class="card-text text-muted small mb-auto flex-grow-1">
-                        Set up a new class and configure assessment parameters
-                    </p>
-                    <button class="btn btn-sm fw-bold text-white mt-3" style="background-color: #495057; border: none;"
-                        data-bs-toggle="modal" data-bs-target="#createClassModal">
-                        <i class="fas fa-plus me-1"></i> Create
-                    </button>
+                    <i class="fas fa-building fa-3x opacity-15" style="color: #6f42c1;"></i>
                 </div>
-            </div>
-        </div>
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card feature-card h-100 shadow-sm">
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="mb-3" style="font-size: 2.5rem; color: #0066cc;">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <h5 class="card-title text-dark fw-bold mb-2">Add Students</h5>
-                    <p class="card-text text-muted small mb-auto flex-grow-1">
-                        Enroll students manually or via bulk import
-                    </p>
-                    <button class="btn btn-sm fw-bold text-white mt-3" style="background-color: #0066cc; border: none;"
-                        data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                        <i class="fas fa-plus me-1"></i> Add
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card feature-card h-100 shadow-sm">
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="mb-3" style="font-size: 2.5rem; color: #28a745;">
-                        <i class="fas fa-keyboard"></i>
-                    </div>
-                    <h5 class="card-title text-dark fw-bold mb-2">Enter Grades</h5>
-                    <p class="card-text text-muted small mb-auto flex-grow-1">
-                        Professional grade entry with dynamic calculations
-                    </p>
-                    <a href="{{ route('teacher.grades') }}" class="btn btn-sm fw-bold text-white mt-3"
-                        style="background-color: #28a745; border: none;">
-                        <i class="fas fa-edit me-1"></i> Enter
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-6 col-lg-3">
-            <div class="card feature-card h-100 shadow-sm">
-                <div class="card-body text-center d-flex flex-column">
-                    <div class="mb-3" style="font-size: 2.5rem; color: #0066cc;">
-                        <i class="fas fa-sliders-h"></i>
-                    </div>
-                    <h5 class="card-title text-dark fw-bold mb-2">Configure</h5>
-                    <p class="card-text text-muted small mb-auto flex-grow-1">
-                        Customize grading scales and components per class
-                    </p>
-                    @if ($myClasses && $myClasses->count() > 0)
-                        <a href="{{ route('teacher.assessment.configure', $myClasses->first()->id) }}"
-                            class="btn btn-sm fw-bold text-white mt-3" style="background-color: #0066cc; border: none;">
-                            <i class="fas fa-gear me-1"></i> Setup
-                        </a>
-                    @else
-                        <button class="btn btn-sm fw-bold text-white mt-3" disabled
-                            style="background-color: #0066cc; border: none;">
-                            <i class="fas fa-gear me-1"></i> No Classes
-                        </button>
-                    @endif
-                </div>
+                <small class="text-muted d-block mt-2">Academic courses</small>
             </div>
         </div>
     </div>
 
-    <!-- Two Column Section: Classes & KSA Info -->
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card stat-card h-100" style="border-left: 4px solid #00a86b;">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2 small fw-semibold">Students</h6>
+                        <h2 class="mb-0 fw-bold" style="color: #00a86b;">{{ $totalStudents ?? 0 }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-3x opacity-15" style="color: #00a86b;"></i>
+                </div>
+                <small class="text-muted d-block mt-2">Total enrolled</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+        <div class="card stat-card h-100" style="border-left: 4px solid #ff8c00;">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-2 small fw-semibold">Grades Posted</h6>
+                        <h2 class="mb-0 fw-bold" style="color: #ff8c00;">{{ $gradesPosted ?? 0 }}</h2>
+                    </div>
+                    <i class="fas fa-star fa-3x opacity-15" style="color: #ff8c00;"></i>
+                </div>
+                <small class="text-muted d-block mt-2">Recently added</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KSA Grading System Info -->
+<div class="row mb-4 g-3">
+    <div class="col-12">
+        <div class="card h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0 text-dark fw-bold">
+                    <i class="fas fa-star me-2"></i> KSA Grading System
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <p class="text-muted small mb-3">Comprehensive grading based on three key components:</p>
+
+                        <div class="row">
+                            <!-- Knowledge -->
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 text-dark small fw-bold">
+                                        <i class="fas fa-brain me-2"></i> Knowledge
+                                    </h6>
+                                    <small class="text-muted"><strong>40%</strong></small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: 40%; background-color: #0066cc;"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">Quizzes (40%) + Exams (60%)</small>
+                            </div>
+
+                            <!-- Skills -->
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold small text-dark">
+                                        <i class="fas fa-tools me-2"></i> Skills
+                                    </h6>
+                                    <small class="text-muted"><strong>50%</strong></small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: 50%; background-color: #28a745;"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">Output (40%) + Class Part (30%) + Activities (15%) +
+                                    Assignments (15%)</small>
+                            </div>
+
+                            <!-- Attitude -->
+                            <div class="col-md-4 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold small text-dark">
+                                        <i class="fas fa-handshake me-2"></i> Attitude
+                                    </h6>
+                                    <small class="text-muted"><strong>10%</strong></small>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: 10%; background-color: #6c757d;"></div>
+                                </div>
+                                <small class="text-muted d-block mt-1">Behavior (50%) + Awareness (50%)</small>
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+                        <div class="alert alert-light mb-0 p-3 rounded">
+                            <small class="fw-bold text-dark">Final Grade = (K × 0.40) + (S × 0.50) + (A × 0.10)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-graduation-cap fa-3x text-muted"></i>
+                            </div>
+                            <h5 class="fw-bold text-primary">KSA System</h5>
+                            <p class="text-muted small">Balanced assessment approach for comprehensive student evaluation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Two Column Section: Courses & Subjects -->
     <div class="row mb-4 g-3">
-        <!-- Left: My Classes -->
+        <!-- Left: My Courses -->
         <div class="col-12 col-lg-6">
             <div class="card h-100">
                 <div class="card-header bg-light">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0 text-dark fw-bold">
-                            <i class="fas fa-door-open me-2"></i> My Classes
+                            <i class="fas fa-building me-2"></i> My Courses
                         </h5>
-                        <a href="{{ route('teacher.classes') }}" class="btn btn-sm fw-bold text-white"
-                            style="background-color: #0066cc; border: none;">View All</a>
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-info-circle me-1"></i> Admin Assigned
+                        </span>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -427,201 +410,41 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th class="ps-3">Class</th>
-                                    <th>Level</th>
-                                    <th class="text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if ($myClasses && $myClasses->count() > 0)
-                                    @forelse($myClasses as $class)
-                                        <tr>
-                                            <td class="ps-3">
-                                                <strong
-                                                    class="text-primary d-block">{{ $class->class_name ?? 'N/A' }}</strong>
-                                                <small class="text-muted">{{ $class->course->course_name ?? 'Course' }}</small>
-                                            </td>
-                                            <td>
-                                                <span class="badge text-white" style="background-color: #0066cc;">
-                                                    {{ $class->section ?? 'Year 1' }}
-                                                </span>
-                                            </td>
-                                            <td class="text-center">
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ route('teacher.assessment.configure', $class->id) }}"
-                                                        class="btn fw-bold text-white"
-                                                        style="background-color: #0066cc; border: none;"
-                                                        title="Configure">
-                                                        <i class="fas fa-sliders-h"></i>
-                                                    </a>
-                                                    <a href="{{ route('teacher.grades.entry', $class->id) }}?term=midterm"
-                                                        class="btn fw-bold text-white"
-                                                        style="background-color: #00a86b; border: none;" title="Entry">  
-                                                        <i class="fas fa-keyboard"></i>
-                                                    </a>
-                                                    <a href="{{ route('teacher.grades.analytics', $class->id) }}"
-                                                        class="btn fw-bold text-white"
-                                                        style="background-color: #ff8c00; border: none;"
-                                                        title="Analytics">
-                                                        <i class="fas fa-chart-pie"></i>
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="3" class="text-center text-muted py-4">
-                                                <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                                                <small>No classes assigned yet</small>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                @else
-                                    <tr>
-                                        <td colspan="3" class="text-center text-muted py-4">
-                                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                                            <small>No classes available</small>
-                                        </td>
-                                    </tr>
-                                @endif
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right: KSA Grading System Info -->
-        <div class="col-12 col-lg-6">
-            <div class="card h-100">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0 text-dark fw-bold">
-                        <i class="fas fa-star me-2"></i> KSA Grading System
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted small mb-3">Comprehensive grading based on three key components:</p>
-
-                    <!-- Knowledge -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0 text-dark small fw-bold">
-                                <i class="fas fa-brain me-2"></i> Knowledge
-                            </h6>
-                            <small class="text-muted"><strong>40%</strong></small>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" style="width: 40%; background-color: #0066cc;"></div>
-                        </div>
-                        <small class="text-muted d-block mt-1">Quizzes (40%) + Exams (60%)</small>
-                    </div>
-
-                    <!-- Skills -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0 fw-bold small text-dark">
-                                <i class="fas fa-tools me-2"></i> Skills
-                            </h6>
-                            <small class="text-muted"><strong>50%</strong></small>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" style="width: 50%; background-color: #28a745;"></div>
-                        </div>
-                        <small class="text-muted d-block mt-1">Output (40%) + Class Part (30%) + Activities (15%) +
-                            Assignments (15%)</small>
-                    </div>
-
-                    <!-- Attitude -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="mb-0 fw-bold small text-dark">
-                                <i class="fas fa-handshake me-2"></i> Attitude
-                            </h6>
-                            <small class="text-muted"><strong>10%</strong></small>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar" style="width: 10%; background-color: #6c757d;"></div>
-                        </div>
-                        <small class="text-muted d-block mt-1">Behavior (50%) + Awareness (50%)</small>
-                    </div>
-
-                    <hr class="my-3">
-                    <div class="alert alert-light mb-0 p-3 rounded">
-                        <small class="fw-bold text-dark">Final Grade = (K × 0.40) + (S × 0.50) + (A × 0.10)</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Courses Section -->
-    <div class="row mb-4 g-3">
-        <div class="col-12">
-            <div class="card h-100">
-                <div class="card-header bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-dark fw-bold">
-                            <i class="fas fa-book me-2"></i> My Courses
-                        </h5>
-                        <a href="{{ route('admin.courses.create') }}" class="btn btn-sm fw-bold text-white"
-                            style="background-color: #0066cc; border: none;">
-                            <i class="fas fa-plus me-1"></i> Add Course
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-3">Course Name</th>
-                                    <th class="d-none d-md-table-cell">Code</th>
-                                    <th class="d-none d-lg-table-cell">Department</th>
-                                    <th class="text-center">Actions</th>
+                                    <th class="ps-3">Course</th>
+                                    <th>Department</th>
+                                    <th class="text-center">Classes</th>
+                                    <th class="text-center">Students</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @if ($myCourses && $myCourses->count() > 0)
                                     @forelse($myCourses as $course)
+                                        @php
+                                            $courseClasses = $myClasses->where('course_id', $course->id);
+                                            $courseStudentCount = $courseClasses->sum(function($class) {
+                                                return $class->students->count();
+                                            });
+                                        @endphp
                                         <tr>
                                             <td class="ps-3">
                                                 <strong class="text-primary d-block">{{ $course->course_name ?? 'N/A' }}</strong>
-                                                <small class="text-muted">{{ $course->description ?? 'No description' }}</small>
+                                                <small class="text-muted">{{ $course->course_code ?? 'N/A' }}</small>
                                             </td>
-                                            <td class="d-none d-md-table-cell">
-                                                <span class="badge text-dark" style="background-color: #e9ecef;">
-                                                    {{ $course->course_code ?? 'N/A' }}
-                                                </span>
-                                            </td>
-                                            <td class="d-none d-lg-table-cell">
-                                                <small class="text-muted">{{ $course->department ?? 'General' }}</small>
+                                            <td>
+                                                <small class="text-muted">{{ $course->college ?? 'General Education' }}</small>
                                             </td>
                                             <td class="text-center">
-                                                <div class="btn-group btn-group-sm" role="group">
-                                                    <a href="{{ route('admin.courses.edit', $course->id) }}"
-                                                        class="btn fw-bold text-white"
-                                                        style="background-color: #0066cc; border: none;"
-                                                        title="Edit Course">
-                                                        <i class="fas fa-edit"></i>
-                                                    </a>
-                                                    <form action="{{ route('admin.courses.destroy', $course->id) }}" method="POST" style="display: inline;" 
-                                                        onsubmit="return confirm('Are you sure you want to delete this course?');">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm fw-bold text-white"
-                                                            style="background-color: #dc3545; border: none;"
-                                                            title="Delete Course">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
+                                                <span class="badge bg-info">{{ $courseClasses->count() }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success">{{ $courseStudentCount }}</span>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="4" class="text-center text-muted py-4">
                                                 <i class="fas fa-inbox fa-2x mb-2"></i><br>
-                                                <small>No courses assigned yet</small>
+                                                <small>No courses assigned</small>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -639,7 +462,94 @@
                 </div>
             </div>
         </div>
+
+        <!-- Right: My Classes -->
+        <div class="col-12 col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-dark fw-bold">
+                            <i class="fas fa-chalkboard me-2"></i> My Classes - UPDATED!
+                        </h5>
+                        <div>
+                            <button class="btn btn-sm fw-bold text-white me-2" 
+                                    href="{{ route('teacher.classes.create') }}"
+                                    style="background-color: #667eea; border: none;">
+                                <i class="fas fa-plus me-1"></i> Create Class
+                            </button>
+                            <a href="{{ route('teacher.classes') }}" class="btn btn-sm fw-bold text-white"
+                                style="background-color: #0066cc; border: none;">View All</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Class Name</th>
+                                    <th>Subject</th>
+                                    <th>Code</th>
+                                    <th class="text-center">Students</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if ($myClasses && $myClasses->count() > 0)
+                                    @forelse($myClasses as $class)
+                                        <tr>
+                                            <td class="ps-3">
+                                                <strong class="text-primary d-block">{{ $class->class_name ?? 'N/A' }}</strong>
+                                                <small class="text-muted">{{ $class->section ?? 'Year 1' }} - {{ $class->year ?? 'N/A' }} Year</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">{{ $class->course->subject_name ?? $class->course->course_name ?? 'N/A' }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ $class->course->course_code ?? 'N/A' }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success">{{ $class->students->count() }}/{{ $class->capacity }}</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{{ route('teacher.classes.show', $class->id) }}" class="btn fw-bold text-white"
+                                                        style="background-color: #00a86b; border: none;" title="View Class">  
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="#" class="btn fw-bold text-white"
+                                                        data-bs-toggle="modal" data-bs-target="#addStudentModal"
+                                                        onclick="selectClassForStudent({{ $class->id }})"
+                                                        style="background-color: #667eea; border: none;" title="Add Students">  
+                                                        <i class="fas fa-user-plus"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                <i class="fas fa-chalkboard fa-2x mb-2"></i><br>
+                                                <small>No classes created yet</small>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                @else
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="fas fa-chalkboard fa-2x mb-2"></i><br>
+                                            <small>No classes available</small>
+                                        </td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
 
     <!-- Recent Grades Posted Section -->
     <div class="row mt-4">
@@ -655,7 +565,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-4 fw-bold">Class</th>
-                                        <th class="fw-bold">Course</th>
+                                        <th class="fw-bold">Department</th>
                                         <th class="text-center fw-bold">Students</th>
                                         <th class="d-none d-md-table-cell text-center fw-bold">Avg Knowledge</th>
                                         <th class="d-none d-md-table-cell text-center fw-bold">Avg Skills</th>
@@ -672,7 +582,7 @@
                                                     {{ $classData->class_name ?? 'N/A' }}
                                                 </a>
                                             </td>
-                                            <td><small class="text-muted">{{ $classData->course_name ?? 'N/A' }}</small></td>
+                                            <td><small class="text-muted">{{ $classData->course_name ?? $classData->department_name ?? 'N/A' }}</small></td>
                                             <td class="text-center">
                                                 <span class="badge bg-info">{{ $classData->student_count }}</span>
                                             </td>
@@ -740,138 +650,26 @@
                         </a>
                     </div>
                 @endif
-            </div>
-        </div>
     </div>
 
     <!-- Add Student Modal -->
     @include('teacher.components.add-student-modal')
 
-    <!-- Create Class Modal -->
-    <div class="modal fade" id="createClassModal" tabindex="-1" role="dialog" aria-labelledby="createClassModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="createClassModalLabel">
-                        <i class="fas fa-plus-circle me-2"></i>Create New Class
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+                option.style.display = '';
+            });
+        });
 
-                <form action="{{ route('teacher.classes.store') }}" method="POST" id="createClassForm">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <!-- Class Name -->
-                            <div class="col-md-12">
-                                <label for="className" class="form-label fw-bold">
-                                    <i class="fas fa-book me-2"></i>Class Name
-                                </label>
-                                <input type="text" class="form-control @error('class_name') is-invalid @enderror"
-                                    id="className" name="class_name" placeholder="e.g., Object Oriented Programming"
-                                    required>
-                                @error('class_name')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Course Selection -->
-                            <div class="col-md-6">
-                                <label for="courseId" class="form-label fw-bold">
-                                    <i class="fas fa-tag me-2"></i>Course
-                                </label>
-                                <select class="form-select @error('course_id') is-invalid @enderror" id="courseId"
-                                    name="course_id" required>
-                                    <option value="">Select Course</option>
-                                    @if (!empty($myClasses))
-                                        @foreach ($myClasses as $class)
-                                            <option value="{{ $class->course_id }}">{{ $class->course->course_name ?? 'N/A' }}
-                                            </option>
-                                        @endforeach
-                                    @endif
-                                </select>
-                                @error('course_id')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Year -->
-                            <div class="col-md-6">
-                                <label for="year" class="form-label fw-bold">
-                                    <i class="fas fa-graduation-cap me-2"></i>Year
-                                </label>
-                                <select class="form-select @error('year') is-invalid @enderror" id="year"
-                                    name="year" required>
-                                    <option value="">Select Year</option>
-                                    <option value="1">1st Year</option>
-                                    <option value="2">2nd Year</option>
-                                    <option value="3">3rd Year</option>
-                                    <option value="4">4th Year</option>
-                                </select>
-                                @error('year')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Section -->
-                            <div class="col-md-6">
-                                <label for="section" class="form-label fw-bold">
-                                    <i class="fas fa-users me-2"></i>Section
-                                </label>
-                                <select class="form-select @error('section') is-invalid @enderror" id="section"
-                                    name="section" required>
-                                    <option value="">Select Section</option>
-                                    <option value="A">Section A</option>
-                                    <option value="B">Section B</option>
-                                    <option value="C">Section C</option>
-                                    <option value="D">Section D</option>
-                                    <option value="E">Section E</option>
-                                </select>
-                                @error('section')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Capacity -->
-                            <div class="col-md-6">
-                                <label for="capacity" class="form-label fw-bold">
-                                    <i class="fas fa-chair me-2"></i>Class Capacity
-                                </label>
-                                <input type="number" class="form-control @error('capacity') is-invalid @enderror"
-                                    id="capacity" name="capacity" placeholder="e.g., 50" min="1" max="100"
-                                    required>
-                                @error('capacity')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <!-- Description -->
-                            <div class="col-md-12">
-                                <label for="description" class="form-label fw-bold">
-                                    <i class="fas fa-file-alt me-2"></i>Description (Optional)
-                                </label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
-                                    rows="3" placeholder="Add notes about this class..."></textarea>
-                                @error('description')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-2"></i>Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary" style="background-color: #667eea; border: none;">
-                            <i class="fas fa-plus me-2"></i>Create Class
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+        // Function to select class for adding students
+        window.selectClassForStudent = function(classId) {
+            // Set the class ID in all class selects
+            const classSelects = document.querySelectorAll('[id$="_class_id"]');
+            classSelects.forEach(select => {
+                select.value = classId;
+            });
+        };
+    });
+    </script>
 
 @endsection

@@ -314,9 +314,9 @@
                     </a></li>
 
                 <li><a href="{{ route('teacher.subjects') }}"
-                        class="{{ request()->routeIs('teacher.subjects') ? 'active' : '' }}">
+                        class="{{ request()->routeIs('teacher.subjects*') ? 'active' : '' }}">
                         <i class="fas fa-book"></i>
-                        <span>Courses</span>
+                        <span>My Subjects</span>
                     </a></li>
 
                 <li><a href="{{ route('teacher.grades') }}"

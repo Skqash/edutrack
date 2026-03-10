@@ -23,7 +23,8 @@ class ClassModel extends Model
         'course_id',
         'description',
         'status',
-        'current_term'
+        'current_term',
+        'units',
     ];
 
     public function teacher()

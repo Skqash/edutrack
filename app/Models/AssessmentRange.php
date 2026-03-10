@@ -21,6 +21,7 @@ class AssessmentRange extends Model
         'quiz_3_max',
         'quiz_4_max',
         'quiz_5_max',
+        'prelim_exam_max',
         'midterm_exam_max',
         'final_exam_max',
         'output_max',
@@ -105,6 +106,7 @@ class AssessmentRange extends Model
     public function normalizeQuizScore($rawScore, $quizNumber): float
     {
         $maxScore = $this->getQuizMax($quizNumber);
+
         return ($rawScore / $maxScore) * 100;
     }
 
@@ -114,6 +116,7 @@ class AssessmentRange extends Model
     public function normalizeExamScore($rawScore, $examType): float
     {
         $maxScore = $this->getExamMax($examType);
+
         return ($rawScore / $maxScore) * 100;
     }
 
@@ -123,6 +126,7 @@ class AssessmentRange extends Model
     public function normalizeSkillScore($rawScore, $skillComponent): float
     {
         $maxScore = $this->{"{$skillComponent}_max"} ?? 100;
+
         return ($rawScore / $maxScore) * 100;
     }
 
@@ -132,6 +136,7 @@ class AssessmentRange extends Model
     public function normalizeAttitudeScore($rawScore, $attitudeComponent): float
     {
         $maxScore = $this->{"{$attitudeComponent}_max"} ?? 100;
+
         return ($rawScore / $maxScore) * 100;
     }
 
@@ -141,6 +146,7 @@ class AssessmentRange extends Model
     public function normalizeAttendanceScore($rawScore): float
     {
         $maxScore = $this->attendance_max;
+
         return ($rawScore / $maxScore) * 100;
     }
 
@@ -151,11 +157,12 @@ class AssessmentRange extends Model
     {
         // If using total quiz items with equal distribution
         if ($this->equal_quiz_distribution && $this->total_quiz_items) {
-            $perQuiz = (int)($this->total_quiz_items / $this->num_quizzes);
+            $perQuiz = (int) ($this->total_quiz_items / $this->num_quizzes);
             $distribution = [];
             for ($i = 1; $i <= $this->num_quizzes; $i++) {
-                $distribution['q' . $i] = $perQuiz;
+                $distribution['q'.$i] = $perQuiz;
             }
+
             return $distribution;
         }
 
@@ -209,4 +216,4 @@ class AssessmentRange extends Model
             'final' => $this->final_exam_max,
         ];
     }
-};
+}

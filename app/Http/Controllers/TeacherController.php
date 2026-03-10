@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AssessmentRange;
+use App\Models\Attendance;
+use App\Models\ClassModel;
+use App\Models\Course;
 use App\Models\Grade;
 use App\Models\GradeEntry;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Student;
-use App\Models\ClassModel;
-use App\Models\Subject;
-use App\Models\Course;
-use App\Models\Teacher;
-use App\Models\AssessmentRange;
 use App\Models\StudentAttendance;
-use App\Models\Attendance;
+use App\Models\Subject;
+use App\Models\Teacher;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class TeacherController extends Controller
 {
@@ -24,23 +25,28 @@ class TeacherController extends Controller
     public function dashboard()
     {
         $teacherId = Auth::id();
-        
+
         // Get teacher's classes with proper relationships
         $myClasses = ClassModel::where('teacher_id', $teacherId)
             ->with('course', 'students')
             ->get();
-        
+
+        // Get teacher's assigned subjects
+        /** @var \App\Models\User $teacher */
+        $teacher = Auth::user();
+        $assignedSubjects = $teacher->subjects()->with('course')->get();
+
         // Get total students in teacher's classes
-        $totalStudents = Student::whereIn('class_id', 
+        $totalStudents = Student::whereIn('class_id',
             ClassModel::where('teacher_id', $teacherId)->pluck('id')
         )->count();
-        
+
         // Get grades posted by this teacher (total count)
         $gradesPosted = Grade::where('teacher_id', $teacherId)
             ->whereNotNull('final_grade')
             ->distinct('student_id', 'class_id', 'term')
             ->count();
-        
+
         // Get classes without complete grades (pending tasks)
         $classesWithoutGrades = [];
         foreach ($myClasses as $class) {
@@ -50,32 +56,32 @@ class TeacherController extends Controller
                 ->whereNotNull('final_grade')
                 ->distinct('student_id')
                 ->count();
-            
+
             if ($gradesCount < $studentCount) {
                 $classesWithoutGrades[] = $class->id;
             }
         }
         $pendingTasks = count($classesWithoutGrades);
-        
+
         // Get recent grades by class (grouped summary)
         $recentGradesByClass = ClassModel::where('teacher_id', $teacherId)
-            ->with(['grades' => function($query) {
+            ->with(['grades' => function ($query) {
                 $query->whereNotNull('final_grade')->latest('updated_at')->limit(1);
             }])
-            ->whereHas('grades', function($query) {
+            ->whereHas('grades', function ($query) {
                 $query->whereNotNull('final_grade');
             })
             ->orderBy('updated_at', 'desc')
             ->limit(10)
             ->get();
-        
+
         // Transform to get class data with grade statistics
-        $recentGrades = $recentGradesByClass->map(function($class) {
+        $recentGrades = $recentGradesByClass->map(function ($class) {
             $classGrades = Grade::where('class_id', $class->id)
                 ->whereNotNull('final_grade')
                 ->get();
-            
-            return (object)[
+
+            return (object) [
                 'class_id' => $class->id,
                 'class_name' => $class->class_name,
                 'course_name' => $class->course->course_name ?? 'N/A',
@@ -97,7 +103,8 @@ class TeacherController extends Controller
             'gradesPosted',
             'pendingTasks',
             'recentGrades',
-            'myCourses'
+            'myCourses',
+            'assignedSubjects'
         ));
     }
 
@@ -121,7 +128,7 @@ class TeacherController extends Controller
     public function subjectsIndex()
     {
         $teacherId = Auth::id();
-        
+
         // Get all unique courses from this teacher's classes
         $courseIds = ClassModel::where('teacher_id', $teacherId)
             ->distinct()
@@ -132,7 +139,7 @@ class TeacherController extends Controller
             ->get();
 
         // Enhance course data with class and student counts
-        $coursesData = $courses->map(function($course) use ($teacherId) {
+        $coursesData = $courses->map(function ($course) use ($teacherId) {
             $classes = ClassModel::where('course_id', $course->id)
                 ->where('teacher_id', $teacherId)
                 ->with('students')
@@ -144,8 +151,8 @@ class TeacherController extends Controller
                 'description' => $course->description ?? null,
                 'code' => $course->course_code ?? null,
                 'class_count' => $classes->count(),
-                'student_count' => $classes->sum(fn($c) => $c->students->count()),
-                'classes' => $classes->map(fn($c) => ['id' => $c->id, 'class_name' => $c->class_name])->toArray(),
+                'student_count' => $classes->sum(fn ($c) => $c->students->count()),
+                'classes' => $classes->map(fn ($c) => ['id' => $c->id, 'class_name' => $c->class_name])->toArray(),
             ];
         });
 
@@ -153,7 +160,7 @@ class TeacherController extends Controller
         $totalStudents = ClassModel::where('teacher_id', $teacherId)
             ->with('students')
             ->get()
-            ->sum(fn($c) => $c->students->count());
+            ->sum(fn ($c) => $c->students->count());
 
         return view('teacher.subjects.index', [
             'courses' => $coursesData,
@@ -213,7 +220,12 @@ class TeacherController extends Controller
             ->get()
             ->keyBy('student_id');
 
-        return view('teacher.grades.entry', compact('class', 'existingGrades'));
+        // Get assessment ranges
+        $range = AssessmentRange::where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+
+        return view('teacher.grades.entry', compact('class', 'existingGrades', 'range'));
     }
 
     /**
@@ -248,7 +260,7 @@ class TeacherController extends Controller
     public function storeGrades(Request $request, $classId)
     {
         $teacherId = Auth::id();
-        
+
         // Validate teacher owns this class
         $class = ClassModel::where('id', $classId)
             ->where('teacher_id', $teacherId)->firstOrFail();
@@ -290,7 +302,7 @@ class TeacherController extends Controller
                     'attitude_score' => $attitude,
                     'final_grade' => $finalGrade,
                     'remarks' => $gradeData['remarks'] ?? null,
-                    'grading_period' => date('Y-m') . '-' . (intdiv((int)date('m') - 1, 3) + 1),
+                    'grading_period' => date('Y-m').'-'.(intdiv((int) date('m') - 1, 3) + 1),
                 ]
             );
 
@@ -350,7 +362,7 @@ class TeacherController extends Controller
     {
         $teacherId = Auth::id();
         $class = ClassModel::findOrFail($classId);
-        
+
         // Verify teacher owns this class
         if ($class->teacher_id !== $teacherId) {
             abort(403);
@@ -363,7 +375,7 @@ class TeacherController extends Controller
         ]);
 
         $date = $validated['date'];
-        
+
         foreach ($validated['attendance'] as $studentId => $data) {
             Attendance::updateOrCreate(
                 [
@@ -430,17 +442,17 @@ class TeacherController extends Controller
         return response()->json([
             'knowledge' => [
                 'weight' => 40,
-                'description' => 'Quizzes 40% + Exams 60% = 40% of term'
+                'description' => 'Quizzes 40% + Exams 60% = 40% of term',
             ],
             'skills' => [
                 'weight' => 50,
-                'description' => 'Output 40% + Class Part 30% + Activities 15% + Assignments 15% = 50% of term'
+                'description' => 'Output 40% + Class Part 30% + Activities 15% + Assignments 15% = 50% of term',
             ],
             'attitude' => [
                 'weight' => 10,
-                'description' => 'Behavior 50% + Awareness 50% = 10% of term'
+                'description' => 'Behavior 50% + Awareness 50% = 10% of term',
             ],
-            'formula' => 'Final Grade = (Knowledge × 0.40) + (Skills × 0.50) + (Attitude × 0.10)'
+            'formula' => 'Final Grade = (Knowledge × 0.40) + (Skills × 0.50) + (Attitude × 0.10)',
         ]);
     }
 
@@ -471,15 +483,19 @@ class TeacherController extends Controller
 
         $validated = $request->validate([
             'class_id' => 'required|exists:classes,id',
-            'name' => 'required|string|max:255',
+            'firstname' => 'required|string|max:255',
+            'surname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'year' => 'required|integer|in:1,2,3,4',
             'section' => 'required|string|in:A,B,C,D,E',
         ]);
 
+        // Combine firstname and surname
+        $fullName = trim($validated['firstname']).' '.trim($validated['surname']);
+
         // Create user
         $user = \App\Models\User::create([
-            'name' => $validated['name'],
+            'name' => $fullName,
             'email' => $validated['email'],
             'password' => bcrypt('password'),
             'role' => 'student',
@@ -502,6 +518,144 @@ class TeacherController extends Controller
         ]);
 
         return redirect()->back()->with('success', "Student {$studentId} added successfully!");
+    }
+
+    /**
+     * Search for existing students to add to class
+     */
+    public function searchStudents(Request $request)
+    {
+        $teacherId = Auth::id();
+        $classId = $request->input('class_id');
+        $searchTerm = $request->input('search', '');
+        $unassignedOnly = $request->input('unassigned_only', false);
+        $sameYearOnly = $request->input('same_year_only', false);
+
+        // Verify teacher owns this class
+        $class = ClassModel::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+
+        if (! $class) {
+            return response()->json(['error' => 'Class not found'], 404);
+        }
+
+        // Build query
+        $query = Student::with('user', 'class');
+
+        // Search by name, email, or student ID
+        if (! empty($searchTerm)) {
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('user', function ($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'LIKE', "%{$searchTerm}%")
+                        ->orWhere('email', 'LIKE', "%{$searchTerm}%");
+                })
+                    ->orWhere('student_id', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        // Filter by same year level if requested
+        if ($sameYearOnly && $class->year) {
+            $query->where('year', $class->year);
+        }
+
+        // Filter unassigned if requested
+        if ($unassignedOnly) {
+            $query->whereNull('class_id')
+                ->orWhere('class_id', '!=', $classId);
+        }
+
+        // Exclude students already in this class
+        $query->where(function ($q) use ($classId) {
+            $q->whereNull('class_id')
+                ->orWhere('class_id', '!=', $classId);
+        });
+
+        $students = $query->limit(50)->get()->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'name' => $student->user->name ?? 'N/A',
+                'email' => $student->user->email ?? 'N/A',
+                'student_id' => $student->student_id,
+                'year' => $student->year,
+                'section' => $student->section,
+                'current_class' => $student->class ? $student->class->class_name : null,
+                'status' => $student->status,
+            ];
+        });
+
+        return response()->json(['students' => $students]);
+    }
+
+    /**
+     * Add existing students to class
+     */
+    public function addExistingStudents(Request $request)
+    {
+        $teacherId = Auth::id();
+        $classId = $request->input('class_id');
+        $studentIds = $request->input('student_ids', []);
+
+        // Validate input
+        if (empty($classId) || empty($studentIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Class and students are required',
+            ], 400);
+        }
+
+        // Verify teacher owns this class
+        $class = ClassModel::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+
+        if (! $class) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Class not found or access denied',
+            ], 404);
+        }
+
+        $addedCount = 0;
+        $errors = [];
+
+        foreach ($studentIds as $studentId) {
+            try {
+                $student = Student::findOrFail($studentId);
+
+                // Check if student is already in this class
+                if ($student->class_id == $classId) {
+                    $errors[] = "Student {$student->student_id} is already in this class";
+
+                    continue;
+                }
+
+                // Update student's class assignment
+                $student->update(['class_id' => $classId]);
+                $addedCount++;
+
+            } catch (\Exception $e) {
+                $errors[] = "Error adding student ID {$studentId}: ".$e->getMessage();
+            }
+        }
+
+        if ($addedCount > 0) {
+            $message = "Successfully added {$addedCount} student(s) to {$class->class_name}";
+            if (! empty($errors)) {
+                $message .= '. Some errors occurred: '.implode(', ', $errors);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'added_count' => $addedCount,
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'No students were added. '.implode(', ', $errors),
+            ], 400);
+        }
     }
 
     /**
@@ -536,12 +690,12 @@ class TeacherController extends Controller
     public function showGradeEntryByTerm($classId)
     {
         $teacherId = Auth::id();
-        
+
         // Get term from query parameter
         $term = request()->query('term', 'midterm');
-        
+
         // Validate term
-        if (!in_array($term, ['midterm', 'final'])) {
+        if (! in_array($term, ['midterm', 'final'])) {
             abort(400, 'Invalid term');
         }
 
@@ -552,6 +706,11 @@ class TeacherController extends Controller
 
         $students = $class->students()->with('user')->get();
 
+        // Get assessment ranges
+        $range = AssessmentRange::where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+
         // Load existing grade entries for this term
         $entries = GradeEntry::where('class_id', $classId)
             ->where('teacher_id', $teacherId)
@@ -559,7 +718,7 @@ class TeacherController extends Controller
             ->get()
             ->keyBy('student_id');
 
-        return view('teacher.grades.grade_entry', compact('class', 'students', 'term', 'entries'));
+        return view('teacher.grades.grade_entry', compact('class', 'students', 'term', 'entries', 'range'));
     }
 
     /**
@@ -568,12 +727,12 @@ class TeacherController extends Controller
     public function storeGradeEntryByTerm(Request $request, $classId)
     {
         $teacherId = Auth::id();
-        
+
         // Get term from query parameter
         $term = $request->query('term', 'midterm');
-        
+
         // Validate term
-        if (!in_array($term, ['midterm', 'final'])) {
+        if (! in_array($term, ['midterm', 'final'])) {
             abort(400, 'Invalid term');
         }
 
@@ -641,7 +800,7 @@ class TeacherController extends Controller
                 $weights = [
                     'knowledge' => 40,
                     'skills' => 50,
-                    'attitude' => 10
+                    'attitude' => 10,
                 ];
                 $computedValues = $entry->computeAverages($weights);
 
@@ -650,16 +809,17 @@ class TeacherController extends Controller
 
                 $saved++;
             } catch (\Exception $e) {
-                Log::error('Grade entry error for student ' . $studentId . ': ' . $e->getMessage());
+                Log::error('Grade entry error for student '.$studentId.': '.$e->getMessage());
                 $errors[] = "Error saving grades for student ID {$studentId}";
+
                 continue;
             }
         }
 
         if ($saved > 0) {
-            return redirect()->route('teacher.grades')->with('success', "✅ Saved {$saved} grade records for " . ucfirst($term) . " term");
+            return redirect()->route('teacher.grades')->with('success', "✅ Saved {$saved} grade records for ".ucfirst($term).' term');
         } else {
-            return back()->with('error', 'No grades were saved. ' . implode(', ', $errors));
+            return back()->with('error', 'No grades were saved. '.implode(', ', $errors));
         }
     }
 
@@ -670,12 +830,17 @@ class TeacherController extends Controller
     {
         $teacherId = Auth::id();
         $term = $request->query('term', 'midterm'); // Get from query parameter, default to midterm
-        
+
         $class = ClassModel::where('teacher_id', $teacherId)
             ->with('students.user', 'course')
             ->findOrFail($classId);
 
         $students = $class->students()->with('user')->get();
+
+        // Get assessment ranges
+        $range = AssessmentRange::where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
 
         // Load existing grade entries for this term from GradeEntry model
         $entries = GradeEntry::where('class_id', $classId)
@@ -684,7 +849,7 @@ class TeacherController extends Controller
             ->get()
             ->keyBy('student_id');
 
-        return view('teacher.grades.grade_entry', compact('class', 'students', 'term', 'entries'));
+        return view('teacher.grades.grade_entry', compact('class', 'students', 'term', 'entries', 'range'));
     }
 
     /**
@@ -694,7 +859,7 @@ class TeacherController extends Controller
     {
         $teacherId = Auth::id();
         $term = $request->query('term', 'midterm');
-        
+
         $class = ClassModel::where('id', $classId)
             ->where('teacher_id', $teacherId)
             ->firstOrFail();
@@ -758,23 +923,24 @@ class TeacherController extends Controller
                 $weights = [
                     'knowledge' => 40,
                     'skills' => 50,
-                    'attitude' => 10
+                    'attitude' => 10,
                 ];
                 $computedValues = $entry->computeAverages($weights);
                 $entry->update($computedValues);
 
                 $saved++;
             } catch (\Exception $e) {
-                Log::error('Grade entry error for student ' . $studentId . ': ' . $e->getMessage());
+                Log::error('Grade entry error for student '.$studentId.': '.$e->getMessage());
                 $errors[] = "Error saving grades for student ID {$studentId}";
+
                 continue;
             }
         }
 
         if ($saved > 0) {
-            return redirect()->route('teacher.grades')->with('success', "✅ Saved {$saved} grade records for " . ucfirst($term) . " term");
+            return redirect()->route('teacher.grades')->with('success', "✅ Saved {$saved} grade records for ".ucfirst($term).' term');
         } else {
-            return back()->with('error', 'No grades were saved. ' . implode(', ', $errors));
+            return back()->with('error', 'No grades were saved. '.implode(', ', $errors));
         }
     }
 
@@ -871,11 +1037,22 @@ class TeacherController extends Controller
      */
     private function getGrade5ptScale(float $grade): string
     {
-        if ($grade >= 90) return '5.0';
-        if ($grade >= 80) return '4.0';
-        if ($grade >= 70) return '3.0';
-        if ($grade >= 60) return '2.0';
-        if ($grade >= 50) return '1.0';
+        if ($grade >= 90) {
+            return '5.0';
+        }
+        if ($grade >= 80) {
+            return '4.0';
+        }
+        if ($grade >= 70) {
+            return '3.0';
+        }
+        if ($grade >= 60) {
+            return '2.0';
+        }
+        if ($grade >= 50) {
+            return '1.0';
+        }
+
         return '0.0';
     }
 
@@ -884,11 +1061,22 @@ class TeacherController extends Controller
      */
     private function getGradeRemark(float $grade): string
     {
-        if ($grade >= 90) return 'Excellent';
-        if ($grade >= 80) return 'Very Good';
-        if ($grade >= 70) return 'Good';
-        if ($grade >= 60) return 'Fair';
-        if ($grade >= 50) return 'Poor';
+        if ($grade >= 90) {
+            return 'Excellent';
+        }
+        if ($grade >= 80) {
+            return 'Very Good';
+        }
+        if ($grade >= 70) {
+            return 'Good';
+        }
+        if ($grade >= 60) {
+            return 'Fair';
+        }
+        if ($grade >= 50) {
+            return 'Poor';
+        }
+
         return 'Fail';
     }
 
@@ -898,9 +1086,9 @@ class TeacherController extends Controller
     private function recalculateGradeScoresWithScheme($grade, array $weights)
     {
         // Knowledge Score (default internal: exams 60%, quizzes 40%)
-        $quizzes = array_filter([ $grade->q1, $grade->q2, $grade->q3, $grade->q4, $grade->q5 ]);
+        $quizzes = array_filter([$grade->q1, $grade->q2, $grade->q3, $grade->q4, $grade->q5]);
         $quizAvg = count($quizzes) > 0 ? array_sum($quizzes) / count($quizzes) : 0;
-        $exams = array_filter([ $grade->exam_prelim ?? null, $grade->midterm_exam ?? null, $grade->final_exam ?? null ]);
+        $exams = array_filter([$grade->exam_prelim ?? null, $grade->midterm_exam ?? null, $grade->final_exam ?? null]);
         $examAvg = count($exams) > 0 ? array_sum($exams) / count($exams) : 0;
         $grade->knowledge_score = ($quizAvg * 0.40) + ($examAvg * 0.60);
 
@@ -951,9 +1139,9 @@ class TeacherController extends Controller
 
         $grades = $request->input('grades', []);
         $term = $request->input('term', 'midterm');
-        
+
         // Validate term
-        if (!in_array($term, ['midterm', 'final'])) {
+        if (! in_array($term, ['midterm', 'final'])) {
             return redirect()->back()->with('error', 'Invalid term selected');
         }
 
@@ -964,7 +1152,7 @@ class TeacherController extends Controller
             try {
                 // Handle both numeric keys (from form submission) and student_id keys
                 $studentId = $gradeData['student_id'] ?? $index;
-                
+
                 $student = Student::findOrFail($studentId);
 
                 // Prepare update data
@@ -1006,7 +1194,7 @@ class TeacherController extends Controller
 
                 foreach ($skillFields as $field) {
                     // Try without suffix first (unified form), then with suffix (legacy form)
-                    $value = $gradeData[$field] ?? $gradeData[$field . '_' . $term] ?? null;
+                    $value = $gradeData[$field] ?? $gradeData[$field.'_'.$term] ?? null;
                     if ($value !== null) {
                         $updateData[$field] = floatval($value);
                     }
@@ -1020,7 +1208,7 @@ class TeacherController extends Controller
 
                 foreach ($attitudeFields as $field) {
                     // Try without suffix first (unified form), then with suffix (legacy form)
-                    $value = $gradeData[$field] ?? $gradeData[$field . '_' . $term] ?? null;
+                    $value = $gradeData[$field] ?? $gradeData[$field.'_'.$term] ?? null;
                     if ($value !== null) {
                         $updateData[$field] = floatval($value);
                     }
@@ -1042,15 +1230,16 @@ class TeacherController extends Controller
 
                 $successCount++;
             } catch (\Exception $e) {
-                $errors[] = "Student {$index}: " . $e->getMessage();
+                $errors[] = "Student {$index}: ".$e->getMessage();
             }
         }
 
         if ($successCount > 0) {
             $message = "✓ {$successCount} grades saved successfully for {$term} term!";
-            if (!empty($errors)) {
-                $message .= " (" . count($errors) . " errors encountered)";
+            if (! empty($errors)) {
+                $message .= ' ('.count($errors).' errors encountered)';
             }
+
             return redirect()->route('teacher.grades')->with('success', $message);
         } else {
             return redirect()->back()->with('error', 'No grades were saved. Please check for errors.');
@@ -1067,25 +1256,25 @@ class TeacherController extends Controller
             $grade->q1, $grade->q2, $grade->q3, $grade->q4, $grade->q5,
             $grade->q6, $grade->q7, $grade->q8, $grade->q9, $grade->q10,
         ]);
-        
+
         $quizAvg = count($quizzes) > 0 ? array_sum($quizzes) / count($quizzes) : 0;
         $examAvg = (($grade->midterm_exam ?? 0) + ($grade->final_exam ?? 0)) / 2;
-        
+
         $grade->knowledge_score = ($quizAvg * 0.40) + ($examAvg * 0.60);
 
         // Skills Score (50%) - Calculate from individual entries
         $outputEntries = array_filter([$grade->output_1, $grade->output_2, $grade->output_3]);
         $outputAvg = count($outputEntries) > 0 ? array_sum($outputEntries) / count($outputEntries) : 0;
         $grade->output_score = $outputAvg;
-        
+
         $cpEntries = array_filter([$grade->class_participation_1, $grade->class_participation_2, $grade->class_participation_3]);
         $cpAvg = count($cpEntries) > 0 ? array_sum($cpEntries) / count($cpEntries) : 0;
         $grade->class_participation_score = $cpAvg;
-        
+
         $actEntries = array_filter([$grade->activities_1, $grade->activities_2, $grade->activities_3]);
         $actAvg = count($actEntries) > 0 ? array_sum($actEntries) / count($actEntries) : 0;
         $grade->activities_score = $actAvg;
-        
+
         $asgEntries = array_filter([$grade->assignments_1, $grade->assignments_2, $grade->assignments_3]);
         $asgAvg = count($asgEntries) > 0 ? array_sum($asgEntries) / count($asgEntries) : 0;
         $grade->assignments_score = $asgAvg;
@@ -1096,7 +1285,7 @@ class TeacherController extends Controller
         $behaviorEntries = array_filter([$grade->behavior_1, $grade->behavior_2, $grade->behavior_3]);
         $behaviorAvg = count($behaviorEntries) > 0 ? array_sum($behaviorEntries) / count($behaviorEntries) : 0;
         $grade->behavior_score = $behaviorAvg;
-        
+
         $awarenessEntries = array_filter([$grade->awareness_1, $grade->awareness_2, $grade->awareness_3]);
         $awarenessAvg = count($awarenessEntries) > 0 ? array_sum($awarenessEntries) / count($awarenessEntries) : 0;
         $grade->awareness_score = $awarenessAvg;
@@ -1145,7 +1334,9 @@ class TeacherController extends Controller
                     try {
                         $data = array_combine($header, $row);
 
-                        if (empty($data['Email'])) continue;
+                        if (empty($data['Email'])) {
+                            continue;
+                        }
 
                         // Validate required fields
                         $name = $data['Name'] ?? null;
@@ -1153,20 +1344,23 @@ class TeacherController extends Controller
                         $year = $data['Year'] ?? null;
                         $section = $data['Section'] ?? null;
 
-                        if (!$name || !$email || !$year || !$section) {
+                        if (! $name || ! $email || ! $year || ! $section) {
                             $errors[] = "Row {$lineNo}: Missing required fields (Name, Email, Year, Section)";
+
                             continue;
                         }
 
                         // Validate year
-                        if (!in_array($year, [1, 2, 3, 4])) {
+                        if (! in_array($year, [1, 2, 3, 4])) {
                             $errors[] = "Row {$lineNo}: Invalid year '{$year}'. Must be 1, 2, 3, or 4.";
+
                             continue;
                         }
 
                         // Validate section
-                        if (!in_array($section, ['A', 'B', 'C', 'D', 'E'])) {
+                        if (! in_array($section, ['A', 'B', 'C', 'D', 'E'])) {
                             $errors[] = "Row {$lineNo}: Invalid section '{$section}'. Must be A, B, C, D, or E.";
+
                             continue;
                         }
 
@@ -1174,6 +1368,7 @@ class TeacherController extends Controller
                         $existingUser = \App\Models\User::where('email', $email)->first();
                         if ($existingUser) {
                             $errors[] = "Row {$lineNo}: User with email '{$email}' already exists.";
+
                             continue;
                         }
 
@@ -1202,7 +1397,7 @@ class TeacherController extends Controller
 
                         $imported++;
                     } catch (\Exception $e) {
-                        $errors[] = "Row {$lineNo}: " . $e->getMessage();
+                        $errors[] = "Row {$lineNo}: ".$e->getMessage();
                     }
                 }
 
@@ -1211,16 +1406,18 @@ class TeacherController extends Controller
 
             if ($imported > 0) {
                 $message = "✓ {$imported} students imported successfully!";
-                if (!empty($errors)) {
-                    $message .= " (" . count($errors) . " rows had errors)";
+                if (! empty($errors)) {
+                    $message .= ' ('.count($errors).' rows had errors)';
                 }
+
                 return redirect()->back()->with('success', $message);
             } else {
-                $errorMsg = !empty($errors) ? implode(" | ", array_slice($errors, 0, 3)) : "No valid records found";
+                $errorMsg = ! empty($errors) ? implode(' | ', array_slice($errors, 0, 3)) : 'No valid records found';
+
                 return redirect()->back()->with('error', "Import failed: {$errorMsg}");
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Excel import error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Excel import error: '.$e->getMessage());
         }
     }
 
@@ -1242,11 +1439,40 @@ class TeacherController extends Controller
             ->where('teacher_id', $teacherId)
             ->first();
 
-        if (!$range) {
+        if (! $range) {
             $range = AssessmentRange::create([
                 'class_id' => $classId,
                 'subject_id' => $course ? $course->id : null,
                 'teacher_id' => $teacherId,
+                // Default quiz values (5 quizzes at 25 points each)
+                'quiz_1_max' => 25,
+                'quiz_2_max' => 25,
+                'quiz_3_max' => 25,
+                'quiz_4_max' => 25,
+                'quiz_5_max' => 25,
+                // Default exam values (70 for midterm, 80 for final as requested)
+                'midterm_exam_max' => 70,
+                'final_exam_max' => 80,
+                'prelim_exam_max' => 70,
+                // Default skills values (midterm)
+                'class_participation_midterm' => 15,
+                'activities_midterm' => 15,
+                'assignments_midterm' => 15,
+                'output_midterm' => 30,
+                // Default skills values (final)
+                'class_participation_final' => 15,
+                'activities_final' => 15,
+                'assignments_final' => 15,
+                'output_final' => 30,
+                // Default attitude values (midterm)
+                'behavior_midterm' => 5,
+                'awareness_midterm' => 5,
+                // Default attitude values (final)
+                'behavior_final' => 5,
+                'awareness_final' => 5,
+                // Other defaults
+                'attendance_required' => true,
+                'attendance_min_percentage' => 80,
             ]);
         }
 
@@ -1270,41 +1496,35 @@ class TeacherController extends Controller
             'quiz_3_max' => 'required|integer|min:5|max:100',
             'quiz_4_max' => 'required|integer|min:5|max:100',
             'quiz_5_max' => 'required|integer|min:5|max:100',
-            
+
             // Knowledge - Exams (Midterm & Final only)
             'midterm_exam_max' => 'required|integer|min:20|max:200',
             'final_exam_max' => 'required|integer|min:20|max:200',
-            
+
             // Skills - Class Participation
-            'class_participation_prelim' => 'required|integer|min:0|max:100',
             'class_participation_midterm' => 'required|integer|min:0|max:100',
             'class_participation_final' => 'required|integer|min:0|max:100',
-            
+
             // Skills - Activities
-            'activities_prelim' => 'required|integer|min:0|max:100',
             'activities_midterm' => 'required|integer|min:0|max:100',
             'activities_final' => 'required|integer|min:0|max:100',
-            
+
             // Skills - Assignments
-            'assignments_prelim' => 'required|integer|min:0|max:100',
             'assignments_midterm' => 'required|integer|min:0|max:100',
             'assignments_final' => 'required|integer|min:0|max:100',
-            
+
             // Skills - Output/Project
-            'output_prelim' => 'required|integer|min:0|max:100',
             'output_midterm' => 'required|integer|min:0|max:100',
             'output_final' => 'required|integer|min:0|max:100',
-            
+
             // Attitude - Behavior
-            'behavior_prelim' => 'required|integer|min:0|max:100',
             'behavior_midterm' => 'required|integer|min:0|max:100',
             'behavior_final' => 'required|integer|min:0|max:100',
-            
+
             // Attitude - Awareness
-            'awareness_prelim' => 'required|integer|min:0|max:100',
             'awareness_midterm' => 'required|integer|min:0|max:100',
             'awareness_final' => 'required|integer|min:0|max:100',
-            
+
             // Attendance
             'attendance_required' => 'boolean',
             'attendance_min_percentage' => 'required|integer|min:0|max:100',
@@ -1377,9 +1597,9 @@ class TeacherController extends Controller
             ->firstOrFail();
 
         $term = $request->input('term', 'midterm');
-        
+
         // Validate term
-        if (!in_array($term, ['midterm', 'final'])) {
+        if (! in_array($term, ['midterm', 'final'])) {
             return redirect()->back()->with('error', 'Invalid term selected');
         }
 
@@ -1425,7 +1645,7 @@ class TeacherController extends Controller
                         $quizzes[] = $quizValue;
                     }
                 }
-                
+
                 // If no quizzes provided, use empty array (will be handled by calculation)
                 if (empty($quizzes)) {
                     $quizzes = array_fill(0, max(1, $range->num_quizzes ?? 5), 0);
@@ -1513,14 +1733,14 @@ class TeacherController extends Controller
                     $attendanceUpdated++;
                 }
             } catch (\Exception $e) {
-                $errors[] = "Student {$studentId}: " . $e->getMessage();
+                $errors[] = "Student {$studentId}: ".$e->getMessage();
             }
         }
 
         $message = "✓ Grades saved! Created: {$gradesCreated}, Updated: {$gradesUpdated}, Attendance: {$attendanceUpdated}";
-        
-        if (!empty($errors)) {
-            $message .= " (" . count($errors) . " errors)";
+
+        if (! empty($errors)) {
+            $message .= ' ('.count($errors).' errors)';
         }
 
         return redirect()->route('teacher.grades')->with('success', $message);
@@ -1603,7 +1823,7 @@ class TeacherController extends Controller
 
         // Calculate comprehensive analytics
         $analytics = [];
-        
+
         if ($gradesWithFinal->count() > 0) {
             $finalGrades = $gradesWithFinal->pluck('final_grade');
             $analytics = [
@@ -1627,13 +1847,15 @@ class TeacherController extends Controller
                 'knowledge_avg' => round($gradesWithFinal->avg('knowledge_score'), 2),
                 'skills_avg' => round($gradesWithFinal->avg('skills_score'), 2),
                 'attitude_avg' => round($gradesWithFinal->avg('attitude_score'), 2),
-                'quiz_avg' => round($gradesWithFinal->avg(function($g) {
+                'quiz_avg' => round($gradesWithFinal->avg(function ($g) {
                     $quizzes = array_filter([$g->q1, $g->q2, $g->q3, $g->q4, $g->q5]);
-                    return !empty($quizzes) ? array_sum($quizzes) / count($quizzes) : 0;
+
+                    return ! empty($quizzes) ? array_sum($quizzes) / count($quizzes) : 0;
                 }), 2),
-                'exam_avg' => round($gradesWithFinal->avg(function($g) {
+                'exam_avg' => round($gradesWithFinal->avg(function ($g) {
                     $exams = array_filter([$g->midterm_exam, $g->final_exam]);
-                    return !empty($exams) ? array_sum($exams) / count($exams) : 0;
+
+                    return ! empty($exams) ? array_sum($exams) / count($exams) : 0;
                 }), 2),
             ];
         } else {
@@ -1671,13 +1893,16 @@ class TeacherController extends Controller
      */
     private function calculateStandardDeviation($values)
     {
-        if (empty($values)) return 0;
-        
+        if (empty($values)) {
+            return 0;
+        }
+
         $mean = array_sum($values) / count($values);
-        $deviationSquared = array_map(function($x) use ($mean) {
+        $deviationSquared = array_map(function ($x) use ($mean) {
             return pow($x - $mean, 2);
         }, $values);
         $variance = array_sum($deviationSquared) / count($values);
+
         return round(sqrt($variance), 2);
     }
 
@@ -1686,8 +1911,21 @@ class TeacherController extends Controller
      */
     public function createClass()
     {
+        $teacherId = Auth::id();
+
+        // Get subjects assigned to this teacher
+        $assignedSubjects = Subject::with('course')
+            ->whereHas('teachers', function ($query) use ($teacherId) {
+                $query->where('teacher_id', $teacherId);
+            })
+            ->orWhereDoesntHave('teachers') // Subjects not assigned to any teacher
+            ->orderBy('subject_name')
+            ->get();
+
+        // Also get all courses for fallback
         $courses = Course::orderBy('course_name')->get();
-        return view('teacher.classes.create', compact('courses'));
+
+        return view('teacher.classes.create', compact('assignedSubjects', 'courses'));
     }
 
     /**
@@ -1698,11 +1936,22 @@ class TeacherController extends Controller
         $validated = $request->validate([
             'class_name' => 'required|string|max:255',
             'course_id' => 'required|exists:courses,id',
+            'subject_id' => 'required|exists:subjects,id',
             'section' => 'required|string|in:A,B,C,D,E',
             'year' => 'required|integer|in:1,2,3,4',
             'capacity' => 'required|integer|min:1|max:100',
             'description' => 'nullable|string|max:500',
+            'academic_year' => 'required|string',
+            'semester' => 'required|string|in:First,Second,Summer',
+            'auto_assign' => 'boolean',
+            'create_assignment' => 'boolean',
+            'additional_teachers' => 'nullable|array',
+            'additional_teachers.*' => 'exists:users,id',
         ]);
+
+        // Get the subject to extract units
+        $subject = \App\Models\Subject::find($validated['subject_id']);
+        $units = $subject ? $subject->credit_hours : 3;
 
         // Create the class
         $class = ClassModel::create([
@@ -1714,10 +1963,52 @@ class TeacherController extends Controller
             'capacity' => $validated['capacity'],
             'class_level' => (int) $validated['year'],
             'description' => $validated['description'] ?? null,
+            'units' => $units,
         ]);
 
+        // Create teacher assignments if requested
+        $teacherId = Auth::id();
+        $course = \App\Models\Course::find($validated['course_id']);
+
+        // Auto-assign the creating teacher
+        if ($request->boolean('auto_assign')) {
+            \App\Models\TeacherAssignment::create([
+                'teacher_id' => $teacherId,
+                'class_id' => $class->id,
+                'subject_id' => $validated['subject_id'],
+                'course_id' => $validated['course_id'],
+                'department' => $course->department ?? null,
+                'academic_year' => $validated['academic_year'],
+                'semester' => $validated['semester'],
+                'status' => 'active',
+                'notes' => 'Auto-assigned when creating class',
+            ]);
+        }
+
+        // Create additional assignments if requested
+        if ($request->boolean('create_assignment') && $request->filled('additional_teachers')) {
+            foreach ($request->additional_teachers as $additionalTeacherId) {
+                \App\Models\TeacherAssignment::create([
+                    'teacher_id' => $additionalTeacherId,
+                    'class_id' => $class->id,
+                    'subject_id' => $validated['subject_id'],
+                    'course_id' => $validated['course_id'],
+                    'department' => $course->department ?? null,
+                    'academic_year' => $validated['academic_year'],
+                    'semester' => $validated['semester'],
+                    'status' => 'active',
+                    'notes' => 'Assigned by '.Auth::user()->name,
+                ]);
+            }
+        }
+
+        $message = "Class '{$class->class_name}' created successfully!";
+        if ($request->boolean('auto_assign') || $request->boolean('create_assignment')) {
+            $message .= ' Teacher assignments have been created.';
+        }
+
         return redirect()->route('teacher.classes.show', $class->id)
-            ->with('success', "Class '{$class->class_name}' created successfully!");
+            ->with('success', $message);
     }
 
     /**
@@ -1729,8 +2020,9 @@ class TeacherController extends Controller
             ->where('teacher_id', Auth::id())
             ->with('course')
             ->firstOrFail();
-        
+
         $courses = Course::orderBy('course_name')->get();
+
         return view('teacher.classes.edit', compact('class', 'courses'));
     }
 
@@ -1778,10 +2070,10 @@ class TeacherController extends Controller
 
         // Delete all related grades first
         Grade::where('class_id', $classId)->delete();
-        
+
         // Delete all related attendance records
         StudentAttendance::whereIn('student_id', $class->students->pluck('id'))->delete();
-        
+
         // Delete the class
         $class->delete();
 
@@ -1798,7 +2090,7 @@ class TeacherController extends Controller
             ->where('teacher_id', Auth::id())
             ->firstOrFail();
 
-        $students = $class->students()->with('user')->get()->sortBy(function($student) {
+        $students = $class->students()->with('user')->get()->sortBy(function ($student) {
             return $student->user?->name ?? '';
         })->values();
 
@@ -1811,7 +2103,7 @@ class TeacherController extends Controller
     public function editStudent($studentId)
     {
         $student = Student::with('user')->findOrFail($studentId);
-        
+
         // Verify teacher owns the class this student belongs to
         $class = ClassModel::where('id', $student->class_id)
             ->where('teacher_id', Auth::id())
@@ -1826,7 +2118,7 @@ class TeacherController extends Controller
     public function updateStudent(Request $request, $studentId)
     {
         $student = Student::with('user')->findOrFail($studentId);
-        
+
         // Verify teacher owns the class
         $class = ClassModel::where('id', $student->class_id)
             ->where('teacher_id', Auth::id())
@@ -1834,7 +2126,7 @@ class TeacherController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $student->user_id,
+            'email' => 'required|email|max:255|unique:users,email,'.$student->user_id,
             'year' => 'required|integer|in:1,2,3,4',
             'section' => 'required|string|in:A,B,C,D,E',
         ]);
@@ -1861,7 +2153,7 @@ class TeacherController extends Controller
     public function destroyStudent($studentId)
     {
         $student = Student::with('user')->findOrFail($studentId);
-        
+
         // Verify teacher owns the class
         $class = ClassModel::where('id', $student->class_id)
             ->where('teacher_id', Auth::id())
@@ -1872,10 +2164,10 @@ class TeacherController extends Controller
 
         // Delete all related grades
         Grade::where('student_id', $studentId)->delete();
-        
+
         // Delete all related attendance records
         StudentAttendance::where('student_id', $studentId)->delete();
-        
+
         // Delete the student
         $student->delete();
 
@@ -1941,22 +2233,22 @@ class TeacherController extends Controller
             $grade->q1, $grade->q2, $grade->q3, $grade->q4, $grade->q5,
             $grade->q6, $grade->q7, $grade->q8, $grade->q9, $grade->q10,
         ]);
-        
+
         $quizAvg = count($quizzes) > 0 ? array_sum($quizzes) / count($quizzes) : 0;
         $examAvg = (($grade->midterm_exam ?? 0) + ($grade->final_exam ?? 0)) / 2;
-        
+
         $grade->knowledge_score = ($quizAvg * 0.40) + ($examAvg * 0.60);
 
         // Skills Score (50%) - Calculate from individual entries
         $outputEntries = array_filter([$grade->output_1, $grade->output_2, $grade->output_3]);
         $outputAvg = count($outputEntries) > 0 ? array_sum($outputEntries) / count($outputEntries) : 0;
-        
+
         $cpEntries = array_filter([$grade->class_participation_1, $grade->class_participation_2, $grade->class_participation_3]);
         $cpAvg = count($cpEntries) > 0 ? array_sum($cpEntries) / count($cpEntries) : 0;
-        
+
         $actEntries = array_filter([$grade->activities_1, $grade->activities_2, $grade->activities_3]);
         $actAvg = count($actEntries) > 0 ? array_sum($actEntries) / count($actEntries) : 0;
-        
+
         $asgEntries = array_filter([$grade->assignments_1, $grade->assignments_2, $grade->assignments_3]);
         $asgAvg = count($asgEntries) > 0 ? array_sum($asgEntries) / count($asgEntries) : 0;
 
@@ -1965,7 +2257,7 @@ class TeacherController extends Controller
         // Attitude Score (10%) - Calculate from individual entries
         $behaviorEntries = array_filter([$grade->behavior_1, $grade->behavior_2, $grade->behavior_3]);
         $behaviorAvg = count($behaviorEntries) > 0 ? array_sum($behaviorEntries) / count($behaviorEntries) : 0;
-        
+
         $awarenessEntries = array_filter([$grade->awareness_1, $grade->awareness_2, $grade->awareness_3]);
         $awarenessAvg = count($awarenessEntries) > 0 ? array_sum($awarenessEntries) / count($awarenessEntries) : 0;
 
@@ -1999,11 +2291,11 @@ class TeacherController extends Controller
             ->where('term', $term)
             ->first();
 
-        if (!$grade) {
+        if (! $grade) {
             return response()->json([
                 'success' => true,
                 'data' => null,
-                'message' => 'No grades found for this student'
+                'message' => 'No grades found for this student',
             ]);
         }
 
@@ -2046,13 +2338,13 @@ class TeacherController extends Controller
             'final' => [
                 'final_grade' => $grade->final_grade,
                 'grade_point' => Grade::getGradePoint($grade->final_grade),
-            ]
+            ],
         ];
 
         return response()->json([
             'success' => true,
             'data' => $scores,
-            'message' => 'Scores retrieved successfully'
+            'message' => 'Scores retrieved successfully',
         ]);
     }
 
@@ -2067,12 +2359,18 @@ class TeacherController extends Controller
             ->findOrFail($classId);
 
         $students = $class->students()->get();
+
+        // Get assessment ranges
+        $range = AssessmentRange::where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+
         $grades = Grade::where('class_id', $classId)
             ->where('teacher_id', $teacherId)
             ->get()
             ->keyBy('student_id');
 
-        return view('teacher.grades.entry_new', compact('class', 'students', 'grades'));
+        return view('teacher.grades.entry_new', compact('class', 'students', 'grades', 'range'));
     }
 
     /**
@@ -2084,7 +2382,7 @@ class TeacherController extends Controller
         $class = ClassModel::where('teacher_id', $teacherId)->findOrFail($classId);
 
         $grades = $request->input('grades', []);
-        
+
         $successCount = 0;
         $errors = [];
 
@@ -2155,15 +2453,16 @@ class TeacherController extends Controller
 
                 $successCount++;
             } catch (\Exception $e) {
-                $errors[] = "Student {$studentId}: " . $e->getMessage();
+                $errors[] = "Student {$studentId}: ".$e->getMessage();
             }
         }
 
         if ($successCount > 0) {
             $message = "✓ {$successCount} grades saved successfully!";
-            if (!empty($errors)) {
-                $message .= " (" . count($errors) . " errors encountered)";
+            if (! empty($errors)) {
+                $message .= ' ('.count($errors).' errors encountered)';
             }
+
             return redirect()->route('teacher.grades', $classId)->with('success', $message);
         } else {
             return redirect()->back()->with('error', 'No grades were saved. Please check for errors.');
@@ -2216,9 +2515,9 @@ class TeacherController extends Controller
         $grade->awareness_total = $attitudeResult['totals']['awareness_total'];
 
         // Calculate Midterm Grade (Knowledge 40% + Skills 50% + Attitude 10%)
-        $grade->midterm_grade = 
-            ($grade->knowledge_average * 0.40) + 
-            ($grade->skills_average * 0.50) + 
+        $grade->midterm_grade =
+            ($grade->knowledge_average * 0.40) +
+            ($grade->skills_average * 0.50) +
             ($grade->attitude_average * 0.10);
 
         // For now, set final_grade_value equal to midterm_grade
@@ -2233,7 +2532,9 @@ class TeacherController extends Controller
 
         // Get grade point and letter grade
         $grade->grade_point = Grade::getGradePoint($grade->overall_grade);
-        $grade->letter_grade = Grade::getLetterGrade($grade->overall_grade);
+        $decimalScale = \App\Helpers\GradeHelper::convertToDecimalScale($grade->overall_grade);
+        $gradeLabel = \App\Helpers\GradeHelper::getGradeLabel($decimalScale);
+        $grade->letter_grade = \App\Helpers\GradeHelper::extractLetterGrade($gradeLabel);
 
         // Save all changes
         $grade->save();
@@ -2249,7 +2550,7 @@ class TeacherController extends Controller
         $term = $request->input('term', 'midterm');
 
         // Validate term
-        if (!in_array($term, ['midterm', 'final'])) {
+        if (! in_array($term, ['midterm', 'final'])) {
             return back()->with('error', 'Invalid term specified.');
         }
 
@@ -2264,7 +2565,7 @@ class TeacherController extends Controller
             ->get();
 
         if ($entries->isEmpty()) {
-            return back()->with('error', 'No grade entries found for ' . ucfirst($term) . ' term. Please enter grades first.');
+            return back()->with('error', 'No grade entries found for '.ucfirst($term).' term. Please enter grades first.');
         }
 
         $successCount = 0;
@@ -2291,38 +2592,38 @@ class TeacherController extends Controller
                 // Map grade_entries columns to grades table columns
                 $updateData = [
                     // Knowledge Component
-                    $prefix . 'exam_pr' => $entry->exam_pr,
-                    $prefix . 'exam_md' => $entry->exam_md,
-                    $prefix . 'quiz_1' => $entry->quiz_1,
-                    $prefix . 'quiz_2' => $entry->quiz_2,
-                    $prefix . 'quiz_3' => $entry->quiz_3,
-                    $prefix . 'quiz_4' => $entry->quiz_4,
-                    $prefix . 'quiz_5' => $entry->quiz_5,
+                    $prefix.'exam_pr' => $entry->exam_pr,
+                    $prefix.'exam_md' => $entry->exam_md,
+                    $prefix.'quiz_1' => $entry->quiz_1,
+                    $prefix.'quiz_2' => $entry->quiz_2,
+                    $prefix.'quiz_3' => $entry->quiz_3,
+                    $prefix.'quiz_4' => $entry->quiz_4,
+                    $prefix.'quiz_5' => $entry->quiz_5,
                     // Skills Component
-                    $prefix . 'output_1' => $entry->output_1,
-                    $prefix . 'output_2' => $entry->output_2,
-                    $prefix . 'output_3' => $entry->output_3,
-                    $prefix . 'classpart_1' => $entry->classpart_1,
-                    $prefix . 'classpart_2' => $entry->classpart_2,
-                    $prefix . 'classpart_3' => $entry->classpart_3,
-                    $prefix . 'activity_1' => $entry->activity_1,
-                    $prefix . 'activity_2' => $entry->activity_2,
-                    $prefix . 'activity_3' => $entry->activity_3,
-                    $prefix . 'assignment_1' => $entry->assignment_1,
-                    $prefix . 'assignment_2' => $entry->assignment_2,
-                    $prefix . 'assignment_3' => $entry->assignment_3,
+                    $prefix.'output_1' => $entry->output_1,
+                    $prefix.'output_2' => $entry->output_2,
+                    $prefix.'output_3' => $entry->output_3,
+                    $prefix.'classpart_1' => $entry->classpart_1,
+                    $prefix.'classpart_2' => $entry->classpart_2,
+                    $prefix.'classpart_3' => $entry->classpart_3,
+                    $prefix.'activity_1' => $entry->activity_1,
+                    $prefix.'activity_2' => $entry->activity_2,
+                    $prefix.'activity_3' => $entry->activity_3,
+                    $prefix.'assignment_1' => $entry->assignment_1,
+                    $prefix.'assignment_2' => $entry->assignment_2,
+                    $prefix.'assignment_3' => $entry->assignment_3,
                     // Attitude Component
-                    $prefix . 'behavior_1' => $entry->behavior_1,
-                    $prefix . 'behavior_2' => $entry->behavior_2,
-                    $prefix . 'behavior_3' => $entry->behavior_3,
-                    $prefix . 'awareness_1' => $entry->awareness_1,
-                    $prefix . 'awareness_2' => $entry->awareness_2,
-                    $prefix . 'awareness_3' => $entry->awareness_3,
+                    $prefix.'behavior_1' => $entry->behavior_1,
+                    $prefix.'behavior_2' => $entry->behavior_2,
+                    $prefix.'behavior_3' => $entry->behavior_3,
+                    $prefix.'awareness_1' => $entry->awareness_1,
+                    $prefix.'awareness_2' => $entry->awareness_2,
+                    $prefix.'awareness_3' => $entry->awareness_3,
                     // Computed Averages
-                    $prefix . 'knowledge_average' => $entry->knowledge_average,
-                    $prefix . 'skills_average' => $entry->skills_average,
-                    $prefix . 'attitude_average' => $entry->attitude_average,
-                    $prefix . 'final_grade' => $entry->term_grade,
+                    $prefix.'knowledge_average' => $entry->knowledge_average,
+                    $prefix.'skills_average' => $entry->skills_average,
+                    $prefix.'attitude_average' => $entry->attitude_average,
+                    $prefix.'final_grade' => $entry->term_grade,
                 ];
 
                 // Update grade record
@@ -2332,12 +2633,119 @@ class TeacherController extends Controller
 
             // If all uploads successful, show success message
             return redirect()->route('teacher.grades', $classId)
-                ->with('success', "🎉 Successfully uploaded {$successCount} grades for " . ucfirst($term) . " term to permanent storage!");
+                ->with('success', "🎉 Successfully uploaded {$successCount} grades for ".ucfirst($term).' term to permanent storage!');
 
         } catch (\Exception $e) {
-            Log::error('Grade upload error: ' . $e->getMessage());
-            return back()->with('error', 'Error uploading grades: ' . $e->getMessage());
+            Log::error('Grade upload error: '.$e->getMessage());
+
+            return back()->with('error', 'Error uploading grades: '.$e->getMessage());
         }
     }
-}
 
+    /**
+     * Show grade results and summary by class with calculated decimal grades
+     * Organized by class groups with pass/fail status and verification from backend
+     */
+    public function gradeResults()
+    {
+        $teacherId = Auth::id();
+
+        // Get all teacher's classes with students and grades
+        $classes = ClassModel::where('teacher_id', $teacherId)
+            ->with(['students.user', 'course'])
+            ->get();
+
+        $classGradeResults = [];
+
+        foreach ($classes as $class) {
+            // Get all grades for this class
+            $grades = Grade::where('class_id', $class->id)
+                ->where('teacher_id', $teacherId)
+                ->with('student.user')
+                ->get();
+
+            // Calculate results for each student
+            $studentResults = [];
+            $classStats = [
+                'total_students' => $class->students()->count(),
+                'graded_students' => 0,
+                'passed_count' => 0,
+                'failed_count' => 0,
+                'average_grade' => 0,
+                'pass_percentage' => 0,
+            ];
+
+            $totalGrade = 0;
+            $graderCount = 0;
+
+            foreach ($grades as $grade) {
+                // Use the GradeHelper to calculate complete summary
+                $summary = \App\Helpers\GradeHelper::getCompleteGradeSummary(
+                    $grade->mid_knowledge_average ?? 0,
+                    $grade->mid_skills_average ?? 0,
+                    $grade->mid_attitude_average ?? 0,
+                    $grade->final_knowledge_average ?? 0,
+                    $grade->final_skills_average ?? 0,
+                    $grade->final_attitude_average ?? 0
+                );
+
+                // Only include if has grades
+                if ($summary['overall']['term_grade'] > 0) {
+                    // Update the grade record with calculated values
+                    $grade->update([
+                        'mid_final_grade' => $summary['midterm']['term_grade'],
+                        'final_final_grade' => $summary['final']['term_grade'],
+                        'overall_grade' => $summary['overall']['term_grade'],
+                        'grade_5pt_scale' => $summary['overall']['decimal_grade'],
+                        'letter_grade' => \App\Helpers\GradeHelper::extractLetterGrade($summary['overall']['grade_label']),
+                        'remarks' => $summary['overall']['remarks'],
+                    ]);
+
+                    $studentResults[] = [
+                        'student' => $grade->student,
+                        'student_id' => $grade->student->student_id,
+                        'student_name' => $grade->student->user->name ?? $grade->student->name,
+                        'midterm_grade' => $summary['midterm']['term_grade'],
+                        'midterm_decimal' => $summary['midterm']['decimal_grade'],
+                        'midterm_status' => $summary['midterm']['status'],
+                        'final_grade' => $summary['final']['term_grade'],
+                        'final_decimal' => $summary['final']['decimal_grade'],
+                        'final_status' => $summary['final']['status'],
+                        'overall_grade' => $summary['overall']['term_grade'],
+                        'decimal_grade' => $summary['overall']['decimal_grade'],
+                        'letter_grade' => \App\Helpers\GradeHelper::extractLetterGrade($summary['overall']['grade_label']),
+                        'status' => $summary['overall']['status'],
+                        'remarks' => $summary['overall']['remarks'],
+                    ];
+
+                    $totalGrade += $summary['overall']['term_grade'];
+                    $graderCount++;
+
+                    if ($summary['overall']['status'] === 'Passed') {
+                        $classStats['passed_count']++;
+                    } else {
+                        $classStats['failed_count']++;
+                    }
+                }
+            }
+
+            // Calculate class statistics
+            $classStats['graded_students'] = $graderCount;
+            $classStats['average_grade'] = $graderCount > 0 ? round($totalGrade / $graderCount, 2) : 0;
+            $classStats['pass_percentage'] = $classStats['total_students'] > 0
+                ? round(($classStats['passed_count'] / $classStats['total_students']) * 100, 1)
+                : 0;
+
+            if ($graderCount > 0) {
+                $classGradeResults[] = [
+                    'class' => $class,
+                    'course' => $class->course,
+                    'students' => $studentResults,
+                    'stats' => $classStats,
+                ];
+            }
+        }
+
+        return view('teacher.grades.grade_results', compact('classGradeResults'));
+    }
+}

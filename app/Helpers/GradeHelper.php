@@ -450,4 +450,276 @@ class GradeHelper
             ],
         ];
     }
+
+    /**
+     * ============================================================
+     * CALCULATE TERM GRADES WITH DECIMAL SCALE (1.0-5.0)
+     * ============================================================
+     * 
+     * Calculate midterm and final term grades with pass/fail status
+     * Decimal Scale: 1.0 (Excellent) to 5.0 (Failed)
+     * Pass: Grade <= 3.0
+     * Fail: Grade > 3.0
+     * 
+     * @param float $knowledge Knowledge average (0-100)
+     * @param float $skills Skills average (0-100)
+     * @param float $attitude Attitude average (0-100)
+     * @return array [
+     *      'term_grade' => float (0-100),
+     *      'decimal_grade' => float (1.0-5.0),
+     *      'status' => string ('Passed'|'Failed'),
+     *      'remarks' => string (Performance description),
+     *      'grade_label' => string (Letter grade representation)
+     * ]
+     */
+    public static function calculateTermGradeWithDecimal($knowledge, $skills, $attitude)
+    {
+        // Calculate term grade using CHED formula
+        // Knowledge: 40%, Skills: 50%, Attitude: 10%
+        $knowledge = floatval($knowledge ?? 0);
+        $skills = floatval($skills ?? 0);
+        $attitude = floatval($attitude ?? 0);
+
+        $termGrade = ($knowledge * 0.40) + ($skills * 0.50) + ($attitude * 0.10);
+        $termGrade = round(max(0, min(100, $termGrade)), 2);
+
+        // Convert to decimal scale (1.0-5.0)
+        $decimalGrade = self::convertToDecimalScale($termGrade);
+
+        // Determine pass/fail status
+        $status = $decimalGrade <= 3.0 ? 'Passed' : 'Failed';
+
+        // Get performance remarks
+        $remarks = self::getPerformanceRemarks($termGrade);
+
+        // Get grade label
+        $gradeLabel = self::getGradeLabel($decimalGrade);
+
+        return [
+            'term_grade' => $termGrade,
+            'decimal_grade' => $decimalGrade,
+            'status' => $status,
+            'remarks' => $remarks,
+            'grade_label' => $gradeLabel,
+        ];
+    }
+
+    /**
+     * Calculate midterm grade with all components
+     * 
+     * @param float $midtermKnowledge Midterm knowledge average
+     * @param float $midtermSkills Midterm skills average
+     * @param float $midtermAttitude Midterm attitude average
+     * @return array Complete midterm grade data with decimal scale
+     */
+    public static function calculateMidtermGrade($midtermKnowledge, $midtermSkills, $midtermAttitude)
+    {
+        return array_merge(
+            self::calculateTermGradeWithDecimal($midtermKnowledge, $midtermSkills, $midtermAttitude),
+            [
+                'period' => 'Midterm',
+                'weight' => 0.40, // Midterm is 40% of overall grade
+            ]
+        );
+    }
+
+    /**
+     * Calculate final term grade with all components
+     * 
+     * @param float $finalKnowledge Final knowledge average
+     * @param float $finalSkills Final skills average
+     * @param float $finalAttitude Final attitude average
+     * @return array Complete final grade data with decimal scale
+     */
+    public static function calculateFinalGrade($finalKnowledge, $finalSkills, $finalAttitude)
+    {
+        return array_merge(
+            self::calculateTermGradeWithDecimal($finalKnowledge, $finalSkills, $finalAttitude),
+            [
+                'period' => 'Final',
+                'weight' => 0.60, // Final is 60% of overall grade
+            ]
+        );
+    }
+
+    /**
+     * Calculate overall grade from midterm and final
+     * Overall = (Midterm * 0.40) + (Final * 0.60)
+     * 
+     * @param array $midtermData Midterm grade data from calculateMidtermGrade()
+     * @param array $finalData Final grade data from calculateFinalGrade()
+     * @return array Overall grade data with decimal scale and pass/fail
+     */
+    public static function calculateOverallTermGrade($midtermData, $finalData)
+    {
+        // Calculate weighted overall grade (0-100)
+        $overallTermGrade = ($midtermData['term_grade'] * 0.40) + ($finalData['term_grade'] * 0.60);
+        $overallTermGrade = round($overallTermGrade, 2);
+
+        // Convert to decimal scale
+        $overallDecimalGrade = self::convertToDecimalScale($overallTermGrade);
+
+        // Determine pass/fail
+        $status = $overallDecimalGrade <= 3.0 ? 'Passed' : 'Failed';
+
+        // Get remarks
+        $remarks = self::getPerformanceRemarks($overallTermGrade);
+
+        // Get grade label
+        $gradeLabel = self::getGradeLabel($overallDecimalGrade);
+
+        return [
+            'period' => 'Overall',
+            'term_grade' => $overallTermGrade,
+            'decimal_grade' => $overallDecimalGrade,
+            'status' => $status,
+            'remarks' => $remarks,
+            'grade_label' => $gradeLabel,
+            'midterm_contribution' => round($midtermData['term_grade'] * 0.40, 2),
+            'final_contribution' => round($finalData['term_grade'] * 0.60, 2),
+        ];
+    }
+
+    /**
+     * Convert 0-100 grade to 1.0-5.0 decimal scale
+     * 1.0 = Excellent (98-100)
+     * 5.0 = Failed (Below 70)
+     * 
+     * @param float $score Numeric score (0-100)
+     * @return float Decimal grade (1.0-5.0)
+     */
+    public static function convertToDecimalScale($score)
+    {
+        $score = floatval($score ?? 0);
+
+        // Grading Scale Mapping (1.0 to 5.0)
+        // 1.0 is highest/excellent, 5.0 is failed
+        if ($score >= 98.0) return 1.00;
+        elseif ($score >= 95.0) return 1.25;
+        elseif ($score >= 92.0) return 1.50;
+        elseif ($score >= 89.0) return 1.75;
+        elseif ($score >= 86.0) return 2.00;
+        elseif ($score >= 83.0) return 2.25;
+        elseif ($score >= 80.0) return 2.50;
+        elseif ($score >= 77.0) return 2.75;
+        elseif ($score >= 74.0) return 3.00;
+        elseif ($score >= 71.0) return 3.25;
+        elseif ($score >= 70.0) return 3.50;
+        else return 5.00; // Failed
+    }
+
+    /**
+     * Get performance remarks based on term grade
+     * 
+     * @param float $score Numeric score (0-100)
+     * @return string Performance description
+     */
+    public static function getPerformanceRemarks($score)
+    {
+        $score = floatval($score ?? 0);
+
+        if ($score >= 98) {
+            return '⭐⭐⭐ Excellent - Exceptional performance';
+        } elseif ($score >= 95) {
+            return '⭐⭐ Excellent - Outstanding performance';
+        } elseif ($score >= 92) {
+            return '⭐ Excellent - Strong performance';
+        } elseif ($score >= 89) {
+            return 'Very Good - Impressive performance';
+        } elseif ($score >= 86) {
+            return 'Very Good - Strong performance';
+        } elseif ($score >= 83) {
+            return 'Good - Solid performance';
+        } elseif ($score >= 80) {
+            return 'Good - Satisfactory performance';
+        } elseif ($score >= 77) {
+            return 'Satisfactory - Meets standards';
+        } elseif ($score >= 74) {
+            return 'Satisfactory - Acceptable performance';
+        } elseif ($score >= 71) {
+            return 'Fair - Needs improvement';
+        } elseif ($score >= 70) {
+            return 'Fair - Barely passing';
+        } else {
+            return '✗ Failed - Below passing standard';
+        }
+    }
+
+    /**
+     * Get grade label for decimal scale
+     * 
+     * @param float $decimalGrade Decimal grade (1.0-5.0)
+     * @return string Grade label
+     */
+    public static function getGradeLabel($decimalGrade)
+    {
+        $decimalGrade = floatval($decimalGrade ?? 0);
+
+        if ($decimalGrade <= 1.00) return 'A+ (Excellent)';
+        elseif ($decimalGrade <= 1.25) return 'A (Excellent)';
+        elseif ($decimalGrade <= 1.50) return 'A- (Excellent)';
+        elseif ($decimalGrade <= 1.75) return 'B+ (Very Good)';
+        elseif ($decimalGrade <= 2.00) return 'B (Very Good)';
+        elseif ($decimalGrade <= 2.25) return 'B- (Very Good)';
+        elseif ($decimalGrade <= 2.50) return 'C+ (Good)';
+        elseif ($decimalGrade <= 2.75) return 'C (Good)';
+        elseif ($decimalGrade <= 3.00) return 'C- (Satisfactory)';
+        elseif ($decimalGrade <= 3.25) return 'D+ (Fair)';
+        elseif ($decimalGrade <= 3.50) return 'D (Fair)';
+        elseif ($decimalGrade <= 5.00) return 'F (Failed)';
+        else return 'INC (Incomplete)';
+    }
+
+    /**
+     * Extract letter grade from full grade label
+     * 
+     * @param string $gradeLabel Full label like "F (Failed)" or "A+ (Excellent)"
+     * @return string Just the letter grade like "F" or "A+"
+     */
+    public static function extractLetterGrade($gradeLabel)
+    {
+        // Extract the part before " (" - this gives us the letter grade only
+        if (strpos($gradeLabel, ' (') !== false) {
+            return explode(' (', $gradeLabel)[0];
+        }
+        return $gradeLabel; // Fallback in case format is different
+    }
+
+    /**
+     * Get complete student grade summary
+     * 
+     * @param float $midtermKnowledge Midterm knowledge score
+     * @param float $midtermSkills Midterm skills score
+     * @param float $midtermAttitude Midterm attitude score
+     * @param float $finalKnowledge Final knowledge score
+     * @param float $finalSkills Final skills score
+     * @param float $finalAttitude Final attitude score
+     * @return array Complete grade summary with all calculations
+     */
+    public static function getCompleteGradeSummary(
+        $midtermKnowledge, $midtermSkills, $midtermAttitude,
+        $finalKnowledge, $finalSkills, $finalAttitude
+    ) {
+        // Calculate midterm grade
+        $midtermGrade = self::calculateMidtermGrade($midtermKnowledge, $midtermSkills, $midtermAttitude);
+
+        // Calculate final grade
+        $finalGrade = self::calculateFinalGrade($finalKnowledge, $finalSkills, $finalAttitude);
+
+        // Calculate overall grade
+        $overallGrade = self::calculateOverallTermGrade($midtermGrade, $finalGrade);
+
+        return [
+            'midterm' => $midtermGrade,
+            'final' => $finalGrade,
+            'overall' => $overallGrade,
+            'summary' => [
+                'student_status' => $overallGrade['status'],
+                'final_grade_decimal' => $overallGrade['decimal_grade'],
+                'final_grade_numeric' => $overallGrade['term_grade'],
+                'grade_label' => $overallGrade['grade_label'],
+                'remarks' => $overallGrade['remarks'],
+            ],
+        ];
+    }
 }

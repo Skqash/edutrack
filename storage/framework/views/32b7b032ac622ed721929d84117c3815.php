@@ -314,9 +314,9 @@
                     </a></li>
 
                 <li><a href="<?php echo e(route('teacher.subjects')); ?>"
-                        class="<?php echo e(request()->routeIs('teacher.subjects') ? 'active' : ''); ?>">
+                        class="<?php echo e(request()->routeIs('teacher.subjects*') ? 'active' : ''); ?>">
                         <i class="fas fa-book"></i>
-                        <span>Courses</span>
+                        <span>My Subjects</span>
                     </a></li>
 
                 <li><a href="<?php echo e(route('teacher.grades')); ?>"

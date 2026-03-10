@@ -68,6 +68,10 @@
                                                     class="btn btn-sm btn-info" title="Edit">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
+                                                <a href="{{ route('admin.teachers.subjects', $teacher->id) }}"
+                                                    class="btn btn-sm btn-primary" title="Manage Subjects">
+                                                    <i class="fas fa-book"></i>
+                                                </a>
                                                 <form action="{{ route('admin.teachers.destroy', $teacher->id) }}"
                                                     method="POST" style="display:inline;">
                                                     @csrf

@@ -771,4 +771,107 @@ class Grade extends Model
     {
         return $query->where('grading_period', $period);
     }
+
+    /**
+     * ============================================================
+     * AUTOMATED GRADE CALCULATION
+     * ============================================================
+     * 
+     * Automatically calculate and update all term grades with decimal
+     * scale and pass/fail status when grade data is saved
+     */
+
+    /**
+     * Calculate and update all grades for this record
+     * 
+     * @return void
+     */
+    public function calculateAndUpdateGrades(): self
+    {
+        // Use the GradeHelper to get complete summary
+        $summary = \App\Helpers\GradeHelper::getCompleteGradeSummary(
+            $this->mid_knowledge_average ?? 0,
+            $this->mid_skills_average ?? 0,
+            $this->mid_attitude_average ?? 0,
+            $this->final_knowledge_average ?? 0,
+            $this->final_skills_average ?? 0,
+            $this->final_attitude_average ?? 0
+        );
+
+        // Update midterm grades
+        $this->mid_final_grade = $summary['midterm']['term_grade'];
+        $this->mid_decimal_grade = $summary['midterm']['decimal_grade'];
+        $this->mid_status = $summary['midterm']['status'];
+        $this->mid_remarks = $summary['midterm']['remarks'];
+
+        // Update final grades
+        $this->final_final_grade = $summary['final']['term_grade'];
+        $this->final_decimal_grade = $summary['final']['decimal_grade'];
+        $this->final_status = $summary['final']['status'];
+        $this->final_remarks = $summary['final']['remarks'];
+
+        // Update overall grades
+        $this->overall_grade = $summary['overall']['term_grade'];
+        $this->grade_5pt_scale = $summary['overall']['decimal_grade'];
+        $this->grade_remarks = $summary['summary']['grade_label'];
+        $this->letter_grade = $summary['overall']['grade_label'];
+        $this->remarks = $summary['overall']['remarks'];
+        $this->final_status = $summary['summary']['student_status'];
+
+        return $this;
+    }
+
+    /**
+     * Get pass/fail status
+     * 
+     * @return string 'Passed' or 'Failed'
+     */
+    public function getPassFailStatus()
+    {
+        if (!$this->grade_5pt_scale) {
+            return 'Pending';
+        }
+        return $this->grade_5pt_scale <= 3.0 ? 'Passed' : 'Failed';
+    }
+
+    /**
+     * Check if student passed
+     * 
+     * @return bool
+     */
+    public function hasPassed()
+    {
+        return $this->grade_5pt_scale && $this->grade_5pt_scale <= 3.0;
+    }
+
+    /**
+     * Check if student failed
+     * 
+     * @return bool
+     */
+    public function hasFailed()
+    {
+        return $this->grade_5pt_scale && $this->grade_5pt_scale > 3.0;
+    }
+
+    /**
+     * Get grade summary array
+     * 
+     * @return array
+     */
+    public function getGradeSummary()
+    {
+        return [
+            'student_name' => $this->student->user->name ?? $this->student->name ?? 'Unknown',
+            'midterm_grade' => $this->mid_final_grade ?? 0,
+            'midterm_decimal' => $this->mid_decimal_grade ?? 0,
+            'final_grade' => $this->final_final_grade ?? 0,
+            'final_decimal' => $this->final_decimal_grade ?? 0,
+            'overall_grade' => $this->overall_grade ?? 0,
+            'overall_decimal' => $this->grade_5pt_scale ?? 0,
+            'status' => $this->getPassFailStatus(),
+            'remarks' => $this->remarks ?? 'Pending calculation',
+            'grade_label' => $this->letter_grade ?? 'Incomplete',
+        ];
+    }
 }

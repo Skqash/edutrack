@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\User;
-use App\Models\Course;
-use App\Models\Subject;
+use App\Http\Controllers\Controller;
+use App\Models\Attendance;
 use App\Models\ClassModel;
+use App\Models\Course;
 use App\Models\Grade;
 use App\Models\Student;
-use App\Models\Attendance;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
+use App\Models\Subject;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -76,7 +76,7 @@ class DashboardController extends Controller
         }
 
         if ($request->has('period') && $request->period) {
-            $query->where('grading_period', 'like', '%' . $request->period . '%');
+            $query->where('grading_period', 'like', '%'.$request->period.'%');
         }
 
         if ($request->has('search') && $request->search) {
@@ -99,8 +99,8 @@ class DashboardController extends Controller
                     'teacher_id' => $request->teacher_id,
                     'period' => $request->period,
                     'search' => $request->search,
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -148,8 +148,8 @@ class DashboardController extends Controller
                     'date_from' => $request->date_from,
                     'date_to' => $request->date_to,
                     'search' => $request->search,
-                ]
-            ]
+                ],
+            ],
         ]);
     }
 
@@ -159,7 +159,7 @@ class DashboardController extends Controller
     public function getClassDetails($classId)
     {
         $class = ClassModel::with(['students.user', 'teacher'])->findOrFail($classId);
-        
+
         // Get attendance summary for this class
         $attendanceSummary = Attendance::where('class_id', $classId)
             ->selectRaw('student_id, COUNT(*) as total_days, SUM(CASE WHEN status = "Present" THEN 1 ELSE 0 END) as present_days')
@@ -178,7 +178,7 @@ class DashboardController extends Controller
                 'class' => $class,
                 'attendance' => $attendanceSummary,
                 'grades' => $gradeSummary,
-            ]
+            ],
         ]);
     }
 

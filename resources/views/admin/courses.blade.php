@@ -6,108 +6,186 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h2 class="fw-bold mb-1">Courses Management</h2>
-                    <p class="text-muted">Manage all courses offered in your institution</p>
+                    <h2 class="fw-bold mb-1">
+                        <i class="fas fa-university me-2" style="color: #27ae60;"></i>Academic Programs
+                    </h2>
+                    <p class="text-muted">Manage college degree programs and departments offered in the university</p>
                 </div>
-                <a href="{{ route('admin.courses.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i> Add New Course
+                <a href="{{ route('admin.courses.create') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i> Add New Program
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Courses Statistics -->
+    <!-- Academic Programs Statistics -->
     <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #3498db;">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm" style="border-left: 4px solid #27ae60;">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Total Courses</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #3498db;">{{ $courses->count() }}</h2>
+                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                Total Programs</h6>
+                            <h2 class="mb-0 fw-bold" style="color: #27ae60;">{{ $courses->count() }}</h2>
                         </div>
-                        <i class="fas fa-book" style="font-size: 40px; color: rgba(52, 152, 219, 0.1);"></i>
+                        <i class="fas fa-university" style="font-size: 35px; color: rgba(39, 174, 96, 0.1);"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #27ae60;">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm" style="border-left: 4px solid #3498db;">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Active Courses</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #27ae60;">{{ $courses->where('status', 'Active')->count() }}</h2>
+                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                Active Programs</h6>
+                            <h2 class="mb-0 fw-bold" style="color: #3498db;">{{ $courses->where('status', 'Active')->count() }}</h2>
                         </div>
-                        <i class="fas fa-check-circle" style="font-size: 40px; color: rgba(39, 174, 96, 0.1);"></i>
+                        <i class="fas fa-check-circle" style="font-size: 35px; color: rgba(52, 152, 219, 0.1);"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card border-0 shadow-sm" style="border-top: 4px solid #f39c12;">
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm" style="border-left: 4px solid #f39c12;">
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div style="flex: 1;">
-                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 12px; letter-spacing: 0.5px;">
-                                Total Credit Hours</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #f39c12;">{{ $courses->sum('credit_hours') }}</h2>
+                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                Total Students</h6>
+                            <h2 class="mb-0 fw-bold" style="color: #f39c12;">{{ $courses->sum(function($course) { return $course->students ?? 0; }) }}</h2>
                         </div>
-                        <i class="fas fa-users" style="font-size: 40px; color: rgba(243, 156, 18, 0.1);"></i>
+                        <i class="fas fa-user-graduate" style="font-size: 35px; color: rgba(243, 156, 18, 0.1);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-0 shadow-sm" style="border-left: 4px solid #9b59b6;">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div style="flex: 1;">
+                            <h6 class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
+                                Colleges</h6>
+                            <h2 class="mb-0 fw-bold" style="color: #9b59b6;">{{ $courses->pluck('department')->unique()->count() }}</h2>
+                        </div>
+                        <i class="fas fa-building" style="font-size: 35px; color: rgba(155, 89, 182, 0.1);"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Courses Table -->
+    <!-- Academic Programs Table -->
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white border-0">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-search text-muted"></i>
-                </span>
-                <input type="text" class="form-control border-start-0" id="courseSearch" placeholder="Search courses...">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-university me-2" style="color: #27ae60;"></i>All Degree Programs
+                </h5>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" style="width: 180px;" id="collegeFilter">
+                        <option value="">All Colleges</option>
+                        @foreach($courses->pluck('department')->unique() as $college)
+                            <option value="{{ $college }}">{{ $college }}</option>
+                        @endforeach
+                    </select>
+                    <div class="input-group" style="width: 250px;">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="fas fa-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" id="programSearch" placeholder="Search programs...">
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover">
-                    <thead style="background-color: #f8f9fa;">
+                    <thead style="background-color: #f0f9f4;">
                         <tr>
-                            <th class="fw-bold" style="color: #2c3e50;">Course Code</th>
-                            <th class="fw-bold" style="color: #2c3e50;">Course Name</th>
-                            <th class="fw-bold" style="color: #2c3e50;">Instructor</th>
-                            <th class="fw-bold" style="color: #2c3e50;">Students</th>
-                            <th class="fw-bold" style="color: #2c3e50;">Status</th>
-                            <th class="fw-bold" style="color: #2c3e50;">Actions</th>
+                            <th class="fw-bold" style="color: #27ae60;">Program Code</th>
+                            <th class="fw-bold" style="color: #27ae60;">Degree Program</th>
+                            <th class="fw-bold" style="color: #27ae60;">College</th>
+                            <th class="fw-bold" style="color: #27ae60;">Students</th>
+                            <th class="fw-bold" style="color: #27ae60;">Years</th>
+                            <th class="fw-bold" style="color: #27ae60;">Status</th>
+                            <th class="fw-bold" style="color: #27ae60;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($courses as $course)
                         <tr>
-                            <td><strong>{{ $course->course_code }}</strong></td>
-                            <td>{{ $course->course_name }}</td>
-                            <td>{{ $course->instructor->name ?? 'N/A' }}</td>
-                            <td><span class="badge bg-info">{{ $course->credit_hours }}</span></td>
+                            <td><strong class="text-success">{{ $course->course_code }}</strong></td>
+                            <td>
+                                <div>
+                                    <strong>{{ $course->course_name }}</strong>
+                                    <br><small class="text-muted">{{ $course->description ?? 'Bachelor of Science in ' . $course->course_name }}</small>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-light text-dark border border-success">{{ $course->department ?? 'General Education' }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-graduate me-2 text-muted"></i>
+                                    <span class="badge bg-info">{{ $course->students ?? 0 }}</span>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-success">{{ $course->duration ?? '4 Years' }}</span></td>
                             <td><span class="badge bg-{{ $course->status == 'Active' ? 'success' : 'danger' }}">{{ $course->status }}</span></td>
                             <td>
-                                <a href="{{ route('admin.courses.edit', $course->id) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="fas fa-edit"></i></a>
-                                <form action="{{ route('admin.courses.destroy', $course->id) }}" method="POST" style="display:inline;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure?')" title="Delete"><i class="fas fa-trash"></i></button>
-                                </form>
+                                <div class="d-flex gap-1 flex-wrap actions-container">
+                                    <!-- View Details -->
+                                    <a href="{{ route('admin.courses.show', $course->id) }}" 
+                                       class="btn btn-sm btn-info d-flex align-items-center justify-content-center" 
+                                       title="View Program Details"
+                                       style="min-width: 38px; height: 38px;">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    
+                                    <!-- Edit Program -->
+                                    <a href="{{ route('admin.courses.edit', $course->id) }}" 
+                                       class="btn btn-sm btn-warning d-flex align-items-center justify-content-center" 
+                                       title="Edit Program"
+                                       style="min-width: 38px; height: 38px;">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- Manage Subjects -->
+                                    <a href="{{ route('admin.courses.manageSubjects', $course->id) }}" 
+                                       class="btn btn-sm btn-success d-flex align-items-center justify-content-center" 
+                                       title="Manage Subjects"
+                                       style="min-width: 38px; height: 38px;">
+                                        <i class="fas fa-book"></i>
+                                    </a>
+                                    
+                                    <!-- Delete Program -->
+                                    <form action="{{ route('admin.courses.destroy', $course->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="btn btn-sm btn-danger d-flex align-items-center justify-content-center" 
+                                                onclick="return confirm('Are you sure you want to delete this degree program? This action cannot be undone.')" 
+                                                title="Delete Program"
+                                                style="min-width: 38px; height: 38px;">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4">
-                                <p class="text-muted">No courses found</p>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-university fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No degree programs found</p>
+                                <a href="{{ route('admin.courses.create') }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus me-2"></i>Add First Program
+                                </a>
                             </td>
                         </tr>
                         @endforelse
@@ -117,4 +195,156 @@
         </div>
     </div>
 
+    <!-- Example Programs Reference -->
+    <div class="card border-0 shadow-sm mt-3">
+        <div class="card-header bg-white border-0">
+            <h6 class="mb-0 fw-bold text-muted">
+                <i class="fas fa-info-circle me-2"></i>Common Degree Program Examples
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-success mb-3">College of Information Technology</h6>
+                    <ul class="list-unstyled small">
+                        <li><strong>BSIT</strong> - Bachelor of Science in Information Technology</li>
+                        <li><strong>BSCS</strong> - Bachelor of Science in Computer Science</li>
+                        <li><strong>BSIS</strong> - Bachelor of Science in Information Systems</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-success mb-3">College of Education</h6>
+                    <ul class="list-unstyled small">
+                        <li><strong>BEED</strong> - Bachelor of Elementary Education</li>
+                        <li><strong>BSED</strong> - Bachelor of Secondary Education</li>
+                        <li><strong>BSAB</strong> - Bachelor of Special Needs Education</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-success mb-3">College of Agriculture</h6>
+                    <ul class="list-unstyled small">
+                        <li><strong>BS-Agri</strong> - Bachelor of Science in Agriculture</li>
+                        <li><strong>BSA</strong> - Bachelor of Science in Agribusiness</li>
+                        <li><strong>BSF</strong> - Bachelor of Science in Forestry</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-success mb-3">College of Business</h6>
+                    <ul class="list-unstyled small">
+                        <li><strong>BSBA</strong> - Bachelor of Science in Business Administration</li>
+                        <li><strong>BSA</strong> - Bachelor of Science in Accountancy</li>
+                        <li><strong>BSTM</strong> - Bachelor of Science in Tourism Management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
+
+@push('styles')
+<style>
+    /* Ensure FontAwesome icons are displayed properly */
+    .fas, .far, .fab {
+        display: inline-block;
+        font-style: normal;
+        font-variant: normal;
+        text-rendering: auto;
+        line-height: 1;
+    }
+    
+    .btn-sm {
+        transition: all 0.2s ease-in-out;
+        font-weight: 500;
+    }
+    
+    .btn-sm:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .btn-info:hover {
+        background-color: #0c5460;
+        border-color: #0c5460;
+    }
+    
+    .btn-warning:hover {
+        background-color: #d63384;
+        border-color: #d63384;
+    }
+    
+    .btn-success:hover {
+        background-color: #0f5132;
+        border-color: #0f5132;
+    }
+    
+    .btn-danger:hover {
+        background-color: #842029;
+        border-color: #842029;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .actions-container {
+        min-width: 170px;
+    }
+    
+    @media (max-width: 768px) {
+        .actions-container {
+            min-width: auto;
+            flex-direction: column;
+        }
+        
+        .actions-container .btn {
+            width: 38px;
+            height: 38px;
+            justify-content: center;
+        }
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add tooltip functionality
+    const buttons = document.querySelectorAll('[title]');
+    buttons.forEach(button => {
+        button.addEventListener('mouseenter', function() {
+            this.style.cursor = 'pointer';
+        });
+    });
+    
+    // Enhanced delete confirmation
+    const deleteButtons = document.querySelectorAll('form button[onclick*="confirm"]');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const programName = this.closest('tr').querySelector('td:nth-child(2) strong').textContent;
+            if (!confirm(`⚠️ DELETE CONFIRMATION ⚠️\n\nAre you sure you want to delete "${programName}"?\n\nThis will permanently remove:\n• All program data\n• Associated subjects\n• Student enrollments\n\nThis action CANNOT be undone!`)) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Add loading state to buttons
+    const actionButtons = document.querySelectorAll('.btn-sm');
+    actionButtons.forEach(button => {
+        if (!button.form) { // Skip delete buttons
+            button.addEventListener('click', function() {
+                const originalContent = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                
+                // Reset after 2 seconds (in case of slow navigation)
+                setTimeout(() => {
+                    this.innerHTML = originalContent;
+                    this.disabled = false;
+                }, 2000);
+            });
+        }
+    });
+});
+</script>
+@endpush

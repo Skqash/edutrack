@@ -188,6 +188,73 @@
             transform: scale(1.05);
         }
 
+        .action-but.btn-print {
+            background: linear-gradient(45deg, #6c757d, #495057);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-print:hover {
+            background: linear-gradient(45deg, #5a6268, #343a40);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        .btn-info {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(45deg, #138496, #0c5460);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ffc107, #e0a800);
+            color: #212529;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-warning:hover {
+            background: linear-gradient(45deg, #e0a800, #d39e00);
+            color: #212529;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 2px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         /* EMPTY STATE */
         .empty-state {
             text-align: center;
@@ -329,10 +396,16 @@
                                             {{ $totalAvg !== null ? number_format($totalAvg, 2) : 'N/A' }}
                                         </td>
                                         <td style="text-align: center;">
-                                            <a href="{{ route('admin.grades.print-student', [$classData['class']->id, $student->id]) }}"
-                                                target="_blank" class="btn-small btn-print">
-                                                <i class="fas fa-print"></i> Print
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('admin.grades.print-midterm', [$classData['class']->id, $student->id]) }}"
+                                                   target="_blank" class="btn-small btn-info" title="Download Midterm Grades">
+                                                    <i class="fas fa-file-pdf"></i> Midterm
+                                                </a>
+                                                <a href="{{ route('admin.grades.print-finals', [$classData['class']->id, $student->id]) }}"
+                                                   target="_blank" class="btn-small btn-warning" title="Download Final Grades">
+                                                    <i class="fas fa-file-pdf"></i> Finals
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach

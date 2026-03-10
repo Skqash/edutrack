@@ -75,6 +75,18 @@ class User extends Authenticatable
         return $this->hasMany(ClassModel::class, 'teacher_id');
     }
 
+    /**
+     * Get the subjects assigned to this teacher.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'teacher_subject', 'teacher_id', 'subject_id')
+            ->withPivot('status', 'assigned_at')
+            ->withTimestamps();
+    }
+
     public function gradesPosted()
     {
         return $this->hasMany(Grade::class, 'teacher_id');

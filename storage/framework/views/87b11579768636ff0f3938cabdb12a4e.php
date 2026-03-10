@@ -99,17 +99,16 @@
                                                 id="theme_<?php echo e($themeKey); ?>" value="<?php echo e($themeKey); ?>"
                                                 <?php echo e($user->theme === $themeKey ? 'checked' : ''); ?>>
                                             <label class="form-check-label d-block" for="theme_<?php echo e($themeKey); ?>">
-                                                <div class="theme-preview p-3 rounded border"
-                                                    id="preview_<?php echo e($themeKey); ?>">
-                                                    <span class="fw-bold"><?php echo e($themeName); ?></span>
-                                                    <div class="mt-2 d-flex gap-2">
-                                                        <div class="theme-color-box bg-primary rounded"
-                                                            style="width: 20px; height: 20px;"></div>
-                                                        <div class="theme-color-box rounded"
-                                                            style="width: 20px; height: 20px; background-color: #6c757d;">
+                                                <div class="theme-preview theme-<?php echo e($themeKey); ?>" id="preview_<?php echo e($themeKey); ?>">
+                                                    <div class="theme-applied">✓ Applied</div>
+                                                    <div class="theme-content">
+                                                        <div class="theme-name"><?php echo e($themeName); ?></div>
+                                                        <div class="theme-colors">
+                                                            <div class="theme-color-box" style="background: var(--theme-primary, #2196F3);"></div>
+                                                            <div class="theme-color-box" style="background: var(--theme-secondary, #6c757d);"></div>
+                                                            <div class="theme-color-box" style="background: var(--theme-success, #4caf50);"></div>
+                                                            <div class="theme-color-box" style="background: var(--theme-warning, #ff9800);"></div>
                                                         </div>
-                                                        <div class="theme-color-box bg-success rounded"
-                                                            style="width: 20px; height: 20px;"></div>
                                                     </div>
                                                 </div>
                                             </label>
@@ -198,29 +197,229 @@
     <style>
         .theme-card {
             cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
         .theme-preview {
-            background-color: #f8f9fa;
+            min-height: 120px;
+            border-radius: 0.75rem;
+            border: 3px solid #e3e6f0;
             transition: all 0.3s ease;
-            min-height: 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-preview::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            z-index: 1;
+        }
+
+        .theme-preview::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            z-index: 1;
+        }
+
+        .theme-content {
+            position: relative;
+            z-index: 2;
+            padding: 1rem;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .theme-colors {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .theme-color-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 0.375rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .form-check-input:checked~label .theme-preview {
-            border-color: #0d6efd !important;
-            background-color: #e7f1ff;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+            border-color: #2196F3 !important;
+            box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+            transform: scale(1.02);
         }
 
         .form-check-input {
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        /* Theme-specific styles */
+        .theme-light .theme-preview::before { background: #ffffff; }
+        .theme-light .theme-preview::after { background: #f8f9fa; }
+        .theme-light .theme-content { color: #333; text-shadow: none; }
+
+        .theme-dark .theme-preview::before { background: #1a1a2e; }
+        .theme-dark .theme-preview::after { background: #16213e; }
+
+        .theme-ocean .theme-preview::before { background: #0066cc; }
+        .theme-ocean .theme-preview::after { background: #004080; }
+
+        .theme-forest .theme-preview::before { background: #1b5e20; }
+        .theme-forest .theme-preview::after { background: #2e7d32; }
+
+        .theme-sunset .theme-preview::before { background: #e65100; }
+        .theme-sunset .theme-preview::after { background: #bf360c; }
+
+        /* Applied theme indicator */
+        .theme-applied {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 3;
+            display: none;
+        }
+
+        .form-check-input:checked~label .theme-applied {
+            display: block;
+        }
+
+        /* Theme transition styles */
+        body {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark theme styles */
+        body.dark-theme {
+            background-color: #1a1a2e !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-theme .card {
+            background-color: #16213e !important;
+            border-color: #0f3460 !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-theme .card-header {
+            background-color: #0f3460 !important;
+            border-color: #16213e !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-theme .form-control,
+        body.dark-theme .form-select {
+            background-color: #16213e !important;
+            border-color: #0f3460 !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-theme .table {
+            color: #ffffff !important;
+        }
+
+        body.dark-theme .table th {
+            background-color: #0f3460 !important;
+            color: #ffffff !important;
+        }
+
+        /* Ocean theme styles */
+        body.ocean-theme {
+            background: linear-gradient(135deg, #0066cc 0%, #004080 100%) !important;
+        }
+
+        body.ocean-theme .card {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #0066cc !important;
+        }
+
+        body.ocean-theme .card-header {
+            background: linear-gradient(135deg, #0066cc 0%, #004080 100%) !important;
+            color: white !important;
+        }
+
+        body.ocean-theme .btn-primary {
+            background: linear-gradient(135deg, #0066cc 0%, #004080 100%) !important;
+            border-color: #0066cc !important;
+        }
+
+        /* Forest theme styles */
+        body.forest-theme {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%) !important;
+        }
+
+        body.forest-theme .card {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #1b5e20 !important;
+        }
+
+        body.forest-theme .card-header {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%) !important;
+            color: white !important;
+        }
+
+        body.forest-theme .btn-primary {
+            background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%) !important;
+            border-color: #1b5e20 !important;
+        }
+
+        /* Sunset theme styles */
+        body.sunset-theme {
+            background: linear-gradient(135deg, #e65100 0%, #bf360c 100%) !important;
+        }
+
+        body.sunset-theme .card {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            border-color: #e65100 !important;
+        }
+
+        body.sunset-theme .card-header {
+            background: linear-gradient(135deg, #e65100 0%, #bf360c 100%) !important;
+            color: white !important;
+        }
+
+        body.sunset-theme .btn-primary {
+            background: linear-gradient(135deg, #e65100 0%, #bf360c 100%) !important;
+            border-color: #e65100 !important;
+        }
+
+        @media (max-width: 768px) {
+            .theme-preview {
+                min-height: 100px;
+            }
         }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', function(){
+            // Grading scheme toggle
             const select = document.getElementById('settingsSchemeSelect');
             const custom = document.getElementById('settingsCustomWeights');
             function toggle(){
@@ -228,6 +427,186 @@
                 if(select.value === 'custom') custom.style.display = 'block'; else custom.style.display = 'none';
             }
             if(select){ select.addEventListener('change', toggle); toggle(); }
+
+            // Theme switching functionality
+            const themeRadios = document.querySelectorAll('input[name="theme"]');
+            const body = document.body;
+            const themeForm = document.getElementById('themeForm');
+
+            // Apply saved theme on page load
+            function applyTheme(theme) {
+                // Remove all theme classes
+                body.classList.remove('light-theme', 'dark-theme', 'ocean-theme', 'forest-theme', 'sunset-theme');
+                
+                // Apply new theme
+                if (theme && theme !== 'light') {
+                    body.classList.add(`${theme}-theme`);
+                }
+                
+                // Save to localStorage for persistence
+                localStorage.setItem('selectedTheme', theme);
+                
+                // Update theme previews
+                updateThemePreviews(theme);
+                
+                console.log(`🎨 Theme applied: ${theme}`);
+            }
+
+            // Update theme preview indicators
+            function updateThemePreviews(selectedTheme) {
+                themeRadios.forEach(radio => {
+                    const preview = radio.nextElementSibling.querySelector('.theme-preview');
+                    const appliedIndicator = radio.nextElementSibling.querySelector('.theme-applied');
+                    
+                    if (radio.value === selectedTheme) {
+                        preview.style.borderColor = '#2196F3';
+                        preview.style.boxShadow = '0 0 0 4px rgba(33, 150, 243, 0.2)';
+                        preview.style.transform = 'scale(1.02)';
+                        if (appliedIndicator) {
+                            appliedIndicator.style.display = 'block';
+                        }
+                    } else {
+                        preview.style.borderColor = '#e3e6f0';
+                        preview.style.boxShadow = 'none';
+                        preview.style.transform = 'scale(1)';
+                        if (appliedIndicator) {
+                            appliedIndicator.style.display = 'none';
+                        }
+                    }
+                });
+            }
+
+            // Theme change event listeners
+            themeRadios.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const theme = radio.value;
+                    applyTheme(theme);
+                    
+                    // Show feedback
+                    showThemeFeedback(theme);
+                });
+            });
+
+            // Show theme change feedback
+            function showThemeFeedback(theme) {
+                // Create toast notification
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed top-0 end-0 p-3';
+                toast.style.zIndex = '1050';
+                toast.innerHTML = `
+                    <div class="toast show" role="alert">
+                        <div class="toast-header">
+                            <i class="fas fa-palette me-2"></i>
+                            <strong class="me-auto">Theme Changed</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            ${theme.charAt(0).toUpperCase() + theme.slice(1)} theme has been applied successfully!
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                // Auto-remove after 3 seconds
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+
+            // Load saved theme on page load
+            const savedTheme = localStorage.getItem('selectedTheme') || '<?php echo e($user->theme ?? "light"); ?>';
+            applyTheme(savedTheme);
+
+            // Handle form submission for theme
+            if (themeForm) {
+                themeForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const theme = formData.get('theme');
+                    
+                    // Apply theme immediately
+                    applyTheme(theme);
+                    
+                    // Submit form via AJAX for better UX
+                    fetch(this.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'text/html'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        // Show success feedback
+                        showThemeFeedback(theme);
+                        console.log('✅ Theme saved to database');
+                    })
+                    .catch(error => {
+                        console.error('❌ Error saving theme:', error);
+                        // Still apply theme locally even if server save fails
+                        showThemeFeedback(theme);
+                    });
+                });
+            }
+
+            // Enhanced theme preview interactions
+            const themeCards = document.querySelectorAll('.theme-card');
+            themeCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    const preview = this.querySelector('.theme-preview');
+                    if (preview && !this.querySelector('input').checked) {
+                        preview.style.transform = 'scale(1.05)';
+                        preview.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+                    }
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    const preview = this.querySelector('.theme-preview');
+                    const radio = this.querySelector('input');
+                    if (preview && !radio.checked) {
+                        preview.style.transform = 'scale(1)';
+                        preview.style.boxShadow = 'none';
+                    }
+                });
+
+                // Click to select theme
+                card.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'INPUT') {
+                        const radio = this.querySelector('input');
+                        radio.checked = true;
+                        radio.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+
+            // Keyboard navigation for themes
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    const checkedRadio = document.querySelector('input[name="theme"]:checked');
+                    const allRadios = Array.from(document.querySelectorAll('input[name="theme"]'));
+                    const currentIndex = allRadios.indexOf(checkedRadio);
+                    
+                    let newIndex;
+                    if (e.key === 'ArrowLeft') {
+                        newIndex = currentIndex > 0 ? currentIndex - 1 : allRadios.length - 1;
+                    } else {
+                        newIndex = currentIndex < allRadios.length - 1 ? currentIndex + 1 : 0;
+                    }
+                    
+                    allRadios[newIndex].checked = true;
+                    allRadios[newIndex].dispatchEvent(new Event('change'));
+                    allRadios[newIndex].focus();
+                }
+            });
+
+            console.log('🎨 Enhanced Theme System Loaded');
+            console.log('✅ Theme switching functional');
+            console.log('✅ Local storage persistence active');
+            console.log('✅ Keyboard navigation enabled');
         });
     </script>
 <?php $__env->stopSection(); ?>

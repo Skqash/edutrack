@@ -1,3 +1,13 @@
+@php
+    // Base64 encode the logo for PDF compatibility
+    $logoPath = public_path('images/cpsu-logo.jpg');
+    $logoBase64 = '';
+    if (file_exists($logoPath)) {
+        $logoData = file_get_contents($logoPath);
+        $logoBase64 = 'data:image/jpeg;base64,' . base64_encode($logoData);
+    }
+@endphp
+
 <!DOCTYPE html>
 <html>
 
@@ -12,10 +22,11 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Times New Roman', Times, serif;
             color: #333;
             line-height: 1.6;
             background: white;
+            position: relative;
         }
 
         .container {
@@ -24,29 +35,74 @@
             margin: 0 auto;
             padding: 0.5in;
             background: white;
+            position: relative;
+        }
+
+        /* WATERMARK */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 120px;
+            color: rgba(26, 84, 144, 0.05);
+            font-weight: bold;
+            z-index: -1;
+            pointer-events: none;
         }
 
         /* HEADER */
         .header {
             text-align: center;
-            border-bottom: 3px solid #333;
-            padding-bottom: 20px;
+            border-bottom: 3px solid #1a5490;
+            padding-bottom: 30px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .logo-container {
             margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
 
         .institution-name {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
-            color: #1a1a1a;
+            color: #1a5490;
             margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .institution-address {
+            font-size: 11px;
+            color: #555;
+            margin-bottom: 10px;
+            font-style: italic;
         }
 
         .certificate-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             color: #333;
-            margin: 15px 0 10px 0;
+            margin: 20px 0 10px 0;
             text-decoration: underline;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .certificate-subtitle {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
         }
 
         /* STUDENT INFO SECTION */
@@ -173,6 +229,60 @@
             margin: 5px 0;
         }
 
+        /* SIGNATURE SECTION */
+        .signature-section {
+            margin-top: 40px;
+            border-top: 2px solid #1a5490;
+            padding-top: 20px;
+        }
+
+        .signature-grid {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .signature-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .signature-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #333;
+            height: 40px;
+            margin-bottom: 5px;
+        }
+
+        .signature-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1a5490;
+            margin-bottom: 3px;
+        }
+
+        .signature-title {
+            font-size: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .signature-date {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            padding: 10px;
+            border: 1px solid #999;
+            background-color: #f5f5f5;
+        }
+
         /* PAGE BREAK */
         @page {
             size: 8.5in 11in;
@@ -195,11 +305,17 @@
 </head>
 
 <body>
+    <div class="watermark">CPSU</div>
     <div class="container">
         <!-- HEADER -->
         <div class="header">
-            <div class="institution-name">CEBU PACIFIC SHIPPING UNIVERSITY</div>
-            <div class="certificate-title">CERTIFICATE OF RECORDS (CRC)</div>
+            <div class="logo-container">
+                <img src="{{ $logoBase64 }}" alt="CPSU Logo" class="logo">
+            </div>
+            <div class="institution-name">CENTRAL PHILIPPINES STATE UNIVERSITY</div>
+            <div class="institution-address">College of Engineering and Information Technology</div>
+            <div class="certificate-title">Certificate of Records (CRC)</div>
+            <div class="certificate-subtitle">Official Academic Record</div>
         </div>
 
         <!-- STUDENT INFORMATION -->
@@ -230,10 +346,9 @@
                 <thead>
                     <tr>
                         <th>Subject</th>
-                        <th style="width: 15%;">Midterm</th>
-                        <th style="width: 15%;">Finals</th>
+                        <th style="width: 20%;">Midterm</th>
+                        <th style="width: 20%;">Finals</th>
                         <th style="width: 20%;">Total Average</th>
-                        <th>Teacher</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -261,7 +376,6 @@
                                     N/A
                                 @endif
                             </td>
-                            <td>{{ $grade->teacher->user->name ?? 'N/A' }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -313,10 +427,36 @@
             </div>
         </div>
 
+        <!-- SIGNATURE SECTION -->
+        <div class="signature-section">
+            <div class="signature-grid">
+                <div class="signature-item">
+                    <div class="signature-label">Prepared by:</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">Academic Records Officer</div>
+                    <div class="signature-title">Office of the Registrar</div>
+                </div>
+                <div class="signature-item">
+                    <div class="signature-label">Certified correct by:</div>
+                    <div class="signature-line"></div>
+                    <div class="signature-name">University Registrar</div>
+                    <div class="signature-title">Central Philippines State University</div>
+                </div>
+                <div class="signature-item">
+                    <div class="signature-label">Date Issued:</div>
+                    <div class="signature-date">{{ date('F j, Y') }}</div>
+                </div>
+            </div>
+        </div>
+
         <!-- FOOTER -->
         <div class="footer">
-            <div class="footer-text">This is an official academic record of {{ config('app.name') }}.</div>
-            <div class="footer-text">Generated on {{ date('F d, Y') }}</div>
+            <div class="footer-text"><strong>OFFICIAL ACADEMIC RECORD</strong> - This document is a certified true copy of the student's academic record.</div>
+            <div class="footer-text">Central Philippines State University • College of Engineering and Information Technology</div>
+            <div class="footer-text">Generated on: {{ date('F d, Y g:i A') }} • Reference #: CRC-{{ $student->student_id ?? '0000' }}-{{ date('Y-m') }}</div>
+            <div class="footer-text" style="margin-top: 10px; font-size: 9px; color: #999;">
+                <em>This document is valid only with the official seal and signature of the University Registrar.</em>
+            </div>
         </div>
     </div>
 </body>
