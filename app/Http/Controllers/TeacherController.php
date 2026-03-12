@@ -39,7 +39,7 @@ class TeacherController extends Controller
         // Get total students in teacher's classes
         $totalStudents = Student::whereIn('class_id',
             ClassModel::where('teacher_id', $teacherId)->pluck('id')
-        )->count();
+        )->with('user')->count();
 
         // Get grades posted by this teacher (total count)
         $gradesPosted = Grade::where('teacher_id', $teacherId)
@@ -1925,7 +1925,10 @@ class TeacherController extends Controller
         // Also get all courses for fallback
         $courses = Course::orderBy('course_name')->get();
 
-        return view('teacher.classes.create', compact('assignedSubjects', 'courses'));
+        // Get all departments for student filtering
+        $departments = Course::distinct()->pluck('department')->filter()->toArray();
+
+        return view('teacher.classes.create', compact('assignedSubjects', 'courses', 'departments'));
     }
 
     /**
@@ -2002,9 +2005,44 @@ class TeacherController extends Controller
             }
         }
 
+        // Assign students to class if provided
+        if ($request->filled('assigned_students')) {
+            $studentIds = explode(',', $request->assigned_students);
+
+            // Validate that all student IDs exist
+            $validStudentIds = Student::whereIn('id', $studentIds)->pluck('id')->toArray();
+
+            foreach ($validStudentIds as $studentId) {
+                // Check if assignment already exists to avoid duplicates
+                $exists = \DB::table('assignment_students')
+                    ->where('assignment_id', $class->id)
+                    ->where('student_id', $studentId)
+                    ->exists();
+
+                if (! $exists) {
+                    // Create student assignment record
+                    \DB::table('assignment_students')->insert([
+                        'assignment_id' => $class->id,
+                        'student_id' => $studentId,
+                        'status' => 'assigned',
+                        'assigned_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // Update student's class assignment
+                    Student::where('id', $studentId)->update(['class_id' => $class->id]);
+                }
+            }
+        }
+
         $message = "Class '{$class->class_name}' created successfully!";
         if ($request->boolean('auto_assign') || $request->boolean('create_assignment')) {
             $message .= ' Teacher assignments have been created.';
+        }
+        if ($request->filled('assigned_students')) {
+            $studentCount = count($validStudentIds ?? []);
+            $message .= " {$studentCount} students have been assigned to the class.";
         }
 
         return redirect()->route('teacher.classes.show', $class->id)
@@ -2053,8 +2091,65 @@ class TeacherController extends Controller
 
         $class->update($validated);
 
+        // Assign students to class if provided
+        if ($request->filled('assigned_students')) {
+            $studentIds = explode(',', $request->assigned_students);
+
+            // Validate that all student IDs exist
+            $validStudentIds = Student::whereIn('id', $studentIds)->pluck('id')->toArray();
+
+            foreach ($validStudentIds as $studentId) {
+                // Check if assignment already exists to avoid duplicates
+                $exists = \DB::table('assignment_students')
+                    ->where('assignment_id', $class->id)
+                    ->where('student_id', $studentId)
+                    ->exists();
+
+                if (! $exists) {
+                    // Create a teacher assignment for this class if it doesn't exist
+                    $assignment = \DB::table('teacher_assignments')
+                        ->where('class_id', $class->id)
+                        ->first();
+
+                    if (! $assignment) {
+                        // Create a default teacher assignment
+                        $assignmentId = \DB::table('teacher_assignments')->insertGetId([
+                            'teacher_id' => Auth::id(),
+                            'class_id' => $class->id,
+                            'subject_id' => 1, // Default subject
+                            'status' => 'active',
+                            'notes' => 'Auto-created for student assignment',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    } else {
+                        $assignmentId = $assignment->id;
+                    }
+
+                    // Create student assignment record
+                    \DB::table('assignment_students')->insert([
+                        'assignment_id' => $assignmentId,
+                        'student_id' => $studentId,
+                        'status' => 'assigned',
+                        'assigned_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // Update student's class assignment
+                    Student::where('id', $studentId)->update(['class_id' => $class->id]);
+                }
+            }
+        }
+
+        $message = "Class '{$class->class_name}' updated successfully!";
+        if ($request->filled('assigned_students')) {
+            $studentCount = count($validStudentIds ?? []);
+            $message .= " {$studentCount} students have been assigned to the class.";
+        }
+
         return redirect()->route('teacher.classes.show', $class->id)
-            ->with('success', "Class '{$class->class_name}' updated successfully!");
+            ->with('success', $message);
     }
 
     /**

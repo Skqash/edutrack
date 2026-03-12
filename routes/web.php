@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\Admin\TeacherAssignmentController;
 use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\AdminGradeController;
@@ -134,7 +135,9 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/subjects/sync', [SubjectController::class, 'syncAll'])->name('subjects.syncAll');
 
     // Classes Routes
+    Route::resource('classes', ClassController::class);
     Route::post('/classes/get-students', [ClassController::class, 'getStudents'])->name('classes.get-students');
+    Route::post('/classes/assign-students', [ClassController::class, 'assignStudentsToClass'])->name('classes.assign-students');
 
     // Students Routes
     Route::resource('students', StudentController::class);

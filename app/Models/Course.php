@@ -9,8 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $program_code
  * @property string $program_name
- * @property string|null $college
- * @property string|null $department
+ * @property string $department
  * @property string|null $description
  * @property int|null $head_id
  * @property string $status
@@ -25,7 +24,6 @@ class Course extends Model
     protected $fillable = [
         'program_code',
         'program_name',
-        'college',
         'department',
         'description',
         'head_id',
@@ -57,12 +55,6 @@ class Course extends Model
         return $this->current_students ?? 0;
     }
 
-    // Accessor for department (fallback to college)
-    public function getDepartmentAttribute()
-    {
-        return $this->department ?? $this->college ?? 'General Education';
-    }
-
     public function head()
     {
         return $this->belongsTo(User::class, 'head_id');
@@ -89,10 +81,10 @@ class Course extends Model
         return $query->where('status', 'Active');
     }
 
-    // Scope by college
-    public function scopeByCollege($query, $college)
+    // Scope by department
+    public function scopeByDepartment($query, $department)
     {
-        return $query->where('college', $college);
+        return $query->where('department', $department);
     }
 
     // Sync all subjects in this course

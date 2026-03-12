@@ -1,6 +1,4 @@
-@extends('layouts.teacher')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
@@ -9,7 +7,7 @@
                     <h1 class="h3 fw-bold mb-0">Create New Class</h1>
                     <p class="text-muted mb-0">Set up a new class and configure basic settings</p>
                 </div>
-                <a href="{{ route('teacher.classes') }}" class="btn btn-outline-secondary">
+                <a href="<?php echo e(route('teacher.classes')); ?>" class="btn btn-outline-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to Classes
                 </a>
             </div>
@@ -23,8 +21,8 @@
                     <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>New Class Information</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('teacher.classes.store') }}" method="POST" class="card-body">
-                        @csrf
+                    <form action="<?php echo e(route('teacher.classes.store')); ?>" method="POST" class="card-body">
+                        <?php echo csrf_field(); ?>
                         <div class="modal-body">
                             <div class="row g-3 mb-4">
                                 <!-- Subject Selection -->
@@ -38,39 +36,55 @@
                                             <input type="text" class="form-control" id="subjectSearch" 
                                                    placeholder="Search subjects..." autocomplete="off">
                                         </div>
-                                        <select class="form-select @error('subject_id') is-invalid @enderror" id="subjectSelect"
+                                        <select class="form-select <?php $__errorArgs = ['subject_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="subjectSelect"
                                                 name="subject_id" required style="margin-top: 8px;" onchange="showSubjectDetails(this.value)">
                                                     <option value="">-- Select a Subject --</option>
-                                                    @if (!empty($assignedSubjects))
-                                                        @foreach ($assignedSubjects as $subject)
-                                                            <option value="{{ $subject->id }}" 
-                                                                    data-code="{{ $subject->subject_code }}"
-                                                                    data-name="{{ $subject->subject_name }}"
-                                                                    data-units="{{ $subject->credit_hours }}"
-                                                                    data-course="{{ $subject->course_name ?? 'N/A' }}"
-                                                                    data-course-id="{{ $subject->course_id ?? '' }}">
-                                                                {{ $subject->subject_code }} - {{ $subject->subject_name }}
+                                                    <?php if(!empty($assignedSubjects)): ?>
+                                                        <?php $__currentLoopData = $assignedSubjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <option value="<?php echo e($subject->id); ?>" 
+                                                                    data-code="<?php echo e($subject->subject_code); ?>"
+                                                                    data-name="<?php echo e($subject->subject_name); ?>"
+                                                                    data-units="<?php echo e($subject->credit_hours); ?>"
+                                                                    data-course="<?php echo e($subject->course_name ?? 'N/A'); ?>"
+                                                                    data-course-id="<?php echo e($subject->course_id ?? ''); ?>">
+                                                                <?php echo e($subject->subject_code); ?> - <?php echo e($subject->subject_name); ?>
+
                                                             </option>
-                                                        @endforeach
-                                                    @else
+                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php else: ?>
                                                         <!-- Fallback: Show all subjects if none assigned -->
-                                                        @php
+                                                        <?php
                                                             $allSubjects = \App\Models\Subject::limit(10)->get();
-                                                        @endphp
-                                                        @foreach ($allSubjects as $subject)
-                                                            <option value="{{ $subject->id }}" 
-                                                                    data-code="{{ $subject->subject_code }}"
-                                                                    data-name="{{ $subject->subject_name }}"
-                                                                    data-units="{{ $subject->credit_hours }}"
-                                                                    data-course="{{ $subject->course_name ?? 'N/A' }}"
-                                                                    data-course-id="{{ $subject->course_id ?? '' }}">
-                                                                {{ $subject->subject_code }} - {{ $subject->subject_name }}
-                                                            @endforeach
-                                                    @endif
+                                                        ?>
+                                                        <?php $__currentLoopData = $allSubjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                            <option value="<?php echo e($subject->id); ?>" 
+                                                                    data-code="<?php echo e($subject->subject_code); ?>"
+                                                                    data-name="<?php echo e($subject->subject_name); ?>"
+                                                                    data-units="<?php echo e($subject->credit_hours); ?>"
+                                                                    data-course="<?php echo e($subject->course_name ?? 'N/A'); ?>"
+                                                                    data-course-id="<?php echo e($subject->course_id ?? ''); ?>">
+                                                                <?php echo e($subject->subject_code); ?> - <?php echo e($subject->subject_name); ?>
+
+                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                                    <?php endif; ?>
                                                 </select>
-                                            @error('subject_id')
-                                                <div class="invalid-feedback d-block">{{ $message }}</div>
-                                            @enderror
+                                            <?php $__errorArgs = ['subject_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                                <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
+                                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                             <small class="text-muted d-block mt-1">Select from your assigned subjects</small>
                                         </div>
                                 </div>
@@ -81,11 +95,25 @@
                                         <label for="class_name" class="form-label fw-bold">
                                             <i class="fas fa-chalkboard me-2"></i>Class Name
                                         </label>
-                                        <input type="text" class="form-control @error('class_name') is-invalid @enderror" id="class_name" 
+                                        <input type="text" class="form-control <?php $__errorArgs = ['class_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="class_name" 
                                                name="class_name" required placeholder="e.g., BSIT - 1A">
-                                    @error('class_name')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
+                                    <?php $__errorArgs = ['class_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         <small class="text-muted d-block mt-1">Use descriptive class names</small>
                                     </div>
                                 </div>
@@ -123,11 +151,25 @@
                                         <label for="capacity" class="form-label">
                                             <i class="fas fa-users me-2"></i>Class Capacity
                                         </label>
-                                        <input type="number" class="form-control @error('capacity') is-invalid @enderror" id="capacity" 
+                                        <input type="number" class="form-control <?php $__errorArgs = ['capacity'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="capacity" 
                                                name="capacity" min="1" placeholder="Maximum number of students">
-                                    @error('capacity')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
+                                    <?php $__errorArgs = ['capacity'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         <small class="text-muted d-block mt-1">Maximum number of students</small>
                                     </div>
                                 </div>
@@ -138,11 +180,25 @@
                                         <label for="description" class="form-label fw-bold">
                                             <i class="fas fa-file-alt me-2"></i>Description (Optional)
                                         </label>
-                                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" 
-                                                  rows="3" placeholder="Add notes about this class...">{{ old('description') }}</textarea>
-                                    @error('description')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
+                                        <textarea class="form-control <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="description" 
+                                                  rows="3" placeholder="Add notes about this class..."><?php echo e(old('description')); ?></textarea>
+                                    <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                         <small class="text-muted d-block mt-1">Optional: Add any relevant information about this class</small>
                                     </div>
                                 </div>
@@ -227,7 +283,7 @@
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Create Class
                         </button>
-                        <a href="{{ route('teacher.classes') }}" class="btn btn-outline-secondary">
+                        <a href="<?php echo e(route('teacher.classes')); ?>" class="btn btn-outline-secondary">
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
                     </div>
@@ -441,3 +497,5 @@ document.addEventListener('DOMContentLoaded', function() {
     loadStudents();
 });
 </script>
+
+<?php echo $__env->make('layouts.teacher', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/classes/create.blade.php ENDPATH**/ ?>

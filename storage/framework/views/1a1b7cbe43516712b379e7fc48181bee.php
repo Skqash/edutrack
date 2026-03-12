@@ -9,7 +9,7 @@
                     <h2 class="fw-bold mb-1">
                         <i class="fas fa-university me-2" style="color: #27ae60;"></i>Academic Programs
                     </h2>
-                    <p class="text-muted">Manage college degree programs and departments offered in the university</p>
+                    <p class="text-muted">Manage degree programs and their academic departments</p>
                 </div>
                 <a href="<?php echo e(route('admin.courses.create')); ?>" class="btn btn-success">
                     <i class="fas fa-plus me-2"></i> Add New Program
@@ -71,7 +71,7 @@
                     <div class="d-flex align-items-center">
                         <div style="flex: 1;">
                             <h6 class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
-                                Colleges</h6>
+                                Departments</h6>
                             <h2 class="mb-0 fw-bold" style="color: #9b59b6;"><?php echo e($courses->pluck('department')->unique()->count()); ?></h2>
                         </div>
                         <i class="fas fa-building" style="font-size: 35px; color: rgba(155, 89, 182, 0.1);"></i>
@@ -89,10 +89,10 @@
                     <i class="fas fa-university me-2" style="color: #27ae60;"></i>All Degree Programs
                 </h5>
                 <div class="d-flex gap-2">
-                    <select class="form-select form-select-sm" style="width: 180px;" id="collegeFilter">
-                        <option value="">All Colleges</option>
-                        <?php $__currentLoopData = $courses->pluck('department')->unique(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $college): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                            <option value="<?php echo e($college); ?>"><?php echo e($college); ?></option>
+                    <select class="form-select form-select-sm" style="width: 180px;" id="departmentFilter">
+                        <option value="">All Departments</option>
+                        <?php $__currentLoopData = $courses->pluck('department')->unique(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $department): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($department); ?>"><?php echo e($department); ?></option>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                     <div class="input-group" style="width: 250px;">
@@ -111,7 +111,7 @@
                         <tr>
                             <th class="fw-bold" style="color: #27ae60;">Program Code</th>
                             <th class="fw-bold" style="color: #27ae60;">Degree Program</th>
-                            <th class="fw-bold" style="color: #27ae60;">College</th>
+                            <th class="fw-bold" style="color: #27ae60;">Department</th>
                             <th class="fw-bold" style="color: #27ae60;">Students</th>
                             <th class="fw-bold" style="color: #27ae60;">Years</th>
                             <th class="fw-bold" style="color: #27ae60;">Status</th>
@@ -309,7 +309,33 @@
 <?php $__env->startPush('scripts'); ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add tooltip functionality
+    // Add filtering functionality
+    const departmentFilter = document.getElementById('departmentFilter');
+    const programSearch = document.getElementById('programSearch');
+    const tableRows = document.querySelectorAll('tbody tr');
+    
+    function filterTable() {
+        const selectedDepartment = departmentFilter.value.toLowerCase();
+        const searchTerm = programSearch.value.toLowerCase();
+        
+        tableRows.forEach(row => {
+            if (row.querySelector('td[colspan]')) return; // Skip empty row
+            
+            const department = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+            const programName = row.querySelector('td:nth-child(2)')?.textContent.toLowerCase() || '';
+            const programCode = row.querySelector('td:nth-child(1)')?.textContent.toLowerCase() || '';
+            
+            const matchesDepartment = !selectedDepartment || department.includes(selectedDepartment);
+            const matchesSearch = !searchTerm || 
+                programName.includes(searchTerm) || 
+                programCode.includes(searchTerm);
+            
+            row.style.display = matchesDepartment && matchesSearch ? '' : 'none';
+        });
+    }
+    
+    departmentFilter.addEventListener('change', filterTable);
+    programSearch.addEventListener('input', filterTable);
     const buttons = document.querySelectorAll('[title]');
     buttons.forEach(button => {
         button.addEventListener('mouseenter', function() {

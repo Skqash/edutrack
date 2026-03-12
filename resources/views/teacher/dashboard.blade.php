@@ -247,6 +247,24 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- Quick Info Banner -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="quick-banner">
+            <div class="row align-items-center g-3">
+                <div class="col-auto">
+                    <i class="fas fa-rocket fa-2x"></i>
+                </div>
+                <div class="col">
+                    <h6 class="mb-1 fw-bold">Enhanced Grading System Ready</h6>
+                    <small>Your dashboard is fully configured • All systems operational • Ready for grading</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Statistics Cards - Enhanced with gradients and improved spacing -->
 <div class="row mb-4 g-3">

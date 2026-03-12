@@ -39,7 +39,7 @@ class AdminGradeController extends Controller
         }
 
         // Get total counts
-        $totalStudents = User::where('role', 'student')->count();
+        $totalStudents = Student::with('user')->count();
         $totalTeachers = User::where('role', 'teacher')->count();
         $totalClasses = ClassModel::count();
         $totalSubjects = Subject::count();

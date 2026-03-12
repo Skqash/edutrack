@@ -81,41 +81,22 @@
                             @enderror
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="college" class="form-label fw-bold">
-                                        <i class="fas fa-building text-success"></i> College
-                                    </label>
-                                    <select class="form-select @error('college') is-invalid @enderror" 
-                                            id="college" name="college" required>
-                                        <option value="">Select college...</option>
-                                        @foreach($colleges as $college)
-                                            <option value="{{ $college }}" {{ old('college') == $college ? 'selected' : '' }}>
-                                                {{ $college }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    @error('college')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="department" class="form-label fw-bold">
-                                        <i class="fas fa-sitemap text-success"></i> Department
-                                    </label>
-                                    <input type="text" class="form-control @error('department') is-invalid @enderror" 
-                                           id="department" name="department" 
-                                           placeholder="e.g., Department of Computer Science" 
-                                           value="{{ old('department') }}">
-                                    <div class="form-text">Optional: Specific department within the college</div>
-                                    @error('department')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
+                        <div class="form-group mb-3">
+                            <label for="department" class="form-label fw-bold">
+                                <i class="fas fa-sitemap text-success"></i> Department
+                            </label>
+                            <select class="form-select @error('department') is-invalid @enderror" 
+                                    id="department" name="department" required>
+                                <option value="">Select department...</option>
+                                @foreach($departments as $department)
+                                    <option value="{{ $department }}" {{ old('department') == $department ? 'selected' : '' }}>
+                                        {{ $department }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('department')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="form-group mb-3">

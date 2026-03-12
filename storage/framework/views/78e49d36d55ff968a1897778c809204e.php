@@ -1,16 +1,16 @@
-@extends('layouts.admin')
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <div class="content-wrapper">
     <div class="page-header">
         <h3 class="page-title">
-            <span class="page-title-icon bg-gradient-primary text-white me-2">
-                <i class="fas fa-edit"></i>
+            <span class="page-title-icon bg-gradient-success text-white me-2">
+                <i class="fas fa-plus-circle"></i>
             </span>
-            Edit Class
+            Create New Class
         </h3>
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.classes.index') }}" class="btn btn-outline-secondary">
+            <a href="<?php echo e(route('admin.classes.index')); ?>" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Classes
             </a>
         </div>
@@ -18,9 +18,8 @@
 
     <div class="row">
         <div class="col-md-8">
-            <form action="{{ route('admin.classes.update', $class) }}" method="POST" id="classForm">
-                @csrf
-                @method('PUT')
+            <form action="<?php echo e(route('admin.classes.store')); ?>" method="POST" id="classForm">
+                <?php echo csrf_field(); ?>
 
                 <!-- Basic Information -->
                 <div class="card mb-4">
@@ -36,11 +35,25 @@
                                     <label for="class_name" class="form-label">
                                         <i class="fas fa-door-open"></i> Class Name *
                                     </label>
-                                    <input type="text" class="form-control @error('class_name') is-invalid @enderror" id="class_name" 
-                                           name="class_name" value="{{ $class->class_name }}" required>
-                                    @error('class_name')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <input type="text" class="form-control <?php $__errorArgs = ['class_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="class_name" 
+                                           name="class_name" placeholder="e.g., BSIT-1A, BSCS-2B" value="<?php echo e(old('class_name')); ?>" required>
+                                    <?php $__errorArgs = ['class_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -48,16 +61,30 @@
                                     <label for="class_level" class="form-label">
                                         <i class="fas fa-layer-group"></i> Year Level *
                                     </label>
-                                    <select name="class_level" id="class_level" class="form-select @error('class_level') is-invalid @enderror" required>
+                                    <select name="class_level" id="class_level" class="form-select <?php $__errorArgs = ['class_level'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
                                         <option value="">Select year level...</option>
-                                        <option value="1" {{ $class->class_level == '1' ? 'selected' : '' }}>1st Year</option>
-                                        <option value="2" {{ $class->class_level == '2' ? 'selected' : '' }}>2nd Year</option>
-                                        <option value="3" {{ $class->class_level == '3' ? 'selected' : '' }}>3rd Year</option>
-                                        <option value="4" {{ $class->class_level == '4' ? 'selected' : '' }}>4th Year</option>
+                                        <option value="1" <?php echo e(old('class_level') == '1' ? 'selected' : ''); ?>>1st Year</option>
+                                        <option value="2" <?php echo e(old('class_level') == '2' ? 'selected' : ''); ?>>2nd Year</option>
+                                        <option value="3" <?php echo e(old('class_level') == '3' ? 'selected' : ''); ?>>3rd Year</option>
+                                        <option value="4" <?php echo e(old('class_level') == '4' ? 'selected' : ''); ?>>4th Year</option>
                                     </select>
-                                    @error('class_level')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['class_level'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                         </div>
@@ -68,11 +95,25 @@
                                     <label for="section" class="form-label">
                                         <i class="fas fa-tag"></i> Section *
                                     </label>
-                                    <input type="text" class="form-control @error('section') is-invalid @enderror" id="section" 
-                                           name="section" value="{{ $class->section }}" required>
-                                    @error('section')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <input type="text" class="form-control <?php $__errorArgs = ['section'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="section" 
+                                           name="section" placeholder="e.g., A, B, C" value="<?php echo e(old('section')); ?>" required>
+                                    <?php $__errorArgs = ['section'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -80,11 +121,25 @@
                                     <label for="capacity" class="form-label">
                                         <i class="fas fa-users"></i> Capacity *
                                     </label>
-                                    <input type="number" class="form-control @error('capacity') is-invalid @enderror" id="capacity" 
-                                           name="capacity" value="{{ $class->capacity }}" min="10" required>
-                                    @error('capacity')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <input type="number" class="form-control <?php $__errorArgs = ['capacity'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="capacity" 
+                                           name="capacity" placeholder="e.g., 60" value="<?php echo e(old('capacity')); ?>" min="10" required>
+                                    <?php $__errorArgs = ['capacity'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -92,13 +147,27 @@
                                     <label for="status" class="form-label">
                                         <i class="fas fa-toggle-on"></i> Status *
                                     </label>
-                                    <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                                        <option value="Active" {{ $class->status == 'Active' ? 'selected' : '' }}>Active</option>
-                                        <option value="Inactive" {{ $class->status == 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                                    <select class="form-select <?php $__errorArgs = ['status'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="status" name="status" required>
+                                        <option value="Active" <?php echo e(old('status') == 'Active' ? 'selected' : ''); ?>>Active</option>
+                                        <option value="Inactive" <?php echo e(old('status') == 'Inactive' ? 'selected' : ''); ?>>Inactive</option>
                                     </select>
-                                    @error('status')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['status'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                         </div>
@@ -107,11 +176,25 @@
                             <label for="description" class="form-label">
                                 <i class="fas fa-align-left"></i> Description
                             </label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" 
-                                      name="description" rows="3">{{ $class->description }}</textarea>
-                            @error('description')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
+                            <textarea class="form-control <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="description" 
+                                      name="description" rows="3" placeholder="Enter class description"><?php echo e(old('description')); ?></textarea>
+                            <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <span class="invalid-feedback"><?php echo e($message); ?></span>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
                 </div>
@@ -130,19 +213,34 @@
                                     <label for="course_id" class="form-label">
                                         <i class="fas fa-book"></i> Course/Program
                                     </label>
-                                    <select name="course_id" id="course_id" class="form-select @error('course_id') is-invalid @enderror">
+                                    <select name="course_id" id="course_id" class="form-select <?php $__errorArgs = ['course_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
                                         <option value="">Select course...</option>
-                                        @foreach($courses as $course)
-                                            <option value="{{ $course->id }}" 
-                                                    data-department="{{ $course->department ?? '' }}"
-                                                    {{ old('course_id', $class->course_id) == $course->id ? 'selected' : '' }}>
-                                                {{ $course->program_code }} - {{ $course->program_name }}
+                                        <?php $__currentLoopData = $courses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $course): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($course->id); ?>" 
+                                                    data-department="<?php echo e($course->department ?? ''); ?>"
+                                                    <?php echo e(old('course_id') == $course->id ? 'selected' : ''); ?>>
+                                                <?php echo e($course->program_code); ?> - <?php echo e($course->program_name); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
-                                    @error('course_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['course_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -150,17 +248,32 @@
                                     <label for="teacher_id" class="form-label">
                                         <i class="fas fa-chalkboard-user"></i> Class Teacher *
                                     </label>
-                                    <select class="form-select @error('teacher_id') is-invalid @enderror" id="teacher_id" name="teacher_id" required>
+                                    <select class="form-select <?php $__errorArgs = ['teacher_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="teacher_id" name="teacher_id" required>
                                         <option value="">Select a teacher...</option>
-                                        @foreach($teachers as $teacher)
-                                            <option value="{{ $teacher->id }}" {{ $class->teacher_id == $teacher->id ? 'selected' : '' }}>
-                                                {{ $teacher->name }}
+                                        <?php $__currentLoopData = $teachers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $teacher): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($teacher->id); ?>" <?php echo e(old('teacher_id') == $teacher->id ? 'selected' : ''); ?>>
+                                                <?php echo e($teacher->name); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
-                                    @error('teacher_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['teacher_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                         </div>
@@ -171,16 +284,31 @@
                                     <label for="academic_year" class="form-label">
                                         <i class="fas fa-calendar-alt"></i> Academic Year *
                                     </label>
-                                    <select name="academic_year" id="academic_year" class="form-select @error('academic_year') is-invalid @enderror" required>
-                                        @foreach($academicYears as $year)
-                                            <option value="{{ $year }}" {{ old('academic_year') == $year ? 'selected' : '' }}>
-                                                {{ $year }}
+                                    <select name="academic_year" id="academic_year" class="form-select <?php $__errorArgs = ['academic_year'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
+                                        <?php $__currentLoopData = $academicYears; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $year): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($year); ?>" <?php echo e(old('academic_year') == $year ? 'selected' : ''); ?>>
+                                                <?php echo e($year); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
-                                    @error('academic_year')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['academic_year'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -188,16 +316,31 @@
                                     <label for="semester" class="form-label">
                                         <i class="fas fa-book-open"></i> Semester *
                                     </label>
-                                    <select name="semester" id="semester" class="form-select @error('semester') is-invalid @enderror" required>
-                                        @foreach($semesters as $semester)
-                                            <option value="{{ $semester }}" {{ old('semester') == $semester ? 'selected' : '' }}>
-                                                {{ $semester }}
+                                    <select name="semester" id="semester" class="form-select <?php $__errorArgs = ['semester'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
+                                        <?php $__currentLoopData = $semesters; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $semester): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($semester); ?>" <?php echo e(old('semester') == $semester ? 'selected' : ''); ?>>
+                                                <?php echo e($semester); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
-                                    @error('semester')
-                                        <span class="invalid-feedback">{{ $message }}</span>
-                                    @enderror
+                                    <?php $__errorArgs = ['semester'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                        <span class="invalid-feedback"><?php echo e($message); ?></span>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                                 </div>
                             </div>
                         </div>
@@ -211,36 +354,16 @@
                             <i class="fas fa-chalkboard-teacher"></i> Teacher Assignments
                         </h5>
                         <div class="form-check form-switch float-end">
-                            <input class="form-check-input" type="checkbox" id="updateAssignments" name="update_assignments" value="1">
-                            <label class="form-check-label" for="updateAssignments">
-                                Update assignments
+                            <input class="form-check-input" type="checkbox" id="createAssignment" name="create_assignment" value="1">
+                            <label class="form-check-label" for="createAssignment">
+                                Enable assignments
                             </label>
                         </div>
                     </div>
                     <div class="card-body" id="assignmentSection" style="display: none;">
-                        @if($existingAssignments->isNotEmpty())
-                            <div class="alert alert-info mb-3">
-                                <h6><i class="fas fa-info-circle"></i> Current Assignments:</h6>
-                                <ul class="mb-0">
-                                    @foreach($existingAssignments->groupBy('teacher_id') as $teacherId => $assignments)
-                                        <li>
-                                            <strong>{{ $assignments->first()->teacher->name }}</strong> - 
-                                            @foreach($assignments as $assignment)
-                                                @if($assignment->subject)
-                                                    <span class="badge bg-success">{{ $assignment->subject->subject_code }}</span>
-                                                @else
-                                                    <span class="badge bg-info">Class Teacher</span>
-                                                @endif
-                                            @endforeach
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle"></i> 
-                                <strong>Warning:</strong> Enabling "Update assignments" will remove all current assignments and create new ones based on your selections below.
-                            </div>
-                        @endif
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Create teacher assignments for this class. You can assign multiple teachers to different subjects and manage student assignments.
+                        </div>
 
                         <!-- Teacher and Subject Assignment -->
                         <div class="row mb-4">
@@ -250,9 +373,9 @@
                                         <i class="fas fa-users"></i> Assign Teachers *
                                     </label>
                                     <select name="assignment_teachers[]" id="assignment_teachers" class="form-select" multiple size="4">
-                                        @foreach($teachers as $teacher)
-                                            <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $teachers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $teacher): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($teacher->id); ?>"><?php echo e($teacher->name); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                     <small class="text-muted">Hold Ctrl/Cmd to select multiple teachers</small>
                                 </div>
@@ -263,9 +386,9 @@
                                         <i class="fas fa-book"></i> Assign Subjects
                                     </label>
                                     <select name="assignment_subjects[]" id="assignment_subjects" class="form-select" multiple size="4">
-                                        @foreach($subjects as $subject)
-                                            <option value="{{ $subject->id }}">{{ $subject->subject_code }} - {{ $subject->subject_name }}</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $subjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($subject->id); ?>"><?php echo e($subject->subject_code); ?> - <?php echo e($subject->subject_name); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                     <small class="text-muted">Hold Ctrl/Cmd to select multiple subjects</small>
                                 </div>
@@ -281,9 +404,9 @@
                                     </label>
                                     <select name="assignment_department" id="assignment_department" class="form-select">
                                         <option value="">Select department...</option>
-                                        @foreach($departments as $department)
-                                            <option value="{{ $department }}">{{ $department }}</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $departments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $department): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($department); ?>"><?php echo e($department); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
                             </div>
@@ -293,7 +416,7 @@
                                         <i class="fas fa-sticky-note"></i> Assignment Notes
                                     </label>
                                     <textarea name="assignment_notes" id="assignment_notes" class="form-control" 
-                                              rows="2" placeholder="Add notes about this assignment...">{{ old('assignment_notes') }}</textarea>
+                                              rows="2" placeholder="Add notes about this assignment..."><?php echo e(old('assignment_notes')); ?></textarea>
                                 </div>
                             </div>
                         </div>
@@ -369,7 +492,8 @@
 
                         <div class="alert alert-warning mt-3">
                             <i class="fas fa-exclamation-triangle"></i> 
-                            <strong>Note:</strong> When enabled, this will replace all existing assignments for this class with new assignments for selected teachers and subjects.
+                            <strong>Note:</strong> When enabled, this will create assignments for selected teachers to this class and subjects. 
+                            Each teacher will be assigned to the class, and if subjects are selected, each teacher will be assigned to all selected subjects.
                             Selected students will be assigned to these teacher assignments.
                         </div>
                     </div>
@@ -377,10 +501,10 @@
 
                 <!-- Submit Buttons -->
                 <div class="form-group">
-                    <button type="submit" class="btn btn-gradient-primary">
-                        <i class="fas fa-save"></i> Update Class
+                    <button type="submit" class="btn btn-gradient-success">
+                        <i class="fas fa-save"></i> Create Class
                     </button>
-                    <a href="{{ route('admin.classes.index') }}" class="btn btn-outline-secondary">
+                    <a href="<?php echo e(route('admin.classes.index')); ?>" class="btn btn-outline-secondary">
                         <i class="fas fa-times"></i> Cancel
                     </a>
                 </div>
@@ -390,14 +514,14 @@
 </div>
 
 <style>
-    .btn-gradient-primary {
-        background: linear-gradient(45deg, #007bff, #0056b3);
+    .btn-gradient-success {
+        background: linear-gradient(45deg, #27ae60, #2ecc71);
         color: white;
         border: none;
     }
 
-    .btn-gradient-primary:hover {
-        background: linear-gradient(45deg, #0056b3, #004085);
+    .btn-gradient-success:hover {
+        background: linear-gradient(45deg, #229954, #27ae60);
         color: white;
     }
 
@@ -409,8 +533,8 @@
 
     .form-control:focus,
     .form-select:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        border-color: #27ae60;
+        box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25);
     }
 
     .card {
@@ -424,8 +548,8 @@
     }
 
     .form-check-input:checked {
-        background-color: #007bff;
-        border-color: #007bff;
+        background-color: #27ae60;
+        border-color: #27ae60;
     }
 
     select[multiple] {
@@ -435,7 +559,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const updateAssignmentsCheckbox = document.getElementById('updateAssignments');
+    const createAssignmentCheckbox = document.getElementById('createAssignment');
     const assignmentSection = document.getElementById('assignmentSection');
     const courseIdSelect = document.getElementById('course_id');
     const departmentSelect = document.getElementById('assignment_department');
@@ -453,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const assignedStudentsInput = document.getElementById('assigned_students');
 
     // Toggle assignment section
-    updateAssignmentsCheckbox.addEventListener('change', function() {
+    createAssignmentCheckbox.addEventListener('change', function() {
         assignmentSection.style.display = this.checked ? 'block' : 'none';
         if (this.checked) {
             loadStudents();
@@ -644,7 +768,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form validation
     const form = document.getElementById('classForm');
     form.addEventListener('submit', function(e) {
-        if (updateAssignmentsCheckbox.checked) {
+        if (createAssignmentCheckbox.checked) {
             const teacherSelect = document.getElementById('assignment_teachers');
             if (teacherSelect.selectedOptions.length === 0) {
                 e.preventDefault();
@@ -656,4 +780,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/admin/classes/create.blade.php ENDPATH**/ ?>

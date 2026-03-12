@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers\Super;
 
-use App\Models\User;
-use App\Models\Course;
-use App\Models\Subject;
-use App\Models\ClassModel;
-use App\Models\Student;
-use App\Models\Grade;
-use App\Models\Attendance;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Attendance;
+use App\Models\ClassModel;
+use App\Models\Course;
+use App\Models\Grade;
+use App\Models\Student;
+use App\Models\Subject;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
@@ -30,7 +30,7 @@ class DashboardController extends Controller
         try {
             $totalAdmins = User::where('role', 'admin')->count();
             $totalTeachers = User::where('role', 'teacher')->count();
-            $totalStudents = User::where('role', 'student')->count();
+            $totalStudents = Student::with('user')->count();
             $totalUsers = User::count();
 
             $totalCourses = Course::count();
@@ -68,35 +68,37 @@ class DashboardController extends Controller
                 'dbStats'
             ));
         } catch (\Exception $e) {
-            Log::error("Dashboard error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to load dashboard: ' . $e->getMessage());
+            Log::error('Dashboard error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to load dashboard: '.$e->getMessage());
         }
     }
 
     /**
      * ==================== USER MANAGEMENT ====================
      */
-
     public function listUsers(Request $request)
     {
         try {
             $query = User::query();
-            
+
             if ($role = $request->query('role')) {
                 $query->where('role', $role);
             }
-            
+
             if ($search = $request->query('search')) {
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%$search%")
-                      ->orWhere('email', 'like', "%$search%");
+                        ->orWhere('email', 'like', "%$search%");
                 });
             }
 
             $users = $query->latest()->paginate(30);
+
             return view('super.users.index', compact('users'));
         } catch (\Exception $e) {
-            Log::error("List users error: " . $e->getMessage());
+            Log::error('List users error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load users');
         }
     }
@@ -105,9 +107,11 @@ class DashboardController extends Controller
     {
         try {
             $user = User::findOrFail($id);
+
             return view('super.users.show', compact('user'));
         } catch (\Exception $e) {
-            Log::error("Show user error: " . $e->getMessage());
+            Log::error('Show user error: '.$e->getMessage());
+
             return redirect()->route('super.users.index')->with('error', 'User not found');
         }
     }
@@ -120,7 +124,7 @@ class DashboardController extends Controller
 
         try {
             $data = $request->only(['name', 'email', 'password', 'role', 'phone', 'status']);
-            
+
             $validator = Validator::make($data, [
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
@@ -143,8 +147,9 @@ class DashboardController extends Controller
 
             return redirect()->route('super.users.show', $user->id)->with('success', 'User created successfully');
         } catch (\Exception $e) {
-            Log::error("Create user error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to create user: ' . $e->getMessage())->withInput();
+            Log::error('Create user error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to create user: '.$e->getMessage())->withInput();
         }
     }
 
@@ -162,7 +167,7 @@ class DashboardController extends Controller
                 'status' => 'nullable|in:Active,Inactive',
             ];
 
-            if (!empty($data['password'])) {
+            if (! empty($data['password'])) {
                 $rules['password'] = 'string|min:8';
             } else {
                 unset($data['password']);
@@ -173,7 +178,7 @@ class DashboardController extends Controller
                 return redirect()->back()->withErrors($validator)->withInput();
             }
 
-            if (!empty($data['password'])) {
+            if (! empty($data['password'])) {
                 $data['password'] = Hash::make($data['password']);
             }
 
@@ -182,8 +187,9 @@ class DashboardController extends Controller
 
             return redirect()->route('super.users.show', $user->id)->with('success', 'User updated successfully');
         } catch (\Exception $e) {
-            Log::error("Update user error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update user: ' . $e->getMessage())->withInput();
+            Log::error('Update user error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to update user: '.$e->getMessage())->withInput();
         }
     }
 
@@ -197,7 +203,8 @@ class DashboardController extends Controller
 
             return redirect()->route('super.users.index')->with('success', 'User deleted successfully');
         } catch (\Exception $e) {
-            Log::error("Delete user error: " . $e->getMessage());
+            Log::error('Delete user error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to delete user');
         }
     }
@@ -208,7 +215,7 @@ class DashboardController extends Controller
             $user = User::findOrFail($id);
             $role = $request->input('role');
 
-            if (!in_array($role, ['admin', 'teacher', 'student'])) {
+            if (! in_array($role, ['admin', 'teacher', 'student'])) {
                 return redirect()->back()->with('error', 'Invalid role');
             }
 
@@ -218,7 +225,8 @@ class DashboardController extends Controller
 
             return redirect()->back()->with('success', 'Role updated successfully');
         } catch (\Exception $e) {
-            Log::error("Toggle role error: " . $e->getMessage());
+            Log::error('Toggle role error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to update role');
         }
     }
@@ -227,8 +235,8 @@ class DashboardController extends Controller
     {
         try {
             $users = User::all(['id', 'name', 'email', 'role', 'phone', 'status', 'created_at']);
-            $filename = 'users_' . now()->format('Ymd_His') . '.csv';
-            $path = storage_path('app/' . $filename);
+            $filename = 'users_'.now()->format('Ymd_His').'.csv';
+            $path = storage_path('app/'.$filename);
 
             $handle = fopen($path, 'w');
             fputcsv($handle, ['ID', 'Name', 'Email', 'Role', 'Phone', 'Status', 'Created At']);
@@ -241,7 +249,7 @@ class DashboardController extends Controller
                     $user->role,
                     $user->phone ?? '',
                     $user->status ?? 'Active',
-                    $user->created_at
+                    $user->created_at,
                 ]);
             }
 
@@ -250,8 +258,9 @@ class DashboardController extends Controller
 
             return response()->download($path)->deleteFileAfterSend(true);
         } catch (\Exception $e) {
-            Log::error("CSV export error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to export CSV: ' . $e->getMessage());
+            Log::error('CSV export error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to export CSV: '.$e->getMessage());
         }
     }
 
@@ -260,7 +269,7 @@ class DashboardController extends Controller
         try {
             $file = $request->file('csv');
 
-            if (!$file || !$file->isValid()) {
+            if (! $file || ! $file->isValid()) {
                 return redirect()->back()->with('error', 'Invalid file upload');
             }
 
@@ -277,7 +286,9 @@ class DashboardController extends Controller
                     try {
                         $data = array_combine($header, $row);
 
-                        if (empty($data['email'])) continue;
+                        if (empty($data['email'])) {
+                            continue;
+                        }
 
                         $existing = User::where('email', $data['email'])->first();
                         $password = Hash::make(Str::random(12));
@@ -300,7 +311,7 @@ class DashboardController extends Controller
 
                         $imported++;
                     } catch (\Exception $e) {
-                        $errors[] = "Line $lineNo: " . $e->getMessage();
+                        $errors[] = "Line $lineNo: ".$e->getMessage();
                     }
                 }
 
@@ -310,27 +321,29 @@ class DashboardController extends Controller
             Log::info("CSV import completed by Super Admin: $imported users imported");
 
             if (count($errors) > 0) {
-                return redirect()->back()->with('warning', "Imported $imported users. Errors: " . implode('; ', array_slice($errors, 0, 5)));
+                return redirect()->back()->with('warning', "Imported $imported users. Errors: ".implode('; ', array_slice($errors, 0, 5)));
             }
 
             return redirect()->back()->with('success', "Successfully imported $imported users");
         } catch (\Exception $e) {
-            Log::error("CSV import error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
+            Log::error('CSV import error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Import failed: '.$e->getMessage());
         }
     }
 
     /**
      * ==================== COURSE MANAGEMENT ====================
      */
-
     public function manageCourses(Request $request)
     {
         try {
             $courses = Course::with('instructor')->paginate(20);
+
             return view('super.courses.index', compact('courses'));
         } catch (\Exception $e) {
-            Log::error("Manage courses error: " . $e->getMessage());
+            Log::error('Manage courses error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load courses');
         }
     }
@@ -339,6 +352,7 @@ class DashboardController extends Controller
     {
         if ($request->isMethod('get')) {
             $teachers = User::where('role', 'teacher')->get();
+
             return view('super.courses.create', compact('teachers'));
         }
 
@@ -357,8 +371,9 @@ class DashboardController extends Controller
 
             return redirect()->route('super.courses.index')->with('success', 'Course created successfully');
         } catch (\Exception $e) {
-            Log::error("Create course error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to create course: ' . $e->getMessage())->withInput();
+            Log::error('Create course error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to create course: '.$e->getMessage())->withInput();
         }
     }
 
@@ -371,6 +386,7 @@ class DashboardController extends Controller
     {
         try {
             $course = Course::with('instructor')->findOrFail($id);
+
             return view('super.courses.show', compact('course'));
         } catch (\Exception $e) {
             return redirect()->route('super.courses.index')->with('error', 'Course not found');
@@ -429,14 +445,15 @@ class DashboardController extends Controller
     /**
      * ==================== CLASS MANAGEMENT ====================
      */
-
     public function manageClasses(Request $request)
     {
         try {
             $classes = ClassModel::with('teacher')->paginate(20);
+
             return view('super.classes.index', compact('classes'));
         } catch (\Exception $e) {
-            Log::error("Manage classes error: " . $e->getMessage());
+            Log::error('Manage classes error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load classes');
         }
     }
@@ -445,6 +462,7 @@ class DashboardController extends Controller
     {
         if ($request->isMethod('get')) {
             $teachers = User::where('role', 'teacher')->get();
+
             return view('super.classes.create', compact('teachers'));
         }
 
@@ -463,7 +481,7 @@ class DashboardController extends Controller
 
             return redirect()->route('super.classes.index')->with('success', 'Class created successfully');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create class: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Failed to create class: '.$e->getMessage())->withInput();
         }
     }
 
@@ -476,6 +494,7 @@ class DashboardController extends Controller
     {
         try {
             $class = ClassModel::with('teacher')->findOrFail($id);
+
             return view('super.classes.show', compact('class'));
         } catch (\Exception $e) {
             return redirect()->route('super.classes.index')->with('error', 'Class not found');
@@ -534,15 +553,16 @@ class DashboardController extends Controller
     /**
      * ==================== STUDENT MANAGEMENT ====================
      */
-
     public function manageStudents(Request $request)
     {
         try {
             $students = Student::with('user', 'class')->paginate(30);
             $classes = ClassModel::all();
+
             return view('super.students.index', compact('students', 'classes'));
         } catch (\Exception $e) {
-            Log::error("Manage students error: " . $e->getMessage());
+            Log::error('Manage students error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load students');
         }
     }
@@ -551,7 +571,8 @@ class DashboardController extends Controller
     {
         if ($request->isMethod('get')) {
             $classes = ClassModel::all();
-            $users = User::where('role', 'student')->get();
+            $users = User::where('role', 'student')->with('student')->get();
+
             return view('super.students.create', compact('classes', 'users'));
         }
 
@@ -569,7 +590,7 @@ class DashboardController extends Controller
 
             return redirect()->route('super.students.index')->with('success', 'Student created successfully');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create student: ' . $e->getMessage())->withInput();
+            return redirect()->back()->with('error', 'Failed to create student: '.$e->getMessage())->withInput();
         }
     }
 
@@ -577,6 +598,7 @@ class DashboardController extends Controller
     {
         try {
             $student = Student::with('user', 'class')->findOrFail($id);
+
             return view('super.students.show', compact('student'));
         } catch (\Exception $e) {
             return redirect()->route('super.students.index')->with('error', 'Student not found');
@@ -634,15 +656,16 @@ class DashboardController extends Controller
     /**
      * ==================== GRADE MANAGEMENT ====================
      */
-
     public function manageGrades(Request $request)
     {
         try {
             $grades = Grade::with('student.user', 'class', 'subject')->paginate(30);
             $classes = ClassModel::all();
+
             return view('super.grades.index', compact('grades', 'classes'));
         } catch (\Exception $e) {
-            Log::error("Manage grades error: " . $e->getMessage());
+            Log::error('Manage grades error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load grades');
         }
     }
@@ -651,6 +674,7 @@ class DashboardController extends Controller
     {
         try {
             $grade = Grade::with('student.user', 'class', 'subject')->findOrFail($id);
+
             return view('super.grades.show', compact('grade'));
         } catch (\Exception $e) {
             return redirect()->route('super.grades.index')->with('error', 'Grade not found');
@@ -706,15 +730,16 @@ class DashboardController extends Controller
     /**
      * ==================== ATTENDANCE MANAGEMENT ====================
      */
-
     public function manageAttendance(Request $request)
     {
         try {
             $attendance = Attendance::with('student.user', 'class')->paginate(30);
             $classes = ClassModel::all();
+
             return view('super.attendance.index', compact('attendance', 'classes'));
         } catch (\Exception $e) {
-            Log::error("Manage attendance error: " . $e->getMessage());
+            Log::error('Manage attendance error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load attendance');
         }
     }
@@ -723,6 +748,7 @@ class DashboardController extends Controller
     {
         try {
             $record = Attendance::with('student.user', 'class')->findOrFail($id);
+
             return view('super.attendance.show', compact('record'));
         } catch (\Exception $e) {
             return redirect()->route('super.attendance.index')->with('error', 'Attendance record not found');
@@ -780,23 +806,23 @@ class DashboardController extends Controller
     /**
      * ==================== DATABASE OPERATIONS ====================
      */
-
     public function getDatabaseStats()
     {
         try {
             DB::connection()->getPDO();
             $database = config('database.connections.mysql.database');
-            
-            $tables = DB::select("SELECT table_name FROM information_schema.tables WHERE table_schema = ?", [$database]);
-            
+
+            $tables = DB::select('SELECT table_name FROM information_schema.tables WHERE table_schema = ?', [$database]);
+
             return [
                 'status' => 'Connected',
                 'database' => $database,
                 'tableCount' => count($tables),
-                'tables' => array_map(fn($t) => $t->table_name, $tables),
+                'tables' => array_map(fn ($t) => $t->table_name, $tables),
             ];
         } catch (\Exception $e) {
-            Log::error("Database stats error: " . $e->getMessage());
+            Log::error('Database stats error: '.$e->getMessage());
+
             return [
                 'status' => 'Error',
                 'database' => 'Unknown',
@@ -818,7 +844,7 @@ class DashboardController extends Controller
 
             $tables = [];
             if ($stats['status'] === 'Connected') {
-                $result = DB::select("
+                $result = DB::select('
                     SELECT 
                         table_name as name,
                         table_rows as rows,
@@ -827,20 +853,21 @@ class DashboardController extends Controller
                         table_collation as collation
                     FROM information_schema.tables
                     WHERE table_schema = ?
-                ", [config('database.connections.mysql.database')]);
+                ', [config('database.connections.mysql.database')]);
                 $tables = $result;
             }
 
             $storage = [
                 'database_size' => $this->getDatabaseSize(),
                 'total_tables' => count($tables),
-                'total_rows' => array_sum(array_map(fn($t) => $t->rows, $tables)),
-                'connections' => DB::select("SHOW PROCESSLIST")[0]->Id ?? 1,
+                'total_rows' => array_sum(array_map(fn ($t) => $t->rows, $tables)),
+                'connections' => DB::select('SHOW PROCESSLIST')[0]->Id ?? 1,
             ];
 
             return view('super.tools.database', compact('connection', 'tables', 'storage', 'stats'));
         } catch (\Exception $e) {
-            Log::error("Database stats view error: " . $e->getMessage());
+            Log::error('Database stats view error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to load database statistics');
         }
     }
@@ -848,13 +875,13 @@ class DashboardController extends Controller
     private function getDatabaseSize()
     {
         try {
-            $result = DB::select("
+            $result = DB::select('
                 SELECT ROUND(SUM(((data_length + index_length) / 1024 / 1024)), 2) as size
                 FROM information_schema.tables
                 WHERE table_schema = ?
-            ", [config('database.connections.mysql.database')]);
-            
-            return ($result[0]->size ?? 0) . ' MB';
+            ', [config('database.connections.mysql.database')]);
+
+            return ($result[0]->size ?? 0).' MB';
         } catch (\Exception $e) {
             return 'N/A';
         }
@@ -865,22 +892,23 @@ class DashboardController extends Controller
         try {
             $sql = trim($request->input('sql', ''));
 
-            if (!$sql) {
+            if (! $sql) {
                 return redirect()->back()->with('error', 'SQL query required');
             }
 
             $lower = strtolower(ltrim($sql));
-            if (!Str::startsWith($lower, 'select')) {
+            if (! Str::startsWith($lower, 'select')) {
                 return redirect()->back()->with('error', 'Only SELECT queries allowed for security');
             }
 
             $results = DB::select($sql);
-            Log::info("Safe query executed by Super Admin");
-            
+            Log::info('Safe query executed by Super Admin');
+
             return view('super.tools.query', compact('results', 'sql'));
         } catch (\Exception $e) {
-            Log::error("Query error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Query failed: ' . $e->getMessage());
+            Log::error('Query error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Query failed: '.$e->getMessage());
         }
     }
 
@@ -900,31 +928,33 @@ class DashboardController extends Controller
             $user = $cfg['username'] ?? '';
             $pass = $cfg['password'] ?? '';
 
-            $filename = 'backup_' . $db . '_' . now()->format('Ymd_His') . '.sql';
-            $path = storage_path('app/backups/' . $filename);
+            $filename = 'backup_'.$db.'_'.now()->format('Ymd_His').'.sql';
+            $path = storage_path('app/backups/'.$filename);
 
             File::ensureDirectoryExists(storage_path('app/backups'));
 
-            $cmd = "mysqldump --host={$host} --port={$port} --user={$user} --password='{$pass}' {$db} > " . escapeshellarg($path);
+            $cmd = "mysqldump --host={$host} --port={$port} --user={$user} --password='{$pass}' {$db} > ".escapeshellarg($path);
             exec($cmd, $output, $return);
 
             if ($return !== 0) {
-                Log::error("Database backup failed");
+                Log::error('Database backup failed');
+
                 return redirect()->back()->with('error', 'Backup command failed');
             }
 
             Log::info("Database backup created by Super Admin: {$filename}");
+
             return response()->download($path)->deleteFileAfterSend(true);
         } catch (\Exception $e) {
-            Log::error("Backup error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Backup failed: ' . $e->getMessage());
+            Log::error('Backup error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Backup failed: '.$e->getMessage());
         }
     }
 
     /**
      * ==================== SYSTEM MANAGEMENT ====================
      */
-
     public function clearCaches()
     {
         try {
@@ -932,12 +962,13 @@ class DashboardController extends Controller
             Artisan::call('config:clear');
             Artisan::call('route:clear');
             Artisan::call('view:clear');
-            Log::info("All caches cleared by Super Admin");
+            Log::info('All caches cleared by Super Admin');
 
             return redirect()->back()->with('success', 'All caches cleared successfully');
         } catch (\Exception $e) {
-            Log::error("Cache clear error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to clear caches: ' . $e->getMessage());
+            Log::error('Cache clear error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Failed to clear caches: '.$e->getMessage());
         }
     }
 
@@ -945,11 +976,13 @@ class DashboardController extends Controller
     {
         try {
             Artisan::call('migrate', ['--force' => true]);
-            Log::info("Database migrations executed by Super Admin");
+            Log::info('Database migrations executed by Super Admin');
+
             return redirect()->back()->with('success', 'Migrations executed successfully');
         } catch (\Exception $e) {
-            Log::error("Migration error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Migration failed: ' . $e->getMessage());
+            Log::error('Migration error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Migration failed: '.$e->getMessage());
         }
     }
 
@@ -957,47 +990,49 @@ class DashboardController extends Controller
     {
         try {
             Artisan::call('db:seed', ['--force' => true]);
-            Log::info("Database seeders executed by Super Admin");
+            Log::info('Database seeders executed by Super Admin');
+
             return redirect()->back()->with('success', 'Seeders executed successfully');
         } catch (\Exception $e) {
-            Log::error("Seeder error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Seeders failed: ' . $e->getMessage());
+            Log::error('Seeder error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Seeders failed: '.$e->getMessage());
         }
     }
 
     /**
      * ==================== SYSTEM MONITORING ====================
      */
-
     public function viewLogs(Request $request)
     {
         try {
             $lines = max(50, min(1000, (int) $request->query('lines', 200)));
             $logPath = storage_path('logs/laravel.log');
 
-            if (!File::exists($logPath)) {
+            if (! File::exists($logPath)) {
                 return view('super.tools.logs', ['lines' => ['No log file found'], 'lines_count' => 0]);
             }
 
             $content = File::get($logPath);
             $rows = preg_split('/\r?\n/', trim($content));
             $tail = array_slice($rows, -$lines);
-            
+
             return view('super.tools.logs', ['lines' => $tail, 'lines_count' => count($tail)]);
         } catch (\Exception $e) {
-            Log::error("View logs error: " . $e->getMessage());
-            return view('super.tools.logs', ['lines' => ['Error reading logs: ' . $e->getMessage()], 'lines_count' => 0]);
+            Log::error('View logs error: '.$e->getMessage());
+
+            return view('super.tools.logs', ['lines' => ['Error reading logs: '.$e->getMessage()], 'lines_count' => 0]);
         }
     }
 
     /**
      * ==================== DATABASE CLEANUP ====================
      */
-
     public function databaseCleanup()
     {
         try {
             $stats = $this->getDatabaseStats();
+
             return view('super.tools.cleanup', compact('stats'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to load cleanup page');
@@ -1010,7 +1045,7 @@ class DashboardController extends Controller
             $action = $request->input('action');
             $confirmed = $request->input('confirm') === 'true';
 
-            if (!$confirmed) {
+            if (! $confirmed) {
                 return redirect()->back()->with('error', 'Action not confirmed');
             }
 
@@ -1019,44 +1054,49 @@ class DashboardController extends Controller
                     $count = User::where('role', '!=', 'admin')->count();
                     User::where('role', '!=', 'admin')->delete();
                     Log::warning("$count non-admin users deleted by Super Admin");
+
                     return redirect()->back()->with('success', "Deleted $count users");
 
                 case 'clear_courses':
                     $count = Course::count();
                     Course::truncate();
                     Log::warning("$count courses deleted by Super Admin");
+
                     return redirect()->back()->with('success', "Deleted $count courses");
 
                 case 'clear_grades':
                     $count = Grade::count();
                     Grade::truncate();
                     Log::warning("$count grades deleted by Super Admin");
+
                     return redirect()->back()->with('success', "Deleted $count grades");
 
                 case 'clear_attendance':
                     $count = Attendance::count();
                     Attendance::truncate();
                     Log::warning("$count attendance records deleted by Super Admin");
+
                     return redirect()->back()->with('success', "Deleted $count attendance records");
 
                 case 'reset_database':
                     Artisan::call('migrate:fresh', ['--seed' => true, '--force' => true]);
-                    Log::warning("Database reset and reseeded by Super Admin");
+                    Log::warning('Database reset and reseeded by Super Admin');
+
                     return redirect()->route('super.dashboard')->with('success', 'Database reset successfully');
 
                 default:
                     return redirect()->back()->with('error', 'Unknown action');
             }
         } catch (\Exception $e) {
-            Log::error("Cleanup error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Cleanup failed: ' . $e->getMessage());
+            Log::error('Cleanup error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Cleanup failed: '.$e->getMessage());
         }
     }
 
     /**
      * ==================== SYSTEM HEALTH ====================
      */
-
     public function systemHealth()
     {
         try {
@@ -1079,7 +1119,8 @@ class DashboardController extends Controller
 
             return view('super.tools.health', compact('health'));
         } catch (\Exception $e) {
-            Log::error("System health error: " . $e->getMessage());
+            Log::error('System health error: '.$e->getMessage());
+
             return redirect()->back()->with('error', 'Failed to check system health');
         }
     }
@@ -1089,8 +1130,8 @@ class DashboardController extends Controller
         try {
             DB::connection()->getPDO();
             $database = config('database.connections.mysql.database');
-            
-            $tables = DB::select("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ?", [$database]);
+
+            $tables = DB::select('SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ?', [$database]);
             $tableCount = $tables[0]->count ?? 0;
 
             $userCount = User::count();
@@ -1103,7 +1144,8 @@ class DashboardController extends Controller
                 'total_records' => $userCount,
             ];
         } catch (\Exception $e) {
-            Log::error("Database health check error: " . $e->getMessage());
+            Log::error('Database health check error: '.$e->getMessage());
+
             return [
                 'status' => 'Error',
                 'connected' => false,
@@ -1120,7 +1162,7 @@ class DashboardController extends Controller
         try {
             $path = storage_path();
             $writable = is_writable($path);
-            
+
             $total = disk_total_space('/');
             $free = disk_free_space('/');
             $usagePercent = round((($total - $free) / $total) * 100, 2);
@@ -1148,7 +1190,7 @@ class DashboardController extends Controller
         try {
             Cache::put('health_check', 'ok', 60);
             $value = Cache::get('health_check');
-            
+
             return [
                 'status' => $value === 'ok' ? 'Healthy' : 'Error',
                 'driver' => config('cache.default'),
@@ -1205,7 +1247,7 @@ class DashboardController extends Controller
         try {
             $confirmed = $request->input('confirm') === 'true';
 
-            if (!$confirmed) {
+            if (! $confirmed) {
                 return redirect()->back()->with('error', 'Action not confirmed');
             }
 
@@ -1223,10 +1265,12 @@ class DashboardController extends Controller
             }
 
             Log::info("$deletedCount old log files cleaned by Super Admin");
+
             return redirect()->back()->with('success', "Deleted $deletedCount old log files");
         } catch (\Exception $e) {
-            Log::error("Log cleanup error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Cleanup failed: ' . $e->getMessage());
+            Log::error('Log cleanup error: '.$e->getMessage());
+
+            return redirect()->back()->with('error', 'Cleanup failed: '.$e->getMessage());
         }
     }
 
@@ -1236,6 +1280,7 @@ class DashboardController extends Controller
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        return round($bytes, $precision) . ' ' . $units[$i];
+
+        return round($bytes, $precision).' '.$units[$i];
     }
 }

@@ -149,6 +149,78 @@
                                 @enderror
                             </div>
 
+                            <!-- Student Assignment Section -->
+                            <div class="card border-info bg-light">
+                                <div class="card-header py-2">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user-graduate me-2"></i>Manage Students
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Add or remove students from this class. You can filter by year or search by student ID or name.
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="student_year_filter" class="form-label">Year</label>
+                                                <select id="student_year_filter" class="form-select form-select-sm">
+                                                    <option value="">All Years</option>
+                                                    <option value="1">1st Year</option>
+                                                    <option value="2">2nd Year</option>
+                                                    <option value="3">3rd Year</option>
+                                                    <option value="4">4th Year</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label for="student_search" class="form-label">Search by Student ID or Name</label>
+                                                <input type="text" id="student_search" class="form-control form-control-sm" placeholder="Search students...">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label mb-0">
+                                                    <strong>Available Students</strong>
+                                                    <span class="badge bg-secondary ms-2" id="availableCount">0</span>
+                                                </label>
+                                                <div>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllAvailable">Select All</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllAvailable">Clear</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label mb-0">
+                                                    <strong>Selected Students</strong>
+                                                    <span class="badge bg-success ms-2" id="selectedCount">0</span>
+                                                </label>
+                                                <div>
+                                                    <button type="button" class="btn btn-sm btn-outline-success" id="selectAllSelected">Select All</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" id="deselectAllSelected">Clear</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="border rounded p-2" style="height: 200px; overflow-y: auto;">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading students...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hidden input to store selected student IDs -->
+                            <input type="hidden" name="assigned_students" id="assigned_students" value="">
+
                             <!-- Form Actions -->
                             <div class="d-flex gap-3 mt-5 pt-3 border-top">
                                 <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
@@ -214,4 +286,174 @@
             </div>
         </div>
     </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const studentYearFilter = document.getElementById('student_year_filter');
+    const studentSearch = document.getElementById('student_search');
+    const availableStudentsDiv = document.getElementById('availableStudents');
+    const selectedStudentsDiv = document.getElementById('selectedStudents');
+    const availableCount = document.getElementById('availableCount');
+    const selectedCount = document.getElementById('selectedCount');
+    const assignedStudentsInput = document.getElementById('assigned_students');
+    
+    let allStudents = [];
+    let selectedStudents = new Set();
+    
+    // Load students function
+    function loadStudents() {
+        fetch('/admin/classes/get-students', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                year: studentYearFilter.value,
+                search: studentSearch.value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            allStudents = data.students || [];
+            renderAvailableStudents();
+            renderSelectedStudents();
+        })
+        .catch(error => {
+            console.error('Error loading students:', error);
+            availableStudentsDiv.innerHTML = '<div class="text-center text-danger">Error loading students</div>';
+        });
+    }
+    
+    // Event listeners for filters
+    studentYearFilter.addEventListener('change', loadStudents);
+    studentSearch.addEventListener('input', debounce(loadStudents, 300));
+    
+    // Select/Clear buttons
+    document.getElementById('selectAllAvailable').addEventListener('click', function() {
+        const checkboxes = availableStudentsDiv.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        updateSelectedCount();
+    });
+    
+    document.getElementById('deselectAllAvailable').addEventListener('click', function() {
+        const checkboxes = availableStudentsDiv.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        updateSelectedCount();
+    });
+    
+    // Toggle student selection
+    function toggleStudent(studentId) {
+        const checkbox = document.querySelector(`input[value="${studentId}"]`);
+        if (checkbox) {
+            if (selectedStudents.has(studentId)) {
+                selectedStudents.delete(studentId);
+                checkbox.checked = false;
+            } else {
+                selectedStudents.add(studentId);
+                checkbox.checked = true;
+            }
+            updateSelectedCount();
+        }
+    }
+    
+    // Update selected count display
+    function updateSelectedCount() {
+        const selectedStudentsList = Array.from(selectedStudents);
+        selectedCount.textContent = selectedStudentsList.length;
+        assignedStudentsInput.value = selectedStudentsList.join(',');
+    }
+    
+    // Render available students
+    function renderAvailableStudents() {
+        const filteredStudents = filterStudents();
+        const availableStudents = filteredStudents.filter(student => !selectedStudents.has(student.id));
+        
+        availableCount.textContent = availableStudents.length;
+        
+        if (availableStudents.length === 0) {
+            availableStudentsDiv.innerHTML = '<div class="text-center text-muted">No available students</div>';
+            return;
+        }
+        
+        let html = '';
+        availableStudents.forEach(student => {
+            html += `
+                <div class="student-item d-flex align-items-center p-2 border-bottom hover-bg-light">
+                    <input type="checkbox" class="form-check-input me-2" value="${student.id}" 
+                           onchange="toggleStudent(${student.id})">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${student.name}</div>
+                        <small class="text-muted">
+                            ${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}
+                        </small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        availableStudentsDiv.innerHTML = html;
+    }
+    
+    // Render selected students
+    function renderSelectedStudents() {
+        const selectedStudentsList = Array.from(selectedStudents);
+        
+        if (selectedStudentsList.length === 0) {
+            selectedStudentsDiv.innerHTML = '<div class="text-center text-muted">No students selected</div>';
+            assignedStudentsInput.value = '';
+            return;
+        }
+        
+        let html = '';
+        selectedStudentsList.forEach(student => {
+            html += `
+                <div class="student-item d-flex align-items-center p-2 border-bottom">
+                    <input type="checkbox" class="form-check-input me-2" checked value="${student.id}" 
+                           onchange="toggleStudent(${student.id})">
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">${student.name}</div>
+                        <small class="text-muted">
+                            ${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}
+                        </small>
+                    </div>
+                </div>
+            `;
+        });
+        
+        selectedStudentsDiv.innerHTML = html;
+    }
+    
+    // Filter students
+    function filterStudents() {
+        return allStudents.filter(student => {
+            if (studentYearFilter.value && student.year != studentYearFilter.value) return false;
+            if (studentSearch.value) {
+                const search = studentSearch.value.toLowerCase();
+                return student.name.toLowerCase().includes(search) || 
+                       student.student_id.toLowerCase().includes(search);
+            }
+            return true;
+        });
+    }
+    
+    // Debounce function
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+            clearTimeout(timeout);
+            return later();
+        };
+    }
+    
+    // Initial load
+    loadStudents();
+});
+</script>
+
 @endsection

@@ -21,7 +21,7 @@ class DashboardController extends Controller
         // Cache dashboard stats for 1 hour
         $stats = Cache::remember('dashboard_stats', 3600, function () {
             return [
-                'totalStudents' => User::where('role', 'student')->count(),
+                'totalStudents' => Student::with('user')->count(),
                 'totalTeachers' => User::where('role', 'teacher')->count(),
                 'totalAdmins' => User::where('role', 'admin')->count(),
                 'totalCourses' => Course::count(),

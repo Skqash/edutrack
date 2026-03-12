@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -7,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * @property int $id
  * @property int $user_id
- * @property string $student_id           Format: YYYY-XXXX-S (e.g., 2022-0233-V)
- * @property int $year                    1, 2, 3, or 4
- * @property string $section              A, B, C, etc.
+ * @property string $student_id Format: YYYY-XXXX-S (e.g., 2022-0233-V)
+ * @property int $year 1, 2, 3, or 4
+ * @property string $section A, B, C, etc.
  * @property int $class_id
  * @property float $gpa
  * @property string $status
@@ -25,7 +26,7 @@ class Student extends Model
         'section',
         'class_id',
         'gpa',
-        'status'
+        'status',
     ];
 
     /**
@@ -78,8 +79,9 @@ class Student extends Model
             1 => '1st Year',
             2 => '2nd Year',
             3 => '3rd Year',
-            4 => '4th Year'
+            4 => '4th Year',
         ];
+
         return $yearMap[$this->year] ?? 'Unknown';
     }
 
@@ -102,6 +104,7 @@ class Student extends Model
         }
 
         $totalPoints = $grades->sum('grade_point');
+
         return round($totalPoints / $grades->count(), 2);
     }
 

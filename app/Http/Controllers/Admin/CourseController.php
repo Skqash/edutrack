@@ -20,17 +20,22 @@ class CourseController extends Controller
     public function create()
     {
         $heads = User::where('role', 'teacher')->get();
-        $colleges = [
-            'College of Engineering and Information Technology',
-            'College of Education',
-            'College of Agriculture',
-            'College of Business and Management',
-            'College of Arts and Sciences',
-            'College of Nursing',
-            'College of Hospitality Management',
+        $departments = [
+            'IT Department',
+            'Computer Science Department',
+            'Information Systems Department',
+            'Engineering Department',
+            'Education Department',
+            'Business Department',
+            'Accounting Department',
+            'Tourism Department',
+            'Agriculture Department',
+            'Arts and Sciences Department',
+            'Nursing Department',
+            'Hospitality Department',
         ];
 
-        return view('admin.courses.create', compact('heads', 'colleges'));
+        return view('admin.courses.create', compact('heads', 'departments'));
     }
 
     public function store(Request $request)
@@ -38,8 +43,7 @@ class CourseController extends Controller
         $validated = $request->validate([
             'program_code' => 'required|unique:courses,program_code|string|max:10',
             'program_name' => 'required|string|max:255',
-            'college' => 'required|string|max:255',
-            'department' => 'nullable|string|max:255',
+            'department' => 'required|string|max:255',
             'description' => 'nullable|string',
             'head_id' => 'nullable|exists:users,id',
             'status' => 'required|in:Active,Inactive',
@@ -60,17 +64,22 @@ class CourseController extends Controller
     public function edit(Course $course)
     {
         $heads = User::where('role', 'teacher')->get();
-        $colleges = [
-            'College of Engineering and Information Technology',
-            'College of Education',
-            'College of Agriculture',
-            'College of Business and Management',
-            'College of Arts and Sciences',
-            'College of Nursing',
-            'College of Hospitality Management',
+        $departments = [
+            'IT Department',
+            'Computer Science Department',
+            'Information Systems Department',
+            'Engineering Department',
+            'Education Department',
+            'Business Department',
+            'Accounting Department',
+            'Tourism Department',
+            'Agriculture Department',
+            'Arts and Sciences Department',
+            'Nursing Department',
+            'Hospitality Department',
         ];
 
-        return view('admin.courses.edit', compact('course', 'heads', 'colleges'));
+        return view('admin.courses.edit', compact('course', 'heads', 'departments'));
     }
 
     public function update(Request $request, Course $course)
@@ -78,8 +87,7 @@ class CourseController extends Controller
         $validated = $request->validate([
             'program_code' => 'required|unique:courses,program_code,'.$course->id.'|string|max:10',
             'program_name' => 'required|string|max:255',
-            'college' => 'required|string|max:255',
-            'department' => 'nullable|string|max:255',
+            'department' => 'required|string|max:255',
             'description' => 'nullable|string',
             'head_id' => 'nullable|exists:users,id',
             'status' => 'required|in:Active,Inactive',

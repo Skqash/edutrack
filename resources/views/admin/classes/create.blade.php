@@ -286,18 +286,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group mb-3">
-                                            <label for="student_course_filter" class="form-label">Course</label>
-                                            <select id="student_course_filter" class="form-select form-select-sm">
-                                                <option value="">All Courses</option>
-                                                @foreach($courses as $course)
-                                                    <option value="{{ $course->id }}">{{ $course->program_code }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="student_year_filter" class="form-label">Year</label>
                                             <select id="student_year_filter" class="form-select form-select-sm">
@@ -309,20 +298,9 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <div class="form-group mb-3">
-                                            <label for="student_department_filter" class="form-label">Department</label>
-                                            <select id="student_department_filter" class="form-select form-select-sm">
-                                                <option value="">All Departments</option>
-                                                @foreach($departments as $department)
-                                                    <option value="{{ $department }}">{{ $department }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group mb-3">
-                                            <label for="student_search" class="form-label">Search</label>
+                                            <label for="student_search" class="form-label">Search by Student ID or Name</label>
                                             <input type="text" id="student_search" class="form-control form-control-sm" placeholder="Search students...">
                                         </div>
                                     </div>
@@ -446,9 +424,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let allStudents = [];
     let selectedStudents = new Set();
     
-    const studentCourseFilter = document.getElementById('student_course_filter');
     const studentYearFilter = document.getElementById('student_year_filter');
-    const studentDepartmentFilter = document.getElementById('student_department_filter');
     const studentSearch = document.getElementById('student_search');
     const availableStudentsDiv = document.getElementById('availableStudents');
     const selectedStudentsDiv = document.getElementById('selectedStudents');
@@ -456,10 +432,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedCount = document.getElementById('selectedCount');
     const assignedStudentsInput = document.getElementById('assigned_students');
 
+    // Debug: Check if elements are found
+    console.log('Elements found:');
+    console.log('- createAssignmentCheckbox:', createAssignmentCheckbox ? 'YES' : 'NO');
+    console.log('- assignmentSection:', assignmentSection ? 'YES' : 'NO');
+    console.log('- studentYearFilter:', studentYearFilter ? 'YES' : 'NO');
+    console.log('- studentSearch:', studentSearch ? 'YES' : 'NO');
+    console.log('- availableStudentsDiv:', availableStudentsDiv ? 'YES' : 'NO');
+
     // Toggle assignment section
     createAssignmentCheckbox.addEventListener('change', function() {
+        console.log('Assignment checkbox changed:', this.checked);
         assignmentSection.style.display = this.checked ? 'block' : 'none';
         if (this.checked) {
+            console.log('Checkbox checked, loading students...');
             loadStudents();
         }
     });
@@ -475,6 +461,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load students function
     function loadStudents() {
+        console.log('Loading students...');
+        console.log('Year filter:', studentYearFilter ? studentYearFilter.value : 'NOT FOUND');
+        console.log('Search filter:', studentSearch ? studentSearch.value : 'NOT FOUND');
+        
         fetch('/admin/classes/get-students', {
             method: 'POST',
             headers: {
@@ -482,21 +472,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
-                course_id: studentCourseFilter.value,
-                year: studentYearFilter.value,
-                department: studentDepartmentFilter.value,
-                search: studentSearch.value
+                year: studentYearFilter ? studentYearFilter.value : '',
+                search: studentSearch ? studentSearch.value : ''
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             allStudents = data.students || [];
+            console.log('Students loaded:', allStudents.length);
             renderAvailableStudents();
             renderSelectedStudents();
         })
         .catch(error => {
             console.error('Error loading students:', error);
-            availableStudentsDiv.innerHTML = '<div class="text-center text-danger">Error loading students</div>';
+            if (availableStudentsDiv) {
+                availableStudentsDiv.innerHTML = '<div class="text-center text-danger">Error loading students</div>';
+            }
         });
     }
 
@@ -568,9 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Filter students
     function filterStudents() {
         return allStudents.filter(student => {
-            if (studentCourseFilter.value && student.course_id != studentCourseFilter.value) return false;
             if (studentYearFilter.value && student.year != studentYearFilter.value) return false;
-            if (studentDepartmentFilter.value && student.department != studentDepartmentFilter.value) return false;
             if (studentSearch.value) {
                 const search = studentSearch.value.toLowerCase();
                 return student.name.toLowerCase().includes(search) || 
@@ -592,9 +585,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Event listeners for filters
-    studentCourseFilter.addEventListener('change', loadStudents);
     studentYearFilter.addEventListener('change', loadStudents);
-    studentDepartmentFilter.addEventListener('change', loadStudents);
     studentSearch.addEventListener('input', debounce(loadStudents, 300));
 
     // Select/Clear buttons
@@ -664,6 +655,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // Initial load of students when page loads
+    if (createAssignmentCheckbox.checked) {
+        loadStudents();
+    }
 });
 </script>
 @endsection

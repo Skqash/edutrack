@@ -16,7 +16,7 @@ class ClassController extends Controller
     public function index()
     {
         $classes = ClassModel::with('teacher')->get();
-        $totalStudents = User::where('role', 'student')->count();
+        $totalStudents = Student::with('user')->count();
         $totalTeachers = User::where('role', 'teacher')->count();
         $totalClasses = ClassModel::count();
         $totalSubjects = \App\Models\Subject::count();
@@ -108,17 +108,29 @@ class ClassController extends Controller
             // Assign students to the assignments if provided
             if ($request->filled('assigned_students')) {
                 $studentIds = explode(',', $request->assigned_students);
+
+                // Validate that all student IDs exist
+                $validStudentIds = Student::whereIn('id', $studentIds)->pluck('id')->toArray();
+
                 foreach ($assignmentIds as $assignmentId) {
-                    foreach ($studentIds as $studentId) {
-                        // Use the pivot table to assign students
-                        \DB::table('assignment_students')->insert([
-                            'assignment_id' => $assignmentId,
-                            'student_id' => trim($studentId),
-                            'status' => 'active',
-                            'assigned_at' => now(),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
+                    foreach ($validStudentIds as $studentId) {
+                        // Check if assignment already exists to avoid duplicates
+                        $exists = \DB::table('assignment_students')
+                            ->where('assignment_id', $assignmentId)
+                            ->where('student_id', $studentId)
+                            ->exists();
+
+                        if (! $exists) {
+                            // Use the pivot table to assign students
+                            \DB::table('assignment_students')->insert([
+                                'assignment_id' => $assignmentId,
+                                'student_id' => $studentId,
+                                'status' => 'assigned',
+                                'assigned_at' => now(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
                     }
                 }
             }
@@ -247,46 +259,107 @@ class ClassController extends Controller
 
     public function getStudents(Request $request)
     {
-        $query = Student::with('course');
+        // Fast query - get students with their user data
+        $query = \App\Models\Student::with('user');
 
-        // Apply filters
-        if ($request->course_id) {
-            $query->where('course_id', $request->course_id);
-        }
-
+        // Apply year filter if provided
         if ($request->year) {
             $query->where('year', $request->year);
         }
 
-        if ($request->department) {
-            $query->whereHas('course', function ($q) use ($request) {
-                $q->where('department', $request->department);
-            });
-        }
-
+        // Apply search filter if provided
         if ($request->search) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($subQuery) use ($search) {
-                    $subQuery->where('name', 'like', "%{$search}%");
-                })->orWhere('student_id', 'like', "%{$search}%");
+                $q->where('student_id', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
-        $students = $query->get()->map(function ($student) {
+        $students = $query->get();
+
+        // Map to the expected format
+        $studentData = $students->map(function ($student) {
             return [
                 'id' => $student->id,
-                'name' => $student->user->name ?? 'Unknown',
+                'name' => $student->user->name,
                 'student_id' => $student->student_id,
-                'course_id' => $student->course_id,
-                'course_name' => $student->course->program_name ?? 'Unknown',
-                'department' => $student->course->department ?? 'Unknown',
+                'course_id' => $student->class->course->id ?? null,
+                'course_name' => $student->class->course->program_name ?? 'Unknown',
+                'department' => $student->class->course->department ?? 'Unknown',
                 'year' => $student->year,
                 'section' => $student->section,
+                'class_id' => $student->class_id ?? null,
+                'class_name' => $student->class->class_name ?? 'Unassigned',
             ];
         });
 
-        return response()->json(['students' => $students]);
+        return response()->json(['students' => $studentData]);
+    }
+
+    public function assignStudentsToClass(Request $request)
+    {
+        $validated = $request->validate([
+            'class_id' => 'required|exists:classes,id',
+            'student_ids' => 'required|array',
+            'student_ids.*' => 'exists:students,id',
+        ]);
+
+        $classId = $validated['class_id'];
+        $studentIds = $validated['student_ids'];
+
+        // Validate that all student IDs exist
+        $validStudentIds = Student::whereIn('id', $studentIds)->pluck('id')->toArray();
+
+        foreach ($validStudentIds as $studentId) {
+            // Check if assignment already exists to avoid duplicates
+            $exists = \DB::table('assignment_students')
+                ->where('assignment_id', $classId)
+                ->where('student_id', $studentId)
+                ->exists();
+
+            if (! $exists) {
+                // Create a teacher assignment for this class if it doesn't exist
+                $assignment = \DB::table('teacher_assignments')
+                    ->where('class_id', $classId)
+                    ->first();
+
+                if (! $assignment) {
+                    // Create a default teacher assignment
+                    $assignmentId = \DB::table('teacher_assignments')->insertGetId([
+                        'teacher_id' => 1, // Default admin teacher
+                        'class_id' => $classId,
+                        'subject_id' => 1, // Default subject
+                        'status' => 'active',
+                        'notes' => 'Auto-created for student assignment',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    $assignmentId = $assignment->id;
+                }
+
+                // Create student assignment record
+                \DB::table('assignment_students')->insert([
+                    'assignment_id' => $assignmentId,
+                    'student_id' => $studentId,
+                    'status' => 'assigned',
+                    'assigned_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Update student's class assignment
+                Student::where('id', $studentId)->update(['class_id' => $classId]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($validStudentIds).' students successfully assigned to class',
+        ]);
     }
 
     public function destroy(ClassModel $class)
