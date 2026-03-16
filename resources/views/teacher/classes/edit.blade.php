@@ -37,7 +37,8 @@
                                         <li>{{ $error }}</li>
                                     @endforeach
                                 </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
                             </div>
                         @endif
 
@@ -50,8 +51,10 @@
                                 <label for="class_name" class="form-label fw-semibold text-dark">
                                     <i class="fas fa-bookmark text-primary me-2"></i>Class Name
                                 </label>
-                                <input type="text" id="class_name" name="class_name" class="form-control form-control-lg @error('class_name') is-invalid @enderror"
-                                    value="{{ old('class_name', $class->class_name) }}" placeholder="e.g., Grade 10-A" required>
+                                <input type="text" id="class_name" name="class_name"
+                                    class="form-control form-control-lg @error('class_name') is-invalid @enderror"
+                                    value="{{ old('class_name', $class->class_name) }}" placeholder="e.g., Grade 10-A"
+                                    required>
                                 @error('class_name')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -62,7 +65,8 @@
                                 <label for="course_id" class="form-label fw-semibold text-dark">
                                     <i class="fas fa-book text-primary me-2"></i>Course
                                 </label>
-                                <select id="course_id" name="course_id" class="form-select form-select-lg @error('course_id') is-invalid @enderror" required>
+                                <select id="course_id" name="course_id"
+                                    class="form-select form-select-lg @error('course_id') is-invalid @enderror" required>
                                     <option value="">-- Select Course --</option>
                                     @forelse ($courses as $course)
                                         <option value="{{ $course->id }}" @selected(old('course_id', $class->course_id) == $course->id)>
@@ -87,7 +91,8 @@
                                     <label for="year" class="form-label fw-semibold text-dark">
                                         <i class="fas fa-graduation-cap text-primary me-2"></i>Grade Year
                                     </label>
-                                    <select id="year" name="year" class="form-select form-select-lg @error('year') is-invalid @enderror" required>
+                                    <select id="year" name="year"
+                                        class="form-select form-select-lg @error('year') is-invalid @enderror" required>
                                         <option value="">-- Select Year --</option>
                                         @for ($i = 1; $i <= 4; $i++)
                                             <option value="{{ $i }}" @selected(old('year', $class->year) == $i)>
@@ -104,7 +109,8 @@
                                     <label for="section" class="form-label fw-semibold text-dark">
                                         <i class="fas fa-layer-group text-primary me-2"></i>Section
                                     </label>
-                                    <select id="section" name="section" class="form-select form-select-lg @error('section') is-invalid @enderror" required>
+                                    <select id="section" name="section"
+                                        class="form-select form-select-lg @error('section') is-invalid @enderror" required>
                                         <option value="">-- Select Section --</option>
                                         @foreach (['A', 'B', 'C', 'D', 'E'] as $sec)
                                             <option value="{{ $sec }}" @selected(old('section', $class->section) == $sec)>
@@ -124,8 +130,10 @@
                                     <i class="fas fa-users text-primary me-2"></i>Class Capacity
                                 </label>
                                 <div class="input-group input-group-lg">
-                                    <input type="number" id="capacity" name="capacity" class="form-control @error('capacity') is-invalid @enderror"
-                                        value="{{ old('capacity', $class->capacity) }}" min="1" max="100" placeholder="50" required>
+                                    <input type="number" id="capacity" name="capacity"
+                                        class="form-control @error('capacity') is-invalid @enderror"
+                                        value="{{ old('capacity', $class->capacity) }}" min="1" max="100"
+                                        placeholder="50" required>
                                     <span class="input-group-text bg-light text-muted">students</span>
                                 </div>
                                 @error('capacity')
@@ -142,7 +150,7 @@
                                 <label for="description" class="form-label fw-semibold text-dark">
                                     <i class="fas fa-align-left text-primary me-2"></i>Description (Optional)
                                 </label>
-                                <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror" 
+                                <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"
                                     rows="4" placeholder="Add any additional information about this class...">{{ old('description', $class->description) }}</textarea>
                                 @error('description')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -158,10 +166,11 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="alert alert-info">
-                                        <i class="fas fa-info-circle"></i> 
-                                        Add or remove students from this class. You can filter by year or search by student ID or name.
+                                        <i class="fas fa-info-circle"></i>
+                                        Add or remove students from this class. You can filter by year or search by student
+                                        ID or name.
                                     </div>
-                                    
+
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
@@ -177,12 +186,14 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
-                                                <label for="student_search" class="form-label">Search by Student ID or Name</label>
-                                                <input type="text" id="student_search" class="form-control form-control-sm" placeholder="Search students...">
+                                                <label for="student_search" class="form-label">Search by Student ID or
+                                                    Name</label>
+                                                <input type="text" id="student_search"
+                                                    class="form-control form-control-sm" placeholder="Search students...">
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -191,8 +202,10 @@
                                                     <span class="badge bg-secondary ms-2" id="availableCount">0</span>
                                                 </label>
                                                 <div>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllAvailable">Select All</button>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllAvailable">Clear</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                        id="selectAllAvailable">Select All</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                        id="deselectAllAvailable">Clear</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -203,16 +216,31 @@
                                                     <span class="badge bg-success ms-2" id="selectedCount">0</span>
                                                 </label>
                                                 <div>
-                                                    <button type="button" class="btn btn-sm btn-outline-success" id="selectAllSelected">Select All</button>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" id="deselectAllSelected">Clear</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-success"
+                                                        id="selectAllSelected">Select All</button>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                        id="deselectAllSelected">Clear</button>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    <div class="border rounded p-2" style="height: 200px; overflow-y: auto;">
-                                        <div class="text-center text-muted">
-                                            <i class="fas fa-spinner fa-spin"></i> Loading students...
+
+                                    <div class="border rounded p-2" style="height: 300px; overflow-y: auto;">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div id="availableStudents" class="h-100">
+                                                    <div class="text-center text-muted">
+                                                        <i class="fas fa-spinner fa-spin"></i> Loading students...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div id="selectedStudents" class="h-100">
+                                                    <div class="text-center text-muted">
+                                                        <i class="fas fa-spinner fa-spin"></i> Loading students...
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -226,7 +254,8 @@
                                 <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
                                     <i class="fas fa-save me-2"></i>Update Class
                                 </button>
-                                <a href="{{ route('teacher.classes.show', $class->id) }}" class="btn btn-secondary btn-lg">
+                                <a href="{{ route('teacher.classes.show', $class->id) }}"
+                                    class="btn btn-secondary btn-lg">
                                     Cancel
                                 </a>
                             </div>
@@ -273,10 +302,9 @@
                             </div>
                             <div class="text-end">
                                 <div class="progress" style="width: 80px; height: 40px;">
-                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                    <div class="progress-bar bg-warning" role="progressbar"
                                         style="width: {{ ($class->students->count() / $class->capacity) * 100 }}%"
-                                        aria-valuenow="{{ $class->students->count() }}" 
-                                        aria-valuemin="0" 
+                                        aria-valuenow="{{ $class->students->count() }}" aria-valuemin="0"
                                         aria-valuemax="{{ $class->capacity }}"></div>
                                 </div>
                             </div>
@@ -286,100 +314,109 @@
             </div>
         </div>
     </div>
-</div>
+    </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const studentYearFilter = document.getElementById('student_year_filter');
-    const studentSearch = document.getElementById('student_search');
-    const availableStudentsDiv = document.getElementById('availableStudents');
-    const selectedStudentsDiv = document.getElementById('selectedStudents');
-    const availableCount = document.getElementById('availableCount');
-    const selectedCount = document.getElementById('selectedCount');
-    const assignedStudentsInput = document.getElementById('assigned_students');
-    
-    let allStudents = [];
-    let selectedStudents = new Set();
-    
-    // Load students function
-    function loadStudents() {
-        fetch('/admin/classes/get-students', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                year: studentYearFilter.value,
-                search: studentSearch.value
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            allStudents = data.students || [];
-            renderAvailableStudents();
-            renderSelectedStudents();
-        })
-        .catch(error => {
-            console.error('Error loading students:', error);
-            availableStudentsDiv.innerHTML = '<div class="text-center text-danger">Error loading students</div>';
-        });
-    }
-    
-    // Event listeners for filters
-    studentYearFilter.addEventListener('change', loadStudents);
-    studentSearch.addEventListener('input', debounce(loadStudents, 300));
-    
-    // Select/Clear buttons
-    document.getElementById('selectAllAvailable').addEventListener('click', function() {
-        const checkboxes = availableStudentsDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = true);
-        updateSelectedCount();
-    });
-    
-    document.getElementById('deselectAllAvailable').addEventListener('click', function() {
-        const checkboxes = availableStudentsDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = false);
-        updateSelectedCount();
-    });
-    
-    // Toggle student selection
-    function toggleStudent(studentId) {
-        const checkbox = document.querySelector(`input[value="${studentId}"]`);
-        if (checkbox) {
-            if (selectedStudents.has(studentId)) {
-                selectedStudents.delete(studentId);
-                checkbox.checked = false;
-            } else {
-                selectedStudents.add(studentId);
-                checkbox.checked = true;
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const studentYearFilter = document.getElementById('student_year_filter');
+            const studentSearch = document.getElementById('student_search');
+            const availableStudentsDiv = document.getElementById('availableStudents');
+            const selectedStudentsDiv = document.getElementById('selectedStudents');
+            const availableCount = document.getElementById('availableCount');
+            const selectedCount = document.getElementById('selectedCount');
+            const assignedStudentsInput = document.getElementById('assigned_students');
+
+            const getStudentsUrl = '{{ route('teacher.classes.get-students') }}';
+            const initialSelectedStudentIds = @json($class->students->pluck('id')->toArray());
+
+            let allStudents = [];
+            let selectedStudents = new Set(initialSelectedStudentIds);
+
+            // Load students function
+            function loadStudents() {
+                fetch(getStudentsUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content')
+                        },
+                        body: JSON.stringify({
+                            year: studentYearFilter.value,
+                            search: studentSearch.value
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        allStudents = data.students || [];
+                        renderAvailableStudents();
+                        renderSelectedStudents();
+                    })
+                    .catch(error => {
+                        console.error('Error loading students:', error);
+                        availableStudentsDiv.innerHTML =
+                            '<div class="text-center text-danger">Error loading students</div>';
+                    });
             }
-            updateSelectedCount();
-        }
-    }
-    
-    // Update selected count display
-    function updateSelectedCount() {
-        const selectedStudentsList = Array.from(selectedStudents);
-        selectedCount.textContent = selectedStudentsList.length;
-        assignedStudentsInput.value = selectedStudentsList.join(',');
-    }
-    
-    // Render available students
-    function renderAvailableStudents() {
-        const filteredStudents = filterStudents();
-        const availableStudents = filteredStudents.filter(student => !selectedStudents.has(student.id));
-        
-        availableCount.textContent = availableStudents.length;
-        
-        if (availableStudents.length === 0) {
-            availableStudentsDiv.innerHTML = '<div class="text-center text-muted">No available students</div>';
-            return;
-        }
-        
-        let html = '';
-        availableStudents.forEach(student => {
-            html += `
+
+            // Event listeners for filters
+            studentYearFilter.addEventListener('change', loadStudents);
+            studentSearch.addEventListener('input', debounce(loadStudents, 300));
+
+            // Select/Clear buttons
+            document.getElementById('selectAllAvailable').addEventListener('click', function() {
+                const availableIds = Array.from(availableStudentsDiv.querySelectorAll(
+                        'input[type="checkbox"]'))
+                    .map(cb => Number(cb.value));
+                availableIds.forEach(id => selectedStudents.add(id));
+                renderAvailableStudents();
+                renderSelectedStudents();
+            });
+
+            document.getElementById('deselectAllAvailable').addEventListener('click', function() {
+                const availableIds = Array.from(availableStudentsDiv.querySelectorAll(
+                        'input[type="checkbox"]'))
+                    .map(cb => Number(cb.value));
+                availableIds.forEach(id => selectedStudents.delete(id));
+                renderAvailableStudents();
+                renderSelectedStudents();
+            });
+
+            // Toggle student selection
+            function toggleStudent(studentId) {
+                if (selectedStudents.has(studentId)) {
+                    selectedStudents.delete(studentId);
+                } else {
+                    selectedStudents.add(studentId);
+                }
+
+                renderAvailableStudents();
+                renderSelectedStudents();
+            }
+
+            // Update selected count display
+            function updateSelectedCount() {
+                const selectedStudentsList = Array.from(selectedStudents);
+                selectedCount.textContent = selectedStudentsList.length;
+                assignedStudentsInput.value = selectedStudentsList.join(',');
+            }
+
+            // Render available students
+            function renderAvailableStudents() {
+                const filteredStudents = filterStudents();
+                const availableStudents = filteredStudents.filter(student => !selectedStudents.has(student.id));
+
+                availableCount.textContent = availableStudents.length;
+
+                if (availableStudents.length === 0) {
+                    availableStudentsDiv.innerHTML =
+                        '<div class="text-center text-muted">No available students</div>';
+                    return;
+                }
+
+                let html = '';
+                availableStudents.forEach(student => {
+                    html += `
                 <div class="student-item d-flex align-items-center p-2 border-bottom hover-bg-light">
                     <input type="checkbox" class="form-check-input me-2" value="${student.id}" 
                            onchange="toggleStudent(${student.id})">
@@ -391,69 +428,80 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `;
-        });
-        
-        availableStudentsDiv.innerHTML = html;
-    }
-    
-    // Render selected students
-    function renderSelectedStudents() {
-        const selectedStudentsList = Array.from(selectedStudents);
-        
-        if (selectedStudentsList.length === 0) {
-            selectedStudentsDiv.innerHTML = '<div class="text-center text-muted">No students selected</div>';
-            assignedStudentsInput.value = '';
-            return;
-        }
-        
-        let html = '';
-        selectedStudentsList.forEach(student => {
-            html += `
+                });
+
+                availableStudentsDiv.innerHTML = html;
+            }
+
+            // Render selected students
+            function renderSelectedStudents() {
+                const selectedIds = Array.from(selectedStudents);
+
+                if (selectedIds.length === 0) {
+                    selectedStudentsDiv.innerHTML =
+                    '<div class="text-center text-muted">No students selected</div>';
+                    updateSelectedCount();
+                    return;
+                }
+
+                let html = '';
+                selectedIds.forEach(id => {
+                    const student = allStudents.find(s => s.id === id) || {
+                        id,
+                        name: 'Unknown Student',
+                        student_id: '',
+                        course_name: '',
+                        year: '',
+                        section: '',
+                    };
+
+                    html += `
                 <div class="student-item d-flex align-items-center p-2 border-bottom">
                     <input type="checkbox" class="form-check-input me-2" checked value="${student.id}" 
                            onchange="toggleStudent(${student.id})">
                     <div class="flex-grow-1">
                         <div class="fw-bold">${student.name}</div>
                         <small class="text-muted">
-                            ${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}
+                            ${student.student_id ? student.student_id + ' • ' : ''}${student.course_name ? student.course_name + ' • ' : ''}${student.year ? 'Year ' + student.year + ' • ' : ''}${student.section || ''}
                         </small>
                     </div>
                 </div>
             `;
-        });
-        
-        selectedStudentsDiv.innerHTML = html;
-    }
-    
-    // Filter students
-    function filterStudents() {
-        return allStudents.filter(student => {
-            if (studentYearFilter.value && student.year != studentYearFilter.value) return false;
-            if (studentSearch.value) {
-                const search = studentSearch.value.toLowerCase();
-                return student.name.toLowerCase().includes(search) || 
-                       student.student_id.toLowerCase().includes(search);
+                });
+
+                selectedStudentsDiv.innerHTML = html;
+                updateSelectedCount();
             }
-            return true;
+
+            // Filter students
+            function filterStudents() {
+                return allStudents.filter(student => {
+                    if (studentYearFilter.value && student.year != studentYearFilter.value) return false;
+                    if (studentSearch.value) {
+                        const search = studentSearch.value.toLowerCase();
+                        return student.name.toLowerCase().includes(search) ||
+                            student.student_id.toLowerCase().includes(search);
+                    }
+                    return true;
+                });
+            }
+
+            // Debounce function
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = function() {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(this, args), wait);
+                    };
+                    clearTimeout(timeout);
+                    return later();
+                };
+            }
+
+            // Initial load
+            loadStudents();
         });
-    }
-    
-    // Debounce function
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-            clearTimeout(timeout);
-            return later();
-        };
-    }
-    
-    // Initial load
-    loadStudents();
-});
-</script>
+    </script>
 
 @endsection

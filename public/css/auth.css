@@ -1,38 +1,124 @@
 body {
-    background: linear-gradient(135deg, #eaf6ff, #f8fffc);
+    background: linear-gradient(135deg, #52c234, #061700);
+    background-image: radial-gradient(circle at top left, rgba(34, 197, 94, 0.16), transparent 55%),
+                      radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.10), transparent 60%),
+                      linear-gradient(135deg, #52c234, #061700);
     min-height: 100vh;
     font-family: "Segoe UI", Tahoma, sans-serif;
+    padding: 0;
+    margin: 0;
+    color: rgba(15, 23, 42, 0.92);
 }
 
 .auth-card {
-    max-width: 420px;
+    max-width: 460px;
     margin: 90px auto;
-    border-radius: 12px;
-    border: none;
-}
-
-.auth-card .card-body {
-    padding: 35px;
-}
-
-.brand-logo {
-    width: 90px;
-    height: auto;
-    margin-bottom: 10px;
-}
-
-.brand-title {
-    color: #198754; /* Bootstrap green */
-    font-weight: 700;
+    border-radius: 20px;
+    border: 1px solid rgba(34, 197, 94, 0.22);
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 22px 45px rgba(34, 197, 94, 0.16);
 }
 
 .btn-primary {
-    background-color: #198754;
-    border-color: #198754;
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    border: none;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
 }
 
 .btn-primary:hover {
-    background-color: #157347;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.brand-title {
+    color: #065f46;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.text-muted {
+    color: rgba(15, 23, 42, 0.65) !important;
+}
+
+.container {
+    padding: 15px;
+}
+
+.auth-card {
+    max-width: 440px;
+    margin: 90px auto;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+.auth-card .card-body {
+    padding: 40px;
+}
+
+.brand-logo {
+    width: 96px;
+    height: auto;
+    margin-bottom: 10px;
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    background: rgba(255, 255, 255, 0.15);
+    padding: 10px;
+}
+
+.brand-title {
+    color: #ffffff;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #14b068, #0d8a4d);
+    border: none;
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.text-muted {
+    color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.form-control {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 16px;
+}
+
+.form-select {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 12px 16px;
+}
+
+.form-label {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: rgba(255, 255, 255, 0.88);
 }
 
 .form-control:focus {
@@ -42,4 +128,182 @@ body {
 
 .toggle-password {
     cursor: pointer;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-group-text {
+    min-height: 48px;
+    font-size: 18px;
+}
+
+/* Better link styling for mobile */
+a {
+    font-size: 15px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+a:hover {
+    color: rgba(255, 255, 255, 1);
+    text-decoration: underline;
+}
+
+.form-check-label {
+    font-size: 15px;
+    padding-left: 8px;
+}
+
+.form-check-input {
+    width: 20px;
+    height: 20px;
+    margin-top: 0;
+}
+
+/* Alert styling */
+.alert {
+    font-size: 15px;
+    padding: 12px 16px;
+    border-radius: 8px;
+}
+
+/* Navbar mobile adjustments */
+.navbar {
+    padding: 12px 0;
+}
+
+.navbar-brand {
+    font-size: 20px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .auth-card {
+        margin: 40px auto;
+        max-width: 100%;
+        border-radius: 12px;
+    }
+
+    .auth-card .card-body {
+        padding: 25px 20px;
+    }
+
+    .brand-logo {
+        width: 70px;
+    }
+
+    .brand-title {
+        font-size: 1.5rem;
+    }
+
+    h4 {
+        font-size: 1.3rem;
+    }
+
+    p {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .navbar-brand {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 576px) {
+    .auth-card {
+        margin: 20px auto;
+        border-radius: 8px;
+    }
+
+    .auth-card .card-body {
+        padding: 20px 15px;
+    }
+
+    .brand-logo {
+        width: 60px;
+    }
+
+    .brand-title {
+        font-size: 1.3rem;
+    }
+
+    h4 {
+        font-size: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 14px;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 16px; /* Keep at 16px to prevent zoom on iOS */
+        padding: 10px 14px;
+    }
+
+    .btn-primary,
+    .btn-success {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    a {
+        font-size: 14px;
+    }
+
+    .alert {
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+
+    /* Stack columns on very small screens */
+    .row .col-md-6 {
+        margin-bottom: 15px;
+    }
+
+    /* Auth footer links */
+    .auth-footer p {
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .auth-footer a {
+        font-weight: 500;
+    }
+}
+
+/* Improve touch targets */
+@media (hover: none) and (pointer: coarse) {
+    /* This targets touch devices */
+    .btn,
+    .form-control,
+    .form-select,
+    a,
+    .input-group-text {
+        min-height: 48px;
+    }
+
+    .form-check-input {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Prevent zoom on input focus for iOS */
+@supports (-webkit-touch-callout: none) {
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
 }

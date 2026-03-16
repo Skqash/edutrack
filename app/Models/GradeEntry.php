@@ -14,7 +14,7 @@ class GradeEntry extends Model
     protected $fillable = [
         'student_id', 'class_id', 'teacher_id', 'term',
         // Knowledge
-        'exam_pr', 'exam_md', 'quiz_1', 'quiz_2', 'quiz_3', 'quiz_4', 'quiz_5',
+        'exam_pr', 'exam_md', 'exam_fn', 'quiz_1', 'quiz_2', 'quiz_3', 'quiz_4', 'quiz_5',
         // Skills
         'output_1', 'output_2', 'output_3',
         'classpart_1', 'classpart_2', 'classpart_3',
@@ -22,17 +22,19 @@ class GradeEntry extends Model
         'assignment_1', 'assignment_2', 'assignment_3',
         // Attitude
         'behavior_1', 'behavior_2', 'behavior_3',
+        'attendance_1', 'attendance_2', 'attendance_3',
         'awareness_1', 'awareness_2', 'awareness_3',
         // Computed
         'exam_average', 'quiz_average', 'knowledge_average',
         'output_average', 'classpart_average', 'activity_average', 'assignment_average', 'skills_average',
-        'behavior_average', 'awareness_average', 'attitude_average',
+        'behavior_average', 'attendance_average', 'awareness_average', 'attitude_average',
         'term_grade', 'remarks'
     ];
 
     protected $casts = [
         'exam_pr' => 'decimal:2',
         'exam_md' => 'decimal:2',
+        'exam_fn' => 'decimal:2',
         'quiz_1' => 'decimal:2',
         'quiz_2' => 'decimal:2',
         'quiz_3' => 'decimal:2',
@@ -53,6 +55,9 @@ class GradeEntry extends Model
         'behavior_1' => 'decimal:2',
         'behavior_2' => 'decimal:2',
         'behavior_3' => 'decimal:2',
+        'attendance_1' => 'decimal:2',
+        'attendance_2' => 'decimal:2',
+        'attendance_3' => 'decimal:2',
         'awareness_1' => 'decimal:2',
         'awareness_2' => 'decimal:2',
         'awareness_3' => 'decimal:2',
@@ -65,6 +70,7 @@ class GradeEntry extends Model
         'assignment_average' => 'decimal:2',
         'skills_average' => 'decimal:2',
         'behavior_average' => 'decimal:2',
+        'attendance_average' => 'decimal:2',
         'awareness_average' => 'decimal:2',
         'attitude_average' => 'decimal:2',
         'term_grade' => 'decimal:2',
@@ -93,10 +99,11 @@ class GradeEntry extends Model
      */
     public function computeAverages(array $weights): array
     {
-        // EXAM AVERAGE
-        $examPr = (float)($this->exam_pr ?? 0);
+        // EXAM AVERAGE — use whichever exam field is populated (exam_md for midterm, exam_fn for final)
         $examMd = (float)($this->exam_md ?? 0);
-        $examAverage = ($examPr + $examMd) / 2;
+        $examFn = (float)($this->exam_fn ?? 0);
+        $examVal = $examMd ?: $examFn; // use whichever is non-zero
+        $examAverage = $examVal; // single exam per term, treat as 100% of exam component
 
         // QUIZ AVERAGE
         $quizzes = [
@@ -136,11 +143,15 @@ class GradeEntry extends Model
         $behaviors = [(float)($this->behavior_1 ?? 0), (float)($this->behavior_2 ?? 0), (float)($this->behavior_3 ?? 0)];
         $behaviorAverage = array_sum($behaviors) / count($behaviors);
 
+        $attendances = [(float)($this->attendance_1 ?? 0), (float)($this->attendance_2 ?? 0), (float)($this->attendance_3 ?? 0)];
+        $attendanceAverage = array_sum($attendances) / count($attendances);
+
         $awareness_arr = [(float)($this->awareness_1 ?? 0), (float)($this->awareness_2 ?? 0), (float)($this->awareness_3 ?? 0)];
         $awarenessAverage = array_sum($awareness_arr) / count($awareness_arr);
 
-        // ATTITUDE = (Behavior 50% + Awareness 50%)
-        $attitudeAverage = ($behaviorAverage * 0.50) + ($awarenessAverage * 0.50);
+        // ATTITUDE = Behavior 50% + Engagement 50% (Engagement = Attendance 60% + Awareness 40%)
+        $engagementAverage = ($attendanceAverage * 0.60) + ($awarenessAverage * 0.40);
+        $attitudeAverage = ($behaviorAverage * 0.50) + ($engagementAverage * 0.50);
 
         // TERM GRADE = (Knowledge % + Skills % + Attitude %)
         $k = $weights['knowledge'] / 100;
@@ -163,6 +174,7 @@ class GradeEntry extends Model
             'assignment_average' => $assignmentAverage,
             'skills_average' => $skillsAverage,
             'behavior_average' => $behaviorAverage,
+            'attendance_average' => $attendanceAverage,
             'awareness_average' => $awarenessAverage,
             'attitude_average' => $attitudeAverage,
             'term_grade' => $termGrade,

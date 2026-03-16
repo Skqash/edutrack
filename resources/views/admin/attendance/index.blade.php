@@ -1,20 +1,73 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="page-header">
-        <div class="row align-items-center">
-            <div class="col-auto">
-                <h3 class="page-title">
-                    <span class="page-title-icon bg-gradient-info text-white me-2">
-                        <i class="fas fa-clipboard-check"></i>
-                    </span>
-                    Attendance Management
-                </h3>
-            </div>
-        </div>
-    </div>
-
     <style>
+        /* Modern Page Header */
+        .page-header-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+            color: white;
+        }
+
+        .page-header-modern .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .page-header-modern .header-title {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header-modern .header-subtitle {
+            margin: 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        @media (max-width: 768px) {
+            .page-header-modern {
+                padding: 1.5rem;
+            }
+
+            .page-header-modern .header-title {
+                font-size: 1.5rem;
+            }
+
+            .page-header-modern .header-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
+
         /* CARD STYLING */
         .attendance-card {
             background: white;

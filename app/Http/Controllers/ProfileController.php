@@ -25,10 +25,15 @@ class ProfileController extends Controller
                 'user_id' => $user->id,
                 'employee_id' => 'EMP' . $user->id,
                 'status' => 'Active',
+                'campus' => 'Victorias Campus',
             ]);
         }
-        
-        return view('teacher.profile.show', compact('user', 'teacher'));
+
+        $schoolRequest = \App\Models\SchoolRequest::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        return view('teacher.profile.show', compact('user', 'teacher', 'schoolRequest'));
     }
 
     /**

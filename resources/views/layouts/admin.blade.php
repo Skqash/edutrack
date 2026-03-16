@@ -1,868 +1,693 @@
-{{-- resources/views/layouts/admin.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>EduTrack | Admin Panel</title>
 
-    <!-- Local Bootstrap (offline safe) -->
-    <link rel="stylesheet" href="{{ asset('bootstrap/css/bootstrap.min.css') }}">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap Icons (download locally later if needed) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    @php $theme = Auth::user()->theme ?? 'light'; @endphp
+    <link rel="stylesheet" href="{{ asset('css/themes/' . $theme . '.css') }}">
 
     <style>
+        /* Modern Admin Layout System */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-bg: #ffffff;
+            --sidebar-text: #64748b;
+            --sidebar-hover: #f8fafc;
+            --sidebar-border: #e2e8f0;
+            --topbar-bg: #ffffff;
+            --topbar-border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 80px;
+            --topbar-height: 70px;
+        }
+
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        html,
         body {
-            height: 100%;
-            width: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
             overflow-x: hidden;
-            scroll-behavior: smooth;
         }
 
-        body {
-            background-color: #f4f8fb;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
+        /* Layout Container */
+        .app-container {
+            display: block;
+            position: relative;
             min-height: 100vh;
-            background: #ffffff;
-            border-right: 1px solid #e5e9f0;
-            transition: all 0.3s ease;
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 1000;
-            overflow-y: auto;
             overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 1050;
+            transition: var(--transition);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
         }
 
         .sidebar.collapsed {
-            width: 80px;
+            width: var(--sidebar-collapsed-width);
         }
 
-        .sidebar.collapsed .logo {
-            padding: 15px 0;
+        /* Sidebar Header */
+        .sidebar-header {
+            height: var(--topbar-height);
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
 
-        .sidebar.collapsed .logo h6,
-        .sidebar.collapsed .logo small,
-        .sidebar.collapsed .nav-link span {
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar-brand i {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            color: var(--primary-color);
+        }
+
+        .sidebar-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            margin-right: 0.75rem;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 2px;
+        }
+
+        .sidebar.collapsed .sidebar-brand span {
             display: none;
+        }
+
+        .sidebar.collapsed .sidebar-brand {
+            justify-content: center;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 1rem 0;
+            background: var(--white);
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .nav-item {
+            margin-bottom: 0.25rem;
+            padding: 0 0.75rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .nav-link:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--white);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        }
+
+        .nav-link i {
+            font-size: 1.125rem;
+            width: 1.5rem;
+            text-align: center;
+            flex-shrink: 0;
         }
 
         .sidebar.collapsed .nav-link {
             justify-content: center;
-            padding: 12px;
-            margin: 4px 0;
+            padding: 0.875rem;
+            gap: 0;
         }
 
-        .sidebar.collapsed .section-title {
+        .sidebar.collapsed .nav-link span {
             display: none;
         }
 
-        .sidebar .logo {
-            text-align: center;
-            padding: 20px;
-            border-bottom: 1px solid #e5e9f0;
-            transition: all 0.3s ease;
+        .badge-sidebar {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
-        .sidebar .logo img {
-            width: 60px;
-            transition: width 0.3s ease;
-        }
-
-        .sidebar.collapsed .logo img {
-            width: 45px;
-        }
-
-        .sidebar .nav-link {
-            color: #333;
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin: 4px 10px;
-            font-size: 15px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .sidebar .nav-link i {
-            min-width: 20px;
-            text-align: center;
-            font-size: 18px;
-        }
-
-        .sidebar .nav-link:hover {
-            background: #eaf6ff;
-            color: #198754;
-            transform: translateX(5px);
-        }
-
-        .sidebar.collapsed .nav-link:hover {
-            transform: none;
-        }
-
-        .sidebar .nav-link.active {
-            background: #198754;
-            color: #fff;
-        }
-
-        .sidebar .section-title {
-            font-size: 11px;
-            color: #6c757d;
-            padding: 15px 25px 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        /* Main container offset */
-        .main-container {
-            margin-left: 260px;
-            transition: margin-left 0.3s ease;
+        /* Main Content Area */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 1.5rem;
             min-height: 100vh;
+            transition: var(--transition);
         }
 
-        .main-container.sidebar-collapsed {
-            margin-left: 80px;
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
         }
 
         /* Topbar */
         .topbar {
-            background: #ffffff;
-            border-bottom: 1px solid #e5e9f0;
-            height: 60px;
+            height: var(--topbar-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            background: var(--topbar-bg);
+            border-bottom: 1px solid var(--topbar-border);
             position: sticky;
             top: 0;
-            z-index: 999;
-            padding: 0 15px;
+            z-index: 1000;
         }
 
-        .topbar .navbar {
-            padding: 0;
-        }
-
-        /* Cards */
-        .stat-card {
-            border: 0;
-            border-radius: 14px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            height: 100%;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
-        }
-
-        .stat-card h3 {
-            font-weight: 700;
-            font-size: clamp(1.5rem, 5vw, 2rem);
-        }
-
-        .stat-card h6 {
-            font-size: clamp(0.75rem, 2vw, 0.9rem);
-        }
-
-        /* Main area */
-        .content-wrapper {
-            min-height: calc(100vh - 60px);
-            padding: clamp(15px, 4vw, 30px);
-        }
-
-        footer {
-            border-top: 1px solid #e5e9f0;
-            padding: 20px 15px;
-            text-align: center;
-            color: #888;
-            font-size: clamp(12px, 2vw, 14px);
-        }
-
-        /* Action buttons styling */
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .btn-action {
-            padding: 0.45rem 0.85rem;
-            font-size: 13px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            white-space: nowrap;
+        .sidebar-toggle {
+            background: transparent;
             border: none;
+            font-size: 1.25rem;
+            color: var(--text-secondary);
             cursor: pointer;
-            font-weight: 500;
-        }
-
-        .btn-action i {
-            font-size: 14px;
-        }
-
-        .btn-edit {
-            background-color: #0dcaf0;
-            color: white;
-        }
-
-        .btn-edit:hover {
-            background-color: #0aa2c0;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .btn-delete {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background-color: #c82333;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .btn-view {
-            background-color: #0d6efd;
-            color: white;
-        }
-
-        .btn-view:hover {
-            background-color: #0b5ed7;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        /* Pagination Styling */
-        .pagination {
-            gap: 4px;
-        }
-
-        .page-link {
-            padding: 0.5rem 0.75rem;
-            font-size: 13px;
-            min-width: 40px;
-            text-align: center;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .page-link:hover {
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 768px) {
-            .page-link {
-                padding: 0.4rem 0.6rem;
-                font-size: 12px;
-                min-width: 36px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .page-link {
-                padding: 0.35rem 0.5rem;
-                font-size: 11px;
-                min-width: 32px;
-            }
-        }
-
-        /* Page header */
-        .page-header {
-            margin-bottom: clamp(20px, 4vw, 30px);
-            padding-bottom: clamp(15px, 3vw, 20px);
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .page-title {
-            font-weight: 600;
-            color: #333;
-            font-size: clamp(1.5rem, 5vw, 2.2rem);
-            margin: 0;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 1200px) {
-            .main-container {
-                margin-left: 80px;
-            }
-
-            .sidebar {
-                width: 80px;
-            }
-
-            .sidebar .logo,
-            .sidebar .nav-link span,
-            .sidebar .section-title {
-                display: none;
-            }
-
-            .sidebar .nav-link {
-                justify-content: center;
-                padding: 12px;
-                margin: 4px 0;
-            }
-
-            .sidebar .logo {
-                display: block;
-                padding: 15px 0;
-            }
-
-            .sidebar .logo img {
-                width: 45px;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .main-container {
-                margin-left: 0;
-            }
-
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: fixed;
-                top: 0;
-                left: -100%;
-                z-index: 2000;
-                min-height: auto;
-                max-height: 80vh;
-                border-right: none;
-                border-bottom: 1px solid #e5e9f0;
-            }
-
-            .sidebar.show {
-                left: 0;
-            }
-
-            .sidebar.show .logo,
-            .sidebar.show .nav-link span,
-            .sidebar.show .section-title {
-                display: block;
-            }
-
-            .sidebar.show .nav-link {
-                justify-content: flex-start;
-                padding: 12px 20px;
-            }
-
-            .sidebar.show .logo {
-                padding: 20px;
-            }
-
-            .sidebar.show .logo img {
-                width: 60px;
-            }
-
-            .topbar {
-                margin-top: 60px;
-                height: auto;
-                padding: 10px 15px !important;
-            }
-
-            .topbar .navbar {
-                flex-wrap: wrap;
-            }
-
-            .stat-card {
-                margin-bottom: 15px;
-            }
-
-            .sidebar .nav-link {
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-
-            .page-header {
-                margin-bottom: 20px;
-                padding-bottom: 15px;
-            }
-
-            .action-buttons {
-                gap: 6px;
-            }
-
-            .btn-action {
-                padding: 0.4rem 0.7rem;
-                font-size: 12px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: fixed;
-                top: 0;
-                left: -100%;
-                z-index: 2000;
-                min-height: auto;
-                max-height: 80vh;
-                border-right: none;
-                border-bottom: 1px solid #e5e9f0;
-            }
-
-            .sidebar.show {
-                left: 0;
-            }
-
-            .sidebar.collapsed {
-                width: 100%;
-            }
-
-            .main-container {
-                margin-left: 0;
-            }
-
-            .main-container.sidebar-collapsed {
-                margin-left: 0;
-            }
-
-            .topbar {
-                margin-top: 60px;
-                height: auto;
-                padding: 10px !important;
-            }
-
-            .topbar .d-flex {
-                flex-wrap: wrap;
-            }
-
-            .stat-card {
-                margin-bottom: 10px;
-            }
-
-            .sidebar .nav-link {
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-
-            .sidebar .logo {
-                padding: 12px;
-            }
-
-            .sidebar .logo img {
-                width: 45px;
-            }
-
-            .sidebar .logo h6 {
-                font-size: 13px !important;
-            }
-
-            .action-buttons {
-                gap: 6px;
-                flex-wrap: wrap;
-            }
-
-            .btn-action {
-                padding: 0.4rem 0.65rem;
-                font-size: 11px;
-                flex: 1 1 48%;
-            }
-
-            .page-header {
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-            }
-
-            .page-title {
-                font-size: 1.3rem;
-            }
-
-            /* Adjust table for mobile */
-            table {
-                font-size: 12px;
-            }
-
-            table th {
-                padding: 6px 3px !important;
-            }
-
-            table td {
-                padding: 6px 3px !important;
-            }
-
-            .stat-card h3 {
-                font-size: clamp(1rem, 4vw, 1.3rem);
-            }
-
-            .stat-card h6 {
-                font-size: clamp(0.65rem, 1.5vw, 0.8rem);
-            }
-
-            .card-body {
-                padding: 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .topbar .form-control {
-                width: 120px !important;
-                font-size: 12px;
-                padding: 0.35rem 0.5rem;
-            }
-
-            .topbar .btn {
-                padding: 0.35rem 0.5rem;
-                font-size: 12px;
-            }
-
-            .stat-card .card-body {
-                padding: 12px !important;
-            }
-
-            .stat-card i {
-                font-size: 20px !important;
-            }
-
-            .stat-card h3 {
-                font-size: clamp(0.9rem, 3.5vw, 1.1rem) !important;
-            }
-
-            .stat-card h6 {
-                font-size: clamp(0.6rem, 1.2vw, 0.75rem) !important;
-            }
-
-            .sidebar .nav-link {
-                padding: 8px 10px;
-                font-size: 11px;
-            }
-
-            .sidebar .logo {
-                padding: 10px;
-            }
-
-            .sidebar .logo img {
-                width: 40px;
-            }
-
-            .sidebar .logo h6 {
-                font-size: 12px !important;
-            }
-
-            .page-title {
-                font-size: 1.1rem !important;
-            }
-
-            .action-buttons {
-                gap: 4px;
-            }
-
-            .btn-action {
-                padding: 0.35rem 0.5rem !important;
-                font-size: 10px !important;
-                flex: 1 1 100%;
-            }
-
-            .btn-action:nth-child(1) {
-                flex: 1 1 48%;
-            }
-
-            .btn-action:nth-child(2) {
-                flex: 1 1 48%;
-            }
-
-            .content-wrapper {
-                padding: 10px;
-            }
-
-            table {
-                font-size: 10px;
-            }
-
-            table th {
-                padding: 4px 2px !important;
-            }
-
-            table td {
-                padding: 4px 2px !important;
-            }
-
-            .card {
-                margin-bottom: 10px;
-            }
-
-            .card-body {
-                padding: 10px;
-            }
-        }
-
-        .page-title-icon {
-            width: 40px;
-            height: 40px;
+            padding: 0.5rem;
             border-radius: 8px;
-            display: inline-flex;
+            transition: var(--transition);
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .topbar-actions {
+            display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .action-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            position: relative;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: var(--danger-color);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.15rem 0.35rem;
+            border-radius: 999px;
+            line-height: 1;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .dropdown-menu-custom {
+            min-width: 240px;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .dropdown-item-custom {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .dropdown-item-custom:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .notifications-dropdown {
+            width: 320px;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-meta {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .notification-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 1rem;
+        }
+
+        /* Mobile Overlay */
+        .mobile-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1040;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .mobile-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Sidebar Mobile */
+        .sidebar.mobile-show {
+            transform: translateX(0);
+        }
+
+        .sidebar {
+            transform: translateX(-100%);
+        }
+
+        @media (min-width: 992px) {
+            .sidebar {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar.mobile-show {
+            transform: translateX(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 
 <body>
-    <!-- SIDEBAR -->
-    <div class="sidebar shadow-sm" id="sidebar">
-        <div class="logo">
-            <img src="{{ asset('images/logo.jpg') }}" alt="logo">
-            <h6 class="text-success fw-bold mt-2">EduTrack</h6>
-            <small class="text-muted">Admin Panel</small>
-        </div>
+    <div class="app-container">
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
 
-        <ul class="nav flex-column mt-3">
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"
-                    href="{{ route('admin.dashboard') }}">
-                    <i class="bi bi-speedometer2 me-2"></i> <span>Dashboard</span>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
+                    <img src="/images/cpsu-logo.jpg" alt="CPSU logo" class="sidebar-logo" />
+                    <span>EduTrack</span>
                 </a>
-            </li>
-
-            <div class="section-title">Registrar</div>
-
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.students*') ? 'active' : '' }}"
-                    href="{{ route('admin.students.index') }}"><i class="bi bi-mortarboard me-2"></i>
-                    <span>Students</span></a></li>
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.teachers*') ? 'active' : '' }}"
-                    href="{{ route('admin.teachers.index') }}"><i class="bi bi-person-badge me-2"></i>
-                    <span>Teachers</span></a></li>
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.courses*') ? 'active' : '' }}"
-                    href="{{ route('admin.courses.index') }}"><i class="bi bi-award me-2"></i> <span>Courses</span></a>
-            </li>
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.classes*') ? 'active' : '' }}"
-                    href="{{ route('admin.classes.index') }}"><i class="bi bi-house-door me-2"></i>
-                    <span>Classes</span></a></li>
-
-            <div class="section-title">Academic</div>
-
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.subjects*') ? 'active' : '' }}"
-                    href="{{ route('admin.subjects.index') }}"><i class="bi bi-book me-2"></i>
-                    <span>Subjects</span></a></li>
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.attendance*') ? 'active' : '' }}"
-                    href="{{ route('admin.attendance.index') }}"><i class="bi bi-check2-square me-2"></i>
-                    <span>Attendance</span></a></li>
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.grades*') ? 'active' : '' }}"
-                    href="{{ route('admin.grades.index') }}"><i class="bi bi-bar-chart-line me-2"></i>
-                    <span>Grades</span></a></li>
-
-            <div class="section-title">System</div>
-
-            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.users*') ? 'active' : '' }}"
-                    href="{{ route('admin.users.index') }}"><i class="bi bi-people me-2"></i> <span>User
-                        Management</span></a></li>
-            <li class="nav-item"><a class="nav-link text-danger" href="/logout"><i
-                        class="bi bi-box-arrow-right me-2"></i> <span>Logout</span></a></li>
-        </ul>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div class="main-container" id="mainContainer">
-
-        <!-- TOP BAR -->
-        <nav class="navbar topbar px-3 px-md-4 d-flex justify-content-between align-items-center flex-wrap">
-            <div class="d-flex align-items-center">
-                <button class="btn btn-outline-success btn-sm me-3" onclick="toggleSidebar()">
-                    <i class="bi bi-list"></i>
-                </button>
-                <span class="fw-bold d-none d-sm-inline">Administrator Dashboard</span>
-                <span class="fw-bold d-sm-none">EduTrack</span>
             </div>
 
-            <div class="d-flex align-items-center gap-2 gap-md-3">
-                <!-- Notifications -->
-                <div class="dropdown">
-                    @php
-                        $unreadCount = \App\Models\Notification::unreadCount(auth()->id());
-                        $notifications = \App\Models\Notification::where('user_id', auth()->id())
-                            ->orderBy('created_at', 'desc')
-                            ->limit(5)
-                            ->get();
-                    @endphp
-                    <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-bell fs-5"></i>
-                        @if ($unreadCount > 0)
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                {{ $unreadCount > 9 ? '9+' : $unreadCount }}
-                            </span>
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar-nav">
+                @php
+                    $pendingRequests = \App\Models\SchoolRequest::where('status', 'pending')->count();
+                @endphp
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.school-requests.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.school-requests*') ? 'active' : '' }}">
+                        <i class="fas fa-school"></i>
+                        <span>School Requests</span>
+                        @if ($pendingRequests > 0)
+                            <span class="badge bg-danger badge-sidebar">{{ $pendingRequests }}</span>
                         @endif
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.teachers.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.teachers*') ? 'active' : '' }}">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>Teachers</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.students.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.students*') ? 'active' : '' }}">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>Students</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.courses.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.courses*') ? 'active' : '' }}">
+                        <i class="fas fa-book-open"></i>
+                        <span>Courses</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.subjects.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.subjects*') ? 'active' : '' }}">
+                        <i class="fas fa-book"></i>
+                        <span>Subjects</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.classes.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.classes*') ? 'active' : '' }}">
+                        <i class="fas fa-school"></i>
+                        <span>Classes</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.grades.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.grades*') ? 'active' : '' }}">
+                        <i class="fas fa-star"></i>
+                        <span>Grades</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.attendance.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.attendance*') ? 'active' : '' }}">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Attendance</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.profile.show') }}"
+                        class="nav-link {{ request()->routeIs('admin.profile*') ? 'active' : '' }}">
+                        <i class="fas fa-user-cog"></i>
+                        <span>Profile</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <!-- Sidebar Toggle -->
+                    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                        <i class="fas fa-bars"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        style="width: 350px; max-height: 400px; overflow-y: auto;">
-                        <li>
-                            <h6 class="dropdown-header">Notifications</h6>
-                        </li>
-                        @forelse($notifications as $notif)
-                            <li>
-                                <a class="dropdown-item border-bottom py-2" href="{{ $notif->action_url ?? '#' }}">
-                                    <div class="d-flex gap-2">
-                                        <span class="badge bg-{{ $notif->type }} rounded-circle">
-                                            <i class="bi bi-{{ $notif->icon ?? 'bell' }}"></i>
-                                        </span>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 {{ $notif->isRead() ? 'text-muted' : 'fw-bold' }}">
-                                                {{ $notif->title }}
-                                            </h6>
-                                            <small class="text-muted d-block">{{ $notif->message }}</small>
-                                            <small class="text-muted">{{ $notif->created_at->diffForHumans() }}</small>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="topbar-actions">
+                        <!-- Notifications -->
+                        @php
+                            $unreadCount = \App\Models\Notification::unreadCount(auth()->id());
+                            $notifications = \App\Models\Notification::where('user_id', auth()->id())
+                                ->orderBy('created_at', 'desc')
+                                ->limit(5)
+                                ->get();
+                        @endphp
+                        <div class="dropdown">
+                            <button class="action-btn" data-bs-toggle="dropdown" aria-expanded="false"
+                                aria-label="Notifications">
+                                <i class="fas fa-bell"></i>
+                                @if ($unreadCount > 0)
+                                    <span
+                                        class="notification-badge">{{ $unreadCount > 9 ? '9+' : $unreadCount }}</span>
+                                @endif
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end notifications-dropdown">
+                                <div class="notification-header">
+                                    <span>Notifications</span>
+                                    @if ($unreadCount > 0)
+                                        <small class="text-muted">{{ $unreadCount }} unread</small>
+                                    @endif
+                                </div>
+                                @forelse($notifications as $notification)
+                                    <a href="{{ $notification->action_url ?? '#' }}" class="notification-item">
+                                        <div class="notification-content">
+                                            @php
+                                                $bgColor = match ($notification->type ?? 'info') {
+                                                    'success' => '16, 185, 129',
+                                                    'warning' => '245, 158, 11',
+                                                    'danger' => '239, 68, 68',
+                                                    default => '79, 70, 229',
+                                                };
+                                                $textColor = match ($notification->type ?? 'info') {
+                                                    'success' => 'var(--success-color)',
+                                                    'warning' => 'var(--warning-color)',
+                                                    'danger' => 'var(--danger-color)',
+                                                    default => 'var(--primary-color)',
+                                                };
+                                            @endphp
+                                            <div class="notification-icon"
+                                                style="background: rgba({{ $bgColor }}, 0.1); color: {{ $textColor }};">
+                                                <i class="fas fa-{{ $notification->icon ?? 'bell' }}"></i>
+                                            </div>
+                                            <div class="notification-text">
+                                                <div
+                                                    class="notification-title {{ $notification->isRead() ? 'text-muted' : '' }}">
+                                                    {{ $notification->title }}
+                                                </div>
+                                                <div class="notification-meta">
+                                                    {{ $notification->created_at->diffForHumans() }}
+                                                </div>
+                                            </div>
                                         </div>
+                                    </a>
+                                @empty
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                        <p class="mb-0">No notifications</p>
                                     </div>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        <!-- Profile -->
+                        <div class="dropdown">
+                            <button class="action-btn" data-bs-toggle="dropdown" aria-expanded="false"
+                                aria-label="Profile menu">
+                                <i class="fas fa-user-circle"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                                <div class="px-3 py-2 border-bottom">
+                                    <div class="fw-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
+                                    <small
+                                        class="text-muted">{{ auth()->user()->email ?? 'admin@edutrack.com' }}</small>
+                                </div>
+                                <a href="{{ route('admin.profile.show') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-user"></i>
+                                    My Profile
                                 </a>
-                            </li>
-                        @empty
-                            <li>
-                                <p class="dropdown-item text-center text-muted py-3">No notifications</p>
-                            </li>
-                        @endforelse
-                        @if (count($notifications) > 0)
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item text-center small"
-                                    href="{{ route('notifications.index') }}">View All</a></li>
-                        @endif
-                    </ul>
+                                <a href="{{ route('admin.profile.edit') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-edit"></i>
+                                    Edit Profile
+                                </a>
+                                <a href="{{ route('admin.profile.change-password') }}" class="dropdown-item-custom">
+                                    <i class="fas fa-key"></i>
+                                    Change Password
+                                </a>
+                                <div class="dropdown-divider-custom"></div>
+                                <a href="{{ route('logout') }}" class="dropdown-item-custom text-danger">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </header>
 
-                <!-- Profile -->
-                <div class="dropdown">
-                    <button class="btn btn-outline-success dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle me-1"></i>
-                        <span class="d-none d-sm-inline">{{ auth()->user()->name ?? 'Admin' }}</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ route('admin.profile.show') }}">
-                                <i class="fas fa-user me-2"></i> My Profile
-                            </a></li>
-                        <li><a class="dropdown-item" href="{{ route('admin.profile.edit') }}">
-                                <i class="fas fa-edit me-2"></i> Edit Profile
-                            </a></li>
-                        <li><a class="dropdown-item" href="{{ route('admin.profile.change-password') }}">
-                                <i class="fas fa-key me-2"></i> Change Password
-                            </a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item text-danger" href="{{ route('logout') }}">Logout</a></li>
-                    </ul>
-                </div>
+            <!-- Page Content -->
+            <div class="page-content">
+                @yield('content')
             </div>
-        </nav>
-
-        <!-- PAGE CONTENT -->
-        <div class="p-3 p-md-4 content-wrapper">
-
-            <!-- ANALYTICS ROW -->
-            <div class="row mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="bi bi-mortarboard fs-3 text-success"></i>
-                            <h6 class="text-muted mt-2 mb-0">Students</h6>
-                            <h3 class="text-success mb-0">{{ $totalStudents ?? '0' }}</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="bi bi-person-badge fs-3 text-primary"></i>
-                            <h6 class="text-muted mt-2 mb-0">Teachers</h6>
-                            <h3 class="text-primary mb-0">{{ $totalTeachers ?? '0' }}</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="bi bi-house-door fs-3 text-warning"></i>
-                            <h6 class="text-muted mt-2 mb-0">Classes</h6>
-                            <h3 class="text-warning mb-0">{{ $totalClasses ?? '0' }}</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3">
-                    <div class="card stat-card shadow-sm">
-                        <div class="card-body text-center">
-                            <i class="bi bi-book fs-3 text-danger"></i>
-                            <h6 class="text-muted mt-2 mb-0">Subjects</h6>
-                            <h3 class="text-danger mb-0">{{ $totalSubjects ?? '0' }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE SLOT -->
-            @yield('content')
-
-        </div>
-
-        <!-- FOOTER -->
-        <footer>
-            © {{ date('Y') }} EduTrack | Academic Management System
-        </footer>
-
+        </main>
     </div>
 
-    <script src="{{ asset('bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-    <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContainer = document.getElementById('mainContainer');
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('show');
+    <script>
+        // Layout Management
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        let isCollapsed = false;
+        let isMobile = window.innerWidth <= 768;
+
+        // Toggle Sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Mobile: slide in/out
+                sidebar.classList.toggle('mobile-show');
+                mobileOverlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('mobile-show') ? 'hidden' : '';
             } else {
+                // Desktop: collapse/expand
+                isCollapsed = !isCollapsed;
                 sidebar.classList.toggle('collapsed');
-                mainContainer.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // Save preference
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
             }
         }
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = event.target.closest('.btn-outline-success');
-
-            if (window.innerWidth <= 768 && !sidebar.contains(event.target) && !toggleBtn) {
-                sidebar.classList.remove('show');
+        // Close Mobile Sidebar
+        function closeMobileSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('mobile-show');
+                mobileOverlay.classList.remove('show');
+                document.body.style.overflow = '';
             }
-        });
+        }
 
-        // Close sidebar on nav link click
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    document.getElementById('sidebar').classList.remove('show');
+        // Preserve sidebar state on reload
+        window.addEventListener('load', () => {
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                isCollapsed = true;
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+
+            // Detect responsive behavior
+            const resizeHandler = () => {
+                isMobile = window.innerWidth <= 768;
+                if (!isMobile) {
+                    sidebar.classList.remove('mobile-show');
+                    mobileOverlay.classList.remove('show');
                 }
-            });
+            };
+
+            window.addEventListener('resize', resizeHandler);
         });
     </script>
 </body>

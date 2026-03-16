@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,477 +8,979 @@
     <title>EduTrack | Teacher Panel</title>
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="<?php echo e(asset('bootstrap/css/bootstrap.min.css')); ?>">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <?php $theme = Auth::user()->theme ?? 'light'; ?>
+    <link rel="stylesheet" href="<?php echo e(asset('css/themes/' . $theme . '.css')); ?>">
 
     <style>
+        /* Modern Teacher Layout System */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --sidebar-bg: #1e293b;
+            --sidebar-text: #f1f5f9;
+            --sidebar-hover: #334155;
+            --sidebar-border: #475569;
+            --topbar-bg: #ffffff;
+            --topbar-border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 80px;
+            --topbar-height: 70px;
+        }
+
+        /* When the sidebar is collapsed, shrink the effective layout width consistently */
+        body.sidebar-collapsed {
+            --sidebar-width: var(--sidebar-collapsed-width);
+        }
+
         * {
-            box-sizing: border-box;
-        }
-
-        html {
-            height: 100%;
-            width: 100%;
-            overflow-x: hidden;
-        }
-
-        body {
-            height: 100%;
-            width: 100%;
-            overflow-x: hidden;
-            background-color: #f4f8fb;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* Method: body left padding reserves space so content CANNOT overlap sidebar */
-        body.teacher-panel {
-            padding-left: 260px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        body.teacher-panel.sidebar-collapsed {
-            padding-left: 80px;
-        }
-        @media (max-width: 768px) {
-            body.teacher-panel {
-                padding-left: 0;
-            }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
+        /* Layout Container */
+        .app-container {
+            display: block;
+            position: relative;
             min-height: 100vh;
-            background: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--white);
+            border-right: 1px solid var(--border-color);
             position: fixed;
-            left: 0;
             top: 0;
-            z-index: 1000;
-            overflow-y: auto;
-            box-shadow: 2px 0 15px rgba(102, 126, 234, 0.15);
-            transition: all 0.3s ease;
-            border-right: 1px solid #e8f0f8;
+            left: 0;
+            height: 100vh;
+            z-index: 1050;
+            transition: var(--transition);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
         }
 
         .sidebar.collapsed {
-            width: 80px;
+            width: var(--sidebar-collapsed-width);
+        }
+
+        /* Sidebar Header */
+        .sidebar-header {
+            height: var(--topbar-height);
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
         }
 
         .sidebar-brand {
-            padding: 20px;
-            border-bottom: 2px solid #e8f0f8;
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
+            gap: 0.75rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar-brand i {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            color: var(--primary-color);
         }
 
         .sidebar.collapsed .sidebar-brand span {
             display: none;
         }
 
-        .sidebar-menu {
-            list-style: none;
-            padding: 20px 0;
-            margin: 0;
+        .sidebar.collapsed .sidebar-brand {
+            justify-content: center;
         }
 
-        .sidebar-menu li {
-            margin: 0;
+        /* Sidebar Navigation */
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 1rem 0;
+            background: var(--white);
         }
 
-        .sidebar-menu a {
-            color: #667eea;
-            text-decoration: none;
-            padding: 12px 20px;
+        .sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+
+        .nav-item {
+            margin-bottom: 0.25rem;
+            padding: 0 0.75rem;
+        }
+
+        .nav-link {
             display: flex;
             align-items: center;
-            gap: 12px;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
             font-weight: 500;
+            font-size: 0.875rem;
+            transition: var(--transition);
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            border-radius: 8px;
         }
 
-        .sidebar-menu a:hover,
-        .sidebar-menu a.active {
-            color: #764ba2;
-            background-color: #f0f4ff;
-            border-left-color: #667eea;
+        .nav-link:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
         }
 
-        .sidebar-menu a i {
-            width: 20px;
+        .nav-link.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--white);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        }
+
+        .nav-link i {
+            font-size: 1.125rem;
+            width: 1.5rem;
             text-align: center;
+            flex-shrink: 0;
         }
 
-        .sidebar.collapsed .sidebar-menu a span {
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 0.875rem;
+            gap: 0;
+        }
+
+        .sidebar.collapsed .nav-link span {
             display: none;
         }
 
-        .main-wrapper {
-            margin-left: 0;
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
+        /* Main Content Area */
+        .main-content {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            transition: all 0.3s ease;
-            overflow-x: hidden;
             position: relative;
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            transition: margin-left var(--transition), width var(--transition);
         }
 
-        .main-wrapper.sidebar-collapsed .topbar {
-            left: 80px;
+        body.sidebar-collapsed .main-content {
+            margin-left: var(--sidebar-collapsed-width);
+            width: calc(100% - var(--sidebar-collapsed-width));
         }
 
+        /* Topbar */
         .topbar {
-            background: white;
+            height: var(--topbar-height);
+            background: var(--topbar-bg);
+            border-bottom: 1px solid var(--topbar-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
             position: fixed;
             top: 0;
-            left: 260px;
+            left: var(--sidebar-width);
             right: 0;
-            z-index: 1000;
-            border-bottom: 2px solid #e8f0f8;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
-            padding: 15px 20px;
+            z-index: 1040;
+            box-shadow: var(--shadow-sm);
+            transition: left var(--transition);
+        }
+
+        body.sidebar-collapsed .topbar {
+            left: var(--sidebar-collapsed-width);
+        }
+
+        /* Mobile overlaid sidebar */
+        .sidebar.mobile-show~.main-content .topbar {
+            left: 0;
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-toggle {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--white);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1.125rem;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+        }
+
+        .sidebar-toggle:hover {
+            background: linear-gradient(135deg, var(--primary-dark), #3730a3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .sidebar-toggle:active {
+            transform: translateY(0);
+        }
+
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        /* Topbar Actions */
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--danger-color);
+            color: var(--white);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.625rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--white);
+        }
+
+        /* Dropdowns */
+        .dropdown-menu-custom {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            padding: 0.5rem;
+            min-width: 200px;
+            background: var(--white);
+            animation: dropdownSlide 0.2s ease-out;
+        }
+
+        @keyframes dropdownSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item-custom {
+            padding: 0.625rem 1rem;
+            border-radius: 6px;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            transition: var(--transition);
+        }
+
+        .dropdown-item-custom:hover {
+            background: var(--light-bg);
+            color: var(--primary-color);
+        }
+
+        .dropdown-divider-custom {
+            height: 1px;
+            background: var(--border-color);
+            margin: 0.5rem 0;
+        }
+
+        /* Notifications Dropdown */
+        .notifications-dropdown {
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .notification-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--text-primary);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 15px;
         }
 
-        .content-wrapper {
-            padding: 20px;
-            padding-top: 80px;
-            flex: 1;
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            overflow-x: hidden;
-            overflow-y: auto;
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
             display: block;
         }
-        .content-wrapper > * {
+
+        .notification-item:hover {
+            background: var(--light-bg);
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-content {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .notification-text {
+            flex: 1;
             min-width: 0;
-            max-width: 100%;
         }
-        .content-wrapper .card {
-            max-width: 100%;
-            overflow: hidden;
+
+        .notification-title {
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+            line-height: 1.4;
         }
-        .content-wrapper .table-responsive {
-            max-width: 100%;
+
+        .notification-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Page Content */
+        .page-content {
+            flex: 1;
+            padding: 1.5rem;
+            padding-top: calc(var(--topbar-height) + 3.5rem) !important;
+            padding-bottom: 3rem !important;
+            min-height: calc(100vh - var(--topbar-height));
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: var(--light-bg);
             width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Grade Entry Table Container Fix */
+        .page-content .container-fluid {
+            max-width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+            overflow-x: auto;
+        }
+
+        .page-content .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            margin-left: 0;
+            margin-right: 0;
         }
 
-        .toggle-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: all 0.3s;
+        /* Ensure tables don't overflow */
+        .page-content table {
+            max-width: 100%;
         }
 
-        .toggle-btn:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        /* Mobile Overlay */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1045;
+            backdrop-filter: blur(2px);
         }
 
-        /* Responsive */
+        .mobile-overlay.show {
+            display: block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 260px;
+                --sidebar-collapsed-width: 70px;
+            }
+        }
+
         @media (max-width: 768px) {
             .sidebar {
-                width: 260px;
-                margin-left: -260px;
+                transform: translateX(-100%);
             }
 
-            .sidebar.show {
-                margin-left: 0;
+            .sidebar.mobile-show {
+                transform: translateX(0);
             }
 
-            .main-wrapper {
+            .main-content {
                 margin-left: 0;
             }
 
             .topbar {
                 left: 0;
-                padding: 10px 15px;
+                padding: 0 1rem;
             }
 
-            .content-wrapper {
-                padding: 15px;
-                padding-top: 70px;
+            .page-content {
+                padding: 1rem;
+                padding-top: calc(var(--topbar-height) + 1rem);
+            }
+
+            .notifications-dropdown {
+                width: min(350px, 90vw);
+            }
+
+            .page-title {
+                font-size: 1.125rem;
+            }
+
+            .sidebar-toggle {
+                display: flex;
             }
         }
 
-        /* Cards */
-        .stat-card {
-            border: none;
-            border-radius: 10px;
-            transition: all 0.3s;
+        @media (max-width: 480px) {
+            :root {
+                --topbar-height: 60px;
+            }
+
+            .topbar {
+                padding: 0 0.75rem;
+            }
+
+            .page-content {
+                padding: 0.75rem;
+                padding-top: calc(var(--topbar-height) + 0.75rem);
+            }
+
+            .sidebar-header {
+                padding: 0 1rem;
+            }
+
+            .sidebar-brand {
+                font-size: 1.125rem;
+            }
+
+            .action-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .notification-badge {
+                width: 16px;
+                height: 16px;
+                font-size: 0.5625rem;
+            }
         }
 
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            /* Add dark mode styles here if needed */
         }
 
-        .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        /* Print styles */
+        @media print {
+
+            .sidebar,
+            .topbar,
+            .mobile-overlay {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+            }
+
+            .page-content {
+                padding: 0 !important;
+            }
         }
 
-        footer {
-            background: white;
-            border-top: 1px solid #e5e9f0;
-            padding: 20px;
-            text-align: center;
-            color: #666;
-            margin-top: 40px;
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
-        /* KSA Grading System Colors */
-        .grade-badge {
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 0.9rem;
+        /* Focus styles */
+        *:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
         }
 
-        .grade-a {
-            background-color: #d4edda;
-            color: #155724;
+        button:focus,
+        a:focus {
+            outline-offset: 1px;
         }
 
-        .grade-b {
-            background-color: #cfe2ff;
-            color: #084298;
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+
+            .action-btn,
+            .sidebar-toggle {
+                border-width: 2px;
+            }
         }
 
-        .grade-c {
-            background-color: #fff3cd;
-            color: #664d03;
-        }
-
-        .grade-d {
-            background-color: #f8d7da;
-            color: #842029;
-        }
-
-        .grade-f {
-            background-color: #f8d7da;
-            color: #842029;
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
-
-    <!-- Theme CSS -->
-    <?php
-        $theme = Auth::user()->theme ?? 'light';
-    ?>
-    <link rel="stylesheet" href="<?php echo e(asset('css/themes/' . $theme . '.css')); ?>">
 </head>
 
-<body class="teacher-panel">
+<body>
+    <div class="app-container">
+        <!-- Mobile Overlay -->
+        <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileSidebar()"></div>
 
-    <div id="mainContainer" class="main-wrapper">
-        <!-- SIDEBAR -->
-        <div id="sidebar" class="sidebar">
-            <div class="sidebar-brand">
-                <i class="fas fa-chalkboard-user"></i>
-                <span>EduTrack</span>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <!-- Sidebar Header -->
+            <div class="sidebar-header">
+                <a href="<?php echo e(route('teacher.dashboard')); ?>" class="sidebar-brand">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>EduTrack</span>
+                </a>
             </div>
 
-            <ul class="sidebar-menu">
-                <li><a href="<?php echo e(route('teacher.dashboard')); ?>"
-                        class="<?php echo e(request()->routeIs('teacher.dashboard') ? 'active' : ''); ?>">
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar-nav">
+                <div class="nav-item">
+                    <a href="<?php echo e(route('teacher.dashboard')); ?>"
+                        class="nav-link <?php echo e(request()->routeIs('teacher.dashboard') ? 'active' : ''); ?>">
                         <i class="fas fa-home"></i>
                         <span>Dashboard</span>
-                    </a></li>
+                    </a>
+                </div>
 
-                <li><a href="<?php echo e(route('teacher.classes')); ?>"
-                        class="<?php echo e(request()->routeIs('teacher.classes*') ? 'active' : ''); ?>">
+                <div class="nav-item">
+                    <a href="<?php echo e(route('teacher.classes')); ?>"
+                        class="nav-link <?php echo e(request()->routeIs('teacher.classes*') ? 'active' : ''); ?>">
                         <i class="fas fa-door-open"></i>
                         <span>My Classes</span>
-                    </a></li>
+                    </a>
+                </div>
 
-                <li><a href="<?php echo e(route('teacher.subjects')); ?>"
-                        class="<?php echo e(request()->routeIs('teacher.subjects*') ? 'active' : ''); ?>">
+                <div class="nav-item">
+                    <a href="<?php echo e(route('teacher.subjects')); ?>"
+                        class="nav-link <?php echo e(request()->routeIs('teacher.subjects*') ? 'active' : ''); ?>">
                         <i class="fas fa-book"></i>
                         <span>My Subjects</span>
-                    </a></li>
+                    </a>
+                </div>
 
-                <li><a href="<?php echo e(route('teacher.grades')); ?>"
-                        class="<?php echo e(request()->routeIs('teacher.grades*') ? 'active' : ''); ?>">
+                <div class="nav-item">
+                    <a href="<?php echo e(route('teacher.grades')); ?>"
+                        class="nav-link <?php echo e(request()->routeIs('teacher.grades*') ? 'active' : ''); ?>">
                         <i class="fas fa-star"></i>
                         <span>Grades</span>
-                    </a></li>
+                    </a>
+                </div>
 
-                <li><a href="<?php echo e(route('teacher.attendance')); ?>"
-                        class="<?php echo e(request()->routeIs('teacher.attendance*') ? 'active' : ''); ?>">
+                <div class="nav-item">
+                    <a href="<?php echo e(route('teacher.attendance')); ?>"
+                        class="nav-link <?php echo e(request()->routeIs('teacher.attendance*') ? 'active' : ''); ?>">
                         <i class="fas fa-check-square"></i>
                         <span>Attendance</span>
-                    </a></li>
+                    </a>
+                </div>
 
-                <li><a href="<?php echo e(route('teacher.settings.index')); ?>"
-                        class="<?php echo e(request()->routeIs('teacher.settings*') ? 'active' : ''); ?>">
+                <div class="nav-item">
+                    <a href="<?php echo e(route('teacher.settings.index')); ?>"
+                        class="nav-link <?php echo e(request()->routeIs('teacher.settings*') ? 'active' : ''); ?>">
                         <i class="fas fa-cog"></i>
                         <span>Settings</span>
-                    </a></li>
-            </ul>
-        </div>
+                    </a>
+                </div>
+            </nav>
+        </aside>
 
-        <!-- TOP BAR -->
-        <nav class="topbar">
-            <div class="d-flex align-items-center gap-2">
-                <button class="toggle-btn" onclick="toggleSidebar()">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <span class="fw-bold d-none d-sm-inline">Teacher Dashboard</span>
-                <span class="fw-bold d-sm-none">EduTrack</span>
-            </div>
-
-            <div class="d-flex align-items-center gap-2 gap-md-3">
-                <!-- Notifications -->
-                <div class="dropdown">
-                    <?php
-                        $unreadCount = \App\Models\Notification::unreadCount(auth()->id());
-                        $notifications = \App\Models\Notification::where('user_id', auth()->id())
-                            ->orderBy('created_at', 'desc')
-                            ->limit(5)
-                            ->get();
-                    ?>
-                    <button class="btn btn-light position-relative" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-bell"></i>
-                        <?php if($unreadCount > 0): ?>
-                            <span
-                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                                style="font-size: 0.7rem;">
-                                <?php echo e($unreadCount > 9 ? '9+' : $unreadCount); ?>
-
-                            </span>
-                        <?php endif; ?>
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <!-- Sidebar Toggle -->
+                    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+                        <i class="fas fa-bars"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        style="width: 350px; max-height: 400px; overflow-y: auto;">
-                        <li>
-                            <h6 class="dropdown-header">Notifications</h6>
-                        </li>
-                        <?php $__empty_1 = true; $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notif): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <li>
-                                <a class="dropdown-item border-bottom py-2" href="<?php echo e($notif->action_url ?? '#'); ?>">
-                                    <div class="d-flex gap-2">
-                                        <span class="badge bg-<?php echo e($notif->type); ?> rounded-circle">
-                                            <i class="fas fa-<?php echo e($notif->icon ?? 'bell'); ?>"></i>
-                                        </span>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 <?php echo e($notif->isRead() ? 'text-muted' : 'fw-bold'); ?>">
-                                                <?php echo e($notif->title); ?>
 
-                                            </h6>
-                                            <small class="text-muted d-block"><?php echo e($notif->message); ?></small>
-                                            <small class="text-muted"><?php echo e($notif->created_at->diffForHumans()); ?></small>
+                    <!-- Page Title -->
+                    <h1 class="page-title">
+                        <?php if(request()->routeIs('teacher.dashboard')): ?>
+                            Dashboard
+                        <?php elseif(request()->routeIs('teacher.classes*')): ?>
+                            My Classes
+                        <?php elseif(request()->routeIs('teacher.grades*')): ?>
+                            Grades
+                        <?php elseif(request()->routeIs('teacher.attendance*')): ?>
+                            Attendance
+                        <?php elseif(request()->routeIs('teacher.subjects*')): ?>
+                            My Subjects
+                        <?php elseif(request()->routeIs('teacher.settings*')): ?>
+                            Settings
+                        <?php else: ?>
+                            EduTrack
+                        <?php endif; ?>
+                    </h1>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="topbar-actions">
+                        <!-- Notifications -->
+                        <?php
+                            $unreadCount = \App\Models\Notification::unreadCount(auth()->id());
+                            $notifications = \App\Models\Notification::where('user_id', auth()->id())
+                                ->orderBy('created_at', 'desc')
+                                ->limit(5)
+                                ->get();
+                        ?>
+                        <div class="dropdown">
+                            <button class="action-btn" data-bs-toggle="dropdown" aria-expanded="false"
+                                aria-label="Notifications">
+                                <i class="fas fa-bell"></i>
+                                <?php if($unreadCount > 0): ?>
+                                    <span
+                                        class="notification-badge"><?php echo e($unreadCount > 9 ? '9+' : $unreadCount); ?></span>
+                                <?php endif; ?>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end notifications-dropdown">
+                                <div class="notification-header">
+                                    <span>Notifications</span>
+                                    <?php if($unreadCount > 0): ?>
+                                        <small class="text-muted"><?php echo e($unreadCount); ?> unread</small>
+                                    <?php endif; ?>
+                                </div>
+                                <?php $__empty_1 = true; $__currentLoopData = $notifications; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $notification): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                    <a href="<?php echo e($notification->action_url ?? '#'); ?>" class="notification-item">
+                                        <div class="notification-content">
+                                            <?php
+                                                $bgColor = match ($notification->type ?? 'info') {
+                                                    'success' => '16, 185, 129',
+                                                    'warning' => '245, 158, 11',
+                                                    'danger' => '239, 68, 68',
+                                                    default => '79, 70, 229',
+                                                };
+                                                $textColor = match ($notification->type ?? 'info') {
+                                                    'success' => 'var(--success-color)',
+                                                    'warning' => 'var(--warning-color)',
+                                                    'danger' => 'var(--danger-color)',
+                                                    default => 'var(--primary-color)',
+                                                };
+                                            ?>
+                                            <div class="notification-icon"
+                                                style="background: rgba(<?php echo e($bgColor); ?>, 0.1); color: <?php echo e($textColor); ?>;">
+                                                <i class="fas fa-<?php echo e($notification->icon ?? 'bell'); ?>"></i>
+                                            </div>
+                                            <div class="notification-text">
+                                                <div
+                                                    class="notification-title <?php echo e($notification->isRead() ? 'text-muted' : ''); ?>">
+                                                    <?php echo e($notification->title); ?>
+
+                                                </div>
+                                                <div class="notification-meta">
+                                                    <?php echo e($notification->created_at->diffForHumans()); ?>
+
+                                                </div>
+                                            </div>
                                         </div>
+                                    </a>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                        <p class="mb-0">No notifications</p>
                                     </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Profile -->
+                        <div class="dropdown">
+                            <button class="action-btn" data-bs-toggle="dropdown" aria-expanded="false"
+                                aria-label="Profile menu">
+                                <i class="fas fa-user-circle"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-custom">
+                                <div class="px-3 py-2 border-bottom">
+                                    <div class="fw-semibold"><?php echo e(auth()->user()->name ?? 'Teacher'); ?></div>
+                                    <small
+                                        class="text-muted"><?php echo e(auth()->user()->email ?? 'teacher@edutrack.com'); ?></small>
+                                </div>
+                                <a href="<?php echo e(route('teacher.profile.show')); ?>" class="dropdown-item-custom">
+                                    <i class="fas fa-user"></i>
+                                    My Profile
                                 </a>
-                            </li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                            <li>
-                                <p class="dropdown-item text-center text-muted py-3">No notifications</p>
-                            </li>
-                        <?php endif; ?>
-                        <?php if(count($notifications) > 0): ?>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item text-center small" href="#">View All</a></li>
-                        <?php endif; ?>
-                    </ul>
+                                <a href="<?php echo e(route('teacher.profile.edit')); ?>" class="dropdown-item-custom">
+                                    <i class="fas fa-edit"></i>
+                                    Edit Profile
+                                </a>
+                                <a href="<?php echo e(route('teacher.profile.change-password')); ?>" class="dropdown-item-custom">
+                                    <i class="fas fa-key"></i>
+                                    Change Password
+                                </a>
+                                <a href="<?php echo e(route('teacher.settings.index')); ?>" class="dropdown-item-custom">
+                                    <i class="fas fa-cog"></i>
+                                    Settings
+                                </a>
+                                <div class="dropdown-divider-custom"></div>
+                                <a href="<?php echo e(route('logout')); ?>" class="dropdown-item-custom text-danger">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </header>
 
-                <!-- Profile -->
-                <div class="dropdown">
-                    <button class="btn btn-outline-primary dropdown-toggle btn-sm" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle me-1"></i>
-                        <span class="d-none d-sm-inline"><?php echo e(auth()->user()->name ?? 'Teacher'); ?></span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="<?php echo e(route('teacher.profile.show')); ?>">
-                                <i class="fas fa-user me-2"></i> My Profile
-                            </a></li>
-                        <li><a class="dropdown-item" href="<?php echo e(route('teacher.profile.edit')); ?>">
-                                <i class="fas fa-edit me-2"></i> Edit Profile
-                            </a></li>
-                        <li><a class="dropdown-item" href="<?php echo e(route('teacher.profile.change-password')); ?>">
-                                <i class="fas fa-key me-2"></i> Change Password
-                            </a></li>
-                        <li><a class="dropdown-item" href="<?php echo e(route('teacher.settings.index')); ?>">
-                                <i class="fas fa-cog me-2"></i> Settings
-                            </a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item text-danger" href="<?php echo e(route('logout')); ?>">
-                                <i class="fas fa-sign-out-alt me-2"></i> Logout
-                            </a></li>
-                    </ul>
-                </div>
+            <!-- Page Content -->
+            <div class="page-content">
+                <?php echo $__env->yieldContent('content'); ?>
             </div>
-        </nav>
-
-        <!-- PAGE CONTENT -->
-        <div class="content-wrapper">
-            <?php echo $__env->yieldContent('content'); ?>
-        </div>
-
-        <!-- FOOTER -->
-        <footer>
-            © <?php echo e(date('Y')); ?> EduTrack | Academic Management System
-        </footer>
-
+        </main>
     </div>
 
-    <script src="<?php echo e(asset('bootstrap/js/bootstrap.bundle.min.js')); ?>"></script>
-    <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContainer = document.getElementById('mainContainer');
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('show');
+    <script>
+        // Layout Management
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const mobileOverlay = document.getElementById('mobileOverlay');
+
+        let isCollapsed = false;
+        let isMobile = window.innerWidth <= 768;
+
+        // Toggle Sidebar
+        function toggleSidebar() {
+            if (isMobile) {
+                // Mobile: slide in/out
+                sidebar.classList.toggle('mobile-show');
+                mobileOverlay.classList.toggle('show');
+                document.body.style.overflow = sidebar.classList.contains('mobile-show') ? 'hidden' : '';
             } else {
+                // Desktop: collapse/expand
+                isCollapsed = !isCollapsed;
                 sidebar.classList.toggle('collapsed');
-                mainContainer.classList.toggle('sidebar-collapsed');
-                document.body.classList.toggle('sidebar-collapsed');
+                document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+                mainContent.classList.toggle('expanded');
+
+                // Save preference
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
             }
         }
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener('click', function(event) {
-            const sidebar = document.getElementById('sidebar');
-            const toggleBtn = event.target.closest('.toggle-btn');
+        // Close Mobile Sidebar
+        function closeMobileSidebar() {
+            if (isMobile) {
+                sidebar.classList.remove('mobile-show');
+                mobileOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
 
-            if (window.innerWidth <= 768 && !sidebar.contains(event.target) && !toggleBtn) {
-                sidebar.classList.remove('show');
+        // Check Mobile Status
+        function checkMobileStatus() {
+            isMobile = window.innerWidth <= 768;
+
+            if (!isMobile) {
+                // Reset mobile states when switching to desktop
+                sidebar.classList.remove('mobile-show');
+                mobileOverlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Initialize Sidebar State
+        function initializeSidebar() {
+            const savedCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            if (savedCollapsed && !isMobile) {
+                isCollapsed = true;
+                sidebar.classList.add('collapsed');
+                document.body.classList.add('sidebar-collapsed');
+                mainContent.classList.add('expanded');
+            }
+        }
+
+        // Handle Navigation Links (Mobile)
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobile) {
+                    closeMobileSidebar();
+                }
+            });
+        });
+
+        // Window Resize Handler
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                checkMobileStatus();
+            }, 250);
+        });
+
+        // Initialize on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkMobileStatus();
+            initializeSidebar();
+        });
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + B to toggle sidebar
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+
+            // Escape to close mobile sidebar
+            if (e.key === 'Escape' && isMobile) {
+                closeMobileSidebar();
             }
         });
 
-        // Close sidebar on nav link click
-        document.querySelectorAll('.sidebar a').forEach(link => {
-            link.addEventListener('click', function() {
-                if (window.innerWidth <= 768) {
-                    document.getElementById('sidebar').classList.remove('show');
-                }
+        // Mark notifications as read when viewed
+        document.querySelectorAll('.notification-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Add AJAX call to mark as read if needed
+                console.log('Notification clicked');
+            });
+        });
+
+        // Prevent dropdown close on click inside
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.addEventListener('click', (e) => {
+                e.stopPropagation();
             });
         });
     </script>

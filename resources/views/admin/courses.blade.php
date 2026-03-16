@@ -1,18 +1,118 @@
 @extends('layouts.admin')
 
 @section('content')
+    <style>
+        /* Modern Page Header */
+        .page-header-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+            color: white;
+        }
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold mb-1">
-                        <i class="fas fa-university me-2" style="color: #27ae60;"></i>Academic Programs
-                    </h2>
-                    <p class="text-muted">Manage degree programs and their academic departments</p>
+        .page-header-modern .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .page-header-modern .header-title {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header-modern .header-subtitle {
+            margin: 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .page-header-modern .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-modern {
+            padding: 0.65rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-modern-white {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-modern-white:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .page-header-modern {
+                padding: 1.5rem;
+            }
+
+            .page-header-modern .header-title {
+                font-size: 1.5rem;
+            }
+
+            .page-header-modern .header-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+
+    <!-- Modern Page Header -->
+    <div class="page-header-modern">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-university"></i>
                 </div>
-                <a href="{{ route('admin.courses.create') }}" class="btn btn-success">
-                    <i class="fas fa-plus me-2"></i> Add New Program
+                <div>
+                    <h1 class="header-title">Academic Programs</h1>
+                    <p class="header-subtitle">Manage degree programs and their academic departments</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{{ route('admin.courses.create') }}" class="btn btn-modern btn-modern-white">
+                    <i class="fas fa-plus"></i> Add New Program
                 </a>
             </div>
         </div>

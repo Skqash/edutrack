@@ -81,7 +81,7 @@
                     </thead>
                     <tbody>
                         <?php $__empty_1 = true; $__currentLoopData = $classes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <tr>
+                            <tr data-class-id="<?php echo e($class->id); ?>">
                                 <td><strong><?php echo e($class->class_name); ?></strong></td>
                                 <td><span class="badge bg-light text-dark"><?php echo e($class->class_level); ?></span></td>
                                 <td><?php echo e($class->section); ?></td>
@@ -94,15 +94,24 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="<?php echo e(route('admin.classes.edit', $class->id)); ?>"
-                                        class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                    <form action="<?php echo e(route('admin.classes.destroy', $class->id)); ?>" method="POST"
-                                        style="display:inline;">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
-                                    </form>
+                                    <div class="btn-group" role="group">
+                                        <a href="<?php echo e(route('admin.classes.edit', $class->id)); ?>"
+                                            class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
+                                        <a href="<?php echo e(route('admin.classes.show', $class->id)); ?>"
+                                            class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a>
+                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                            onclick="openStudentModal(<?php echo e($class->id); ?>, '<?php echo e($class->class_name); ?>')">
+                                            <i class="fas fa-user-plus"></i> Add Students
+                                        </button>
+                                        <form action="<?php echo e(route('admin.classes.destroy', $class->id)); ?>" method="POST"
+                                            style="display:inline;">
+                                            <?php echo csrf_field(); ?>
+                                            <?php echo method_field('DELETE'); ?>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Are you sure?')"><i
+                                                    class="fas fa-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -117,6 +126,12 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <?php echo $__env->make('admin.classes.partials.student-assignment-modal', [
+        'courses' => $courses,
+        'departments' => $departments,
+    ], \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.admin', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/admin/classes.blade.php ENDPATH**/ ?>

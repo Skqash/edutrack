@@ -1,23 +1,133 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+    <style>
+        /* Modern Page Header */
+        .page-header-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+            color: white;
+        }
+
+        .page-header-modern .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .page-header-modern .header-title {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header-modern .header-subtitle {
+            margin: 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .page-header-modern .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-modern {
+            padding: 0.65rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-modern-white {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-modern-white:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-modern-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-modern-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
+        @media (max-width: 768px) {
+            .page-header-modern {
+                padding: 1.5rem;
+            }
+
+            .page-header-modern .header-title {
+                font-size: 1.5rem;
+            }
+
+            .page-header-modern .header-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+
+    <!-- Modern Page Header -->
+    <div class="page-header-modern">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-book-open"></i>
+                </div>
                 <div>
-                    <h2 class="fw-bold mb-1">
-                        <i class="fas fa-book-open me-2" style="color: #6c757d;"></i>Subject Management
-                    </h2>
-                    <p class="text-muted">Manage subjects across all degree programs and departments</p>
+                    <h1 class="header-title">Subject Management</h1>
+                    <p class="header-subtitle">Manage subjects across all degree programs and departments</p>
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-danger" onclick="syncAllSubjects()" title="Sync all subjects with their courses">
-                        <i class="fas fa-sync me-2"></i>Sync Subjects
-                    </button>
-                    <a href="{{ route('admin.subjects.create') }}" class="btn btn-danger">
-                        <i class="fas fa-plus me-2"></i> Add New Subject
-                    </a>
-                </div>
+            </div>
+            <div class="header-actions">
+                <button type="button" class="btn btn-modern btn-modern-outline" onclick="syncAllSubjects()" title="Sync all subjects with their courses">
+                    <i class="fas fa-sync"></i>Sync Subjects
+                </button>
+                <a href="{{ route('admin.subjects.create') }}" class="btn btn-modern btn-modern-white">
+                    <i class="fas fa-plus"></i> Add New Subject
+                </a>
             </div>
         </div>
     </div>

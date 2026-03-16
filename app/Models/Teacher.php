@@ -16,6 +16,8 @@ class Teacher extends Model
         'user_id',
         'employee_id',
         'qualification',
+        'connected_school',
+        'campus',
         'bio',
         'specialization',
         'department',

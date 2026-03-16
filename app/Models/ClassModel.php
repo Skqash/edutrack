@@ -18,6 +18,7 @@ class ClassModel extends Model
         'level',
         'section',
         'year',
+        'academic_year',
         'capacity',
         'teacher_id',
         'course_id',

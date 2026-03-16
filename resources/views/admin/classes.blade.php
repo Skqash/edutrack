@@ -1,15 +1,118 @@
 @extends('layouts.admin')
 
 @section('content')
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h2 class="fw-bold mb-1">Classes Management</h2>
-                    <p class="text-muted">Manage all classes and organize students by class sections</p>
+    <style>
+        /* Modern Page Header */
+        .page-header-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+            color: white;
+        }
+
+        .page-header-modern .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .page-header-modern .header-title {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header-modern .header-subtitle {
+            margin: 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .page-header-modern .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-modern {
+            padding: 0.65rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-modern-white {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-modern-white:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .page-header-modern {
+                padding: 1.5rem;
+            }
+
+            .page-header-modern .header-title {
+                font-size: 1.5rem;
+            }
+
+            .page-header-modern .header-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+
+    <!-- Modern Page Header -->
+    <div class="page-header-modern">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-school"></i>
                 </div>
-                <a href="{{ route('admin.classes.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i> Add New Class
+                <div>
+                    <h1 class="header-title">Classes Management</h1>
+                    <p class="header-subtitle">Manage all classes and organize students by class sections</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{{ route('admin.classes.create') }}" class="btn btn-modern btn-modern-white">
+                    <i class="fas fa-plus"></i> Add New Class
                 </a>
             </div>
         </div>
@@ -83,7 +186,7 @@
                     </thead>
                     <tbody>
                         @forelse($classes as $class)
-                            <tr>
+                            <tr data-class-id="{{ $class->id }}">
                                 <td><strong>{{ $class->class_name }}</strong></td>
                                 <td><span class="badge bg-light text-dark">{{ $class->class_level }}</span></td>
                                 <td>{{ $class->section }}</td>
@@ -101,8 +204,8 @@
                                             class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
                                         <a href="{{ route('admin.classes.show', $class->id) }}"
                                             class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a>
-                                        <button type="button" class="btn btn-sm btn-outline-success" 
-                                                onclick="openStudentModal({{ $class->id }}, '{{ $class->class_name }}')">
+                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                            onclick="openStudentModal({{ $class->id }}, '{{ $class->class_name }}')">
                                             <i class="fas fa-user-plus"></i> Add Students
                                         </button>
                                         <form action="{{ route('admin.classes.destroy', $class->id) }}" method="POST"
@@ -110,7 +213,8 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Are you sure?')"><i class="fas fa-trash"></i></button>
+                                                onclick="return confirm('Are you sure?')"><i
+                                                    class="fas fa-trash"></i></button>
                                         </form>
                                     </div>
                                 </td>
@@ -127,336 +231,10 @@
             </div>
         </div>
     </div>
-</div>
-
-<!-- Student Assignment Modal -->
-<div class="modal fade" id="studentAssignmentModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-user-graduate me-2"></i>
-                    Add Students to <span id="modalClassName"></span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i>
-                    Select students to enroll in <strong id="modalClassName"></strong>. You can filter by course, year, department, or search by name/student ID.
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="form-group mb-3">
-                            <label for="modal_course_filter" class="form-label">Course</label>
-                            <select id="modal_course_filter" class="form-select form-select-sm">
-                                <option value="">All Courses</option>
-                                @foreach($courses as $course)
-                                    <option value="{{ $course->id }}" data-department="{{ $course->department }}">{{ $course->program_code }} - {{ $course->program_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-3">
-                            <label for="modal_year_filter" class="form-label">Year</label>
-                            <select id="modal_year_filter" class="form-select form-select-sm">
-                                <option value="">All Years</option>
-                                <option value="1">1st Year</option>
-                                <option value="2">2nd Year</option>
-                                <option value="3">3rd Year</option>
-                                <option value="4">4th Year</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-3">
-                            <label for="modal_department_filter" class="form-label">Department</label>
-                            <select id="modal_department_filter" class="form-select form-select-sm">
-                                <option value="">All Departments</option>
-                                @foreach($departments as $department)
-                                    <option value="{{ $department }}">{{ $department }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-3">
-                            <label for="modal_student_search" class="form-label">Search</label>
-                            <input type="text" id="modal_student_search" class="form-control form-control-sm" placeholder="Search students...">
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label mb-0">
-                                <strong>Available Students</strong>
-                                <span class="badge bg-secondary ms-2" id="modalAvailableCount">0</span>
-                            </label>
-                            <div>
-                                <button type="button" class="btn btn-sm btn-outline-primary" id="modalSelectAllAvailable">Select All</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" id="modalDeselectAllAvailable">Clear</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label mb-0">
-                                <strong>Selected Students</strong>
-                                <span class="badge bg-success ms-2" id="modalSelectedCount">0</span>
-                            </label>
-                            <div>
-                                <button type="button" class="btn btn-sm btn-outline-success" id="modalSelectAllSelected">Select All</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" id="modalDeselectAllSelected">Clear</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="border rounded p-2" style="height: 200px; overflow-y: auto;">
-                    <div class="text-center text-muted">
-                        <i class="fas fa-spinner fa-spin"></i> Loading students...
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="saveStudentAssignments">
-                    <i class="fas fa-save me-2"></i> Save Assignments
-                </button>
-            </div>
-        </div>
     </div>
-</div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let currentClassId = null;
-    let allStudents = [];
-    let selectedStudents = new Set();
-    let studentAssignments = {};
-    
-    // Modal elements
-    const studentModal = document.getElementById('studentAssignmentModal');
-    const modalClassName = document.getElementById('modalClassName');
-    const modalCourseFilter = document.getElementById('modal_course_filter');
-    const modalYearFilter = document.getElementById('modal_year_filter');
-    const modalDepartmentFilter = document.getElementById('modal_department_filter');
-    const modalStudentSearch = document.getElementById('modal_student_search');
-    const modalAvailableDiv = document.getElementById('availableStudents');
-    const modalSelectedDiv = document.getElementById('selectedStudents');
-    const modalAvailableCount = document.getElementById('modalAvailableCount');
-    const modalSelectedCount = document.getElementById('modalSelectedCount');
-    const saveButton = document.getElementById('saveStudentAssignments');
-    
-    // Open student modal function
-    window.openStudentModal = function(classId, className) {
-        currentClassId = classId;
-        modalClassName.textContent = className;
-        studentModal.classList.add('show');
-        document.body.classList.add('modal-open');
-        
-        // Load students for this class
-        loadModalStudents(classId);
-    };
-    
-    // Load students for modal
-    function loadModalStudents(classId) {
-        fetch('/admin/classes/get-students', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                class_id: classId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            allStudents = data.students || [];
-            renderModalAvailableStudents();
-            renderModalSelectedStudents();
-        })
-        .catch(error => {
-            console.error('Error loading students:', error);
-            modalAvailableDiv.innerHTML = '<div class="text-center text-danger">Error loading students</div>';
-        });
-    }
-    
-    // Render available students in modal
-    function renderModalAvailableStudents() {
-        const filteredStudents = filterModalStudents();
-        const availableStudents = filteredStudents.filter(student => !selectedStudents.has(student.id));
-        
-        modalAvailableCount.textContent = availableStudents.length;
-        
-        if (availableStudents.length === 0) {
-            modalAvailableDiv.innerHTML = '<div class="text-center text-muted">No available students</div>';
-            return;
-        }
-        
-        let html = '';
-        availableStudents.forEach(student => {
-            html += `
-                <div class="student-item d-flex align-items-center p-2 border-bottom hover-bg-light">
-                    <input type="checkbox" class="form-check-input me-2" value="${student.id}" 
-                           onchange="toggleModalStudent(${student.id})">
-                    <div class="flex-grow-1">
-                        <div class="fw-bold">${student.name}</div>
-                        <small class="text-muted">
-                            ${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}
-                        </small>
-                    </div>
-                </div>
-            `;
-        });
-        
-        modalAvailableDiv.innerHTML = html;
-    }
-    
-    // Render selected students in modal
-    function renderModalSelectedStudents() {
-        const selectedStudentsList = Array.from(selectedStudents);
-        
-        if (selectedStudentsList.length === 0) {
-            modalSelectedDiv.innerHTML = '<div class="text-center text-muted">No students selected</div>';
-            return;
-        }
-        
-        let html = '';
-        selectedStudentsList.forEach(student => {
-            html += `
-                <div class="student-item d-flex align-items-center p-2 border-bottom">
-                    <input type="checkbox" class="form-check-input me-2" checked value="${student.id}" 
-                           onchange="toggleModalStudent(${student.id})">
-                    <div class="flex-grow-1">
-                        <div class="fw-bold">${student.name}</div>
-                        <small class="text-muted">
-                            ${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}
-                        </small>
-                    </div>
-                </div>
-            `;
-        });
-        
-        modalSelectedDiv.innerHTML = html;
-    }
-    
-    // Toggle student selection in modal
-    function toggleModalStudent(studentId) {
-        if (selectedStudents.has(studentId)) {
-            selectedStudents.delete(studentId);
-        } else {
-            selectedStudents.add(studentId);
-        }
-        renderModalAvailableStudents();
-        renderModalSelectedStudents();
-    }
-    
-    // Filter students for modal
-    function filterModalStudents() {
-        return allStudents.filter(student => {
-            if (modalCourseFilter.value && student.course_id != modalCourseFilter.value) return false;
-            if (modalYearFilter.value && student.year != modalYearFilter.value) return false;
-            if (modalDepartmentFilter.value && student.department != modalDepartmentFilter.value) return false;
-            if (modalStudentSearch.value) {
-                const search = modalStudentSearch.value.toLowerCase();
-                return student.name.toLowerCase().includes(search) || 
-                       student.student_id.toLowerCase().includes(search);
-            }
-            return true;
-        });
-    }
-    
-    // Modal event listeners
-    modalCourseFilter.addEventListener('change', loadModalStudents);
-    modalYearFilter.addEventListener('change', loadModalStudents);
-    modalDepartmentFilter.addEventListener('change', loadModalStudents);
-    modalStudentSearch.addEventListener('input', debounce(loadModalStudents, 300));
-    
-    // Select/Clear buttons for modal
-    document.getElementById('modalSelectAllAvailable').addEventListener('click', function() {
-        const checkboxes = modalAvailableDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = true);
-        renderModalSelectedStudents();
-    });
-    
-    document.getElementById('modalDeselectAllAvailable').addEventListener('click', function() {
-        const checkboxes = modalAvailableDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = false);
-        renderModalSelectedStudents();
-    });
-    
-    // Save student assignments
-    saveButton.addEventListener('click', function() {
-        const selectedStudentIds = Array.from(selectedStudents);
-        
-        if (selectedStudentIds.length === 0) {
-            alert('Please select at least one student to assign.');
-            return;
-        }
-        
-        // Save assignments to database
-        fetch('/admin/classes/assign-students', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                class_id: currentClassId,
-                student_ids: selectedStudentIds
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update student assignments count in table
-                updateStudentCount(currentClassId, selectedStudentIds.length);
-                
-                // Close modal
-                studentModal.classList.remove('show');
-                document.body.classList.remove('modal-open');
-                
-                // Show success message
-                alert(`Successfully assigned ${selectedStudentIds.length} students to ${modalClassName.textContent}`);
-            } else {
-                alert('Error assigning students: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error assigning students:', error);
-            alert('Error assigning students. Please try again.');
-        });
-    });
-    
-    // Update student count in table
-    function updateStudentCount(classId, count) {
-        const countElements = document.querySelectorAll(`[data-class-id="${classId}"] .badge-info`);
-        if (countElements.length > 0) {
-            countElements.forEach(el => el.textContent = count);
-        }
-    }
-    
-    // Debounce function
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-            clearTimeout(timeout);
-            return later();
-        };
-    }
-});
-</script>
-
+    @include('admin.classes.partials.student-assignment-modal', [
+        'courses' => $courses,
+        'departments' => $departments,
+    ])
 @endsection

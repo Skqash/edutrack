@@ -11,10 +11,12 @@ use App\Models\GradeEntry;
 use App\Models\Student;
 use App\Models\StudentAttendance;
 use App\Models\Subject;
-use App\Models\Teacher;
+use App\Models\TeacherAssignment;
+use App\Models\SchoolRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TeacherController extends Controller
@@ -97,6 +99,12 @@ class TeacherController extends Controller
         // Get teacher's courses (unique from their classes)
         $myCourses = Course::whereIn('id', $myClasses->pluck('course_id')->unique())->get();
 
+        // Latest school request that has been approved or rejected (for dashboard alert)
+        $latestSchoolRequest = SchoolRequest::where('user_id', $teacherId)
+            ->whereIn('status', ['approved', 'rejected'])
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
         return view('teacher.dashboard', compact(
             'myClasses',
             'totalStudents',
@@ -104,7 +112,8 @@ class TeacherController extends Controller
             'pendingTasks',
             'recentGrades',
             'myCourses',
-            'assignedSubjects'
+            'assignedSubjects',
+            'latestSchoolRequest'
         ));
     }
 
@@ -114,11 +123,15 @@ class TeacherController extends Controller
     public function classes()
     {
         $teacherId = Auth::id();
+
         $classes = ClassModel::where('teacher_id', $teacherId)
-            ->with('students')
+            ->with('students', 'course')
             ->paginate(10);
 
-        return view('teacher.classes.index', compact('classes'));
+        // Provide course list for filtering (all courses in the system)
+        $courses = Course::orderBy('course_name')->get();
+
+        return view('teacher.classes.index', compact('classes', 'courses'));
     }
 
     /**
@@ -170,6 +183,65 @@ class TeacherController extends Controller
     }
 
     /**
+     * Request a subject from admin
+     */
+    public function requestSubject(Request $request)
+    {
+        $validated = $request->validate([
+            'subject_name' => 'required|string|max:255',
+            'subject_code' => 'nullable|string|max:50',
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $teacherId = Auth::id();
+        $teacher = User::find($teacherId);
+
+        // Create a notification for admin
+        \App\Models\Notification::create([
+            'user_id' => 1, // Assuming admin user ID is 1, adjust as needed
+            'title' => 'Subject Request from ' . $teacher->name,
+            'message' => "Teacher {$teacher->name} has requested to be assigned: {$validated['subject_name']}" . 
+                        ($validated['subject_code'] ? " ({$validated['subject_code']})" : '') . 
+                        ". Reason: {$validated['reason']}",
+            'type' => 'info',
+            'icon' => 'paper-plane',
+            'action_url' => route('admin.teachers.subjects', $teacherId),
+        ]);
+
+        return redirect()->route('teacher.subjects')->with('success', 'Subject request sent to admin successfully!');
+    }
+
+    /**
+     * Create a new subject (for independent teachers)
+     */
+    public function createSubject(Request $request)
+    {
+        $validated = $request->validate([
+            'subject_name' => 'required|string|max:255',
+            'subject_code' => 'required|string|max:50|unique:subjects,subject_code',
+            'credit_hours' => 'required|integer|min:1|max:6',
+            'category' => 'nullable|string|max:100',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $teacherId = Auth::id();
+
+        // Create the subject
+        $subject = \App\Models\Subject::create([
+            'subject_name' => $validated['subject_name'],
+            'subject_code' => $validated['subject_code'],
+            'credit_hours' => $validated['credit_hours'],
+            'category' => $validated['category'] ?? 'General',
+            'description' => $validated['description'],
+            'program' => 'Independent',
+            'type' => 'Core',
+            'instructor_id' => $teacherId,
+        ]);
+
+        return redirect()->route('teacher.subjects')->with('success', 'Subject created successfully! You can now create classes for this subject.');
+    }
+
+    /**
      * Show class details with students
      */
     public function classDetail($classId)
@@ -184,23 +256,20 @@ class TeacherController extends Controller
     }
 
     /**
-     * Show grades page
+     * Show teacher grade dashboard (midterm/final entry + summary)
      */
     public function grades()
     {
         $teacherId = Auth::id();
+
         $classes = ClassModel::where('teacher_id', $teacherId)
-            ->with('students')
-            ->get();
+            ->with('students', 'course')
+            ->paginate(10);
 
-        $recentGrades = Grade::where('teacher_id', $teacherId)
-            ->with('student', 'class')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+        // Provide course list for filtering (all courses in the system)
+        $courses = Course::orderBy('course_name')->get();
 
-        // Redirect to grades dashboard or list of classes
-        return redirect()->route('teacher.classes');
+        return view('teacher.grades.index', compact('classes', 'courses'));
     }
 
     /**
@@ -233,25 +302,9 @@ class TeacherController extends Controller
      */
     public function showGradeEntryUnified($classId, $term = 'midterm')
     {
-        $teacherId = Auth::id();
-        $class = ClassModel::where('teacher_id', $teacherId)
-            ->with('students.user', 'course')
-            ->findOrFail($classId);
-
-        $students = $class->students()->with('user')->get();
-
-        // Get assessment ranges
-        $range = AssessmentRange::where('class_id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->first();
-
-        // Get existing grades
-        $grades = Grade::where('class_id', $classId)
-            ->where('term', $term)
-            ->get()
-            ->keyBy('student_id');
-
-        return view('teacher.grades.entry_unified', compact('class', 'students', 'term', 'range', 'grades'));
+        // This method has been deprecated - redirecting to the main grade entry
+        return redirect()->route('teacher.grades.entry', ['classId' => $classId, 'term' => $term])
+            ->with('info', 'Using the standard grade entry form.');
     }
 
     /**
@@ -369,27 +422,39 @@ class TeacherController extends Controller
         }
 
         $validated = $request->validate([
-            'attendance' => 'required|array',
-            'attendance.*.status' => 'required|in:Present,Absent,Late,Leave',
             'date' => 'required|date',
         ]);
 
         $date = $validated['date'];
+        $attendanceData = $request->input('attendance', []);
 
-        foreach ($validated['attendance'] as $studentId => $data) {
+        if (empty($attendanceData)) {
+            return redirect()->back()->with('error', 'No attendance data submitted. Please mark at least one student.');
+        }
+
+        $saved = 0;
+        foreach ($attendanceData as $studentId => $data) {
+            $status = $data['status'] ?? null;
+            if (!$status || !in_array($status, ['Present', 'Absent', 'Late', 'Leave'])) {
+                continue;
+            }
+
             Attendance::updateOrCreate(
                 [
                     'student_id' => $studentId,
-                    'class_id' => $classId,
-                    'date' => $date,
+                    'class_id'   => $classId,
+                    'date'       => $date,
                 ],
-                [
-                    'status' => $data['status'],
-                ]
+                ['status' => $status]
             );
+            $saved++;
         }
 
-        return redirect()->back()->with('success', 'Attendance recorded successfully');
+        if ($saved === 0) {
+            return redirect()->back()->with('error', 'No valid attendance records were saved.');
+        }
+
+        return redirect()->back()->with('success', "Attendance saved for {$saved} student(s) on {$date}.");
     }
 
     /**
@@ -630,8 +695,15 @@ class TeacherController extends Controller
                     continue;
                 }
 
-                // Update student's class assignment
-                $student->update(['class_id' => $classId]);
+                // Update student's class assignment + school/department metadata
+                $studentUpdate = ['class_id' => $classId];
+                if (!empty($class->course->college)) {
+                    $studentUpdate['school'] = $class->course->college;
+                }
+                if (!empty($class->course->department)) {
+                    $studentUpdate['department'] = $class->course->department;
+                }
+                $student->update($studentUpdate);
                 $addedCount++;
 
             } catch (\Exception $e) {
@@ -663,25 +735,9 @@ class TeacherController extends Controller
      */
     public function showGradeEntryChed($classId, $term = 'midterm')
     {
-        $teacherId = Auth::id();
-        $class = ClassModel::where('teacher_id', $teacherId)
-            ->with('students.user')
-            ->findOrFail($classId);
-
-        $students = $class->students()->with('user')->get();
-
-        // Get assessment ranges
-        $range = AssessmentRange::where('class_id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->first();
-
-        // Get existing grades
-        $grades = Grade::where('class_id', $classId)
-            ->where('term', $term)
-            ->get()
-            ->keyBy('student_id');
-
-        return view('teacher.grades.entry_ched', compact('class', 'students', 'term', 'range', 'grades'));
+        // This method has been deprecated - redirecting to the main grade entry
+        return redirect()->route('teacher.grades.entry', ['classId' => $classId, 'term' => $term])
+            ->with('info', 'Using the standard grade entry form.');
     }
 
     /**
@@ -757,6 +813,7 @@ class TeacherController extends Controller
                 // Knowledge Component
                 $data['exam_pr'] = floatval($gradeData['exam_pr'] ?? 0);
                 $data['exam_md'] = floatval($gradeData['exam_md'] ?? 0);
+                $data['exam_fn'] = floatval($gradeData['exam_fn'] ?? 0);
                 $data['quiz_1'] = floatval($gradeData['quiz_1'] ?? 0);
                 $data['quiz_2'] = floatval($gradeData['quiz_2'] ?? 0);
                 $data['quiz_3'] = floatval($gradeData['quiz_3'] ?? 0);
@@ -781,6 +838,9 @@ class TeacherController extends Controller
                 $data['behavior_1'] = floatval($gradeData['behavior_1'] ?? 0);
                 $data['behavior_2'] = floatval($gradeData['behavior_2'] ?? 0);
                 $data['behavior_3'] = floatval($gradeData['behavior_3'] ?? 0);
+                $data['attendance_1'] = floatval($gradeData['attendance_1'] ?? 0);
+                $data['attendance_2'] = floatval($gradeData['attendance_2'] ?? 0);
+                $data['attendance_3'] = floatval($gradeData['attendance_3'] ?? 0);
                 $data['awareness_1'] = floatval($gradeData['awareness_1'] ?? 0);
                 $data['awareness_2'] = floatval($gradeData['awareness_2'] ?? 0);
                 $data['awareness_3'] = floatval($gradeData['awareness_3'] ?? 0);
@@ -1551,39 +1611,9 @@ class TeacherController extends Controller
      */
     public function showGradeEntryEnhanced($classId, $term = 'midterm')
     {
-        $teacherId = Auth::id();
-        $class = ClassModel::where('id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->with('students.user', 'course')
-            ->firstOrFail();
-
-        // Get assessment ranges
-        $range = AssessmentRange::where('class_id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->first();
-
-        // Get existing grades
-        $grades = Grade::where('class_id', $classId)
-            ->where('term', $term)
-            ->get()
-            ->keyBy('student_id');
-
-        // Get attendance records
-        $attendance = StudentAttendance::where('class_id', $classId)
-            ->where('term', $term)
-            ->get()
-            ->keyBy('student_id');
-
-        $students = $class->students()->with('user')->get();
-
-        return view('teacher.grades.entry_updated', compact(
-            'class',
-            'students',
-            'term',
-            'range',
-            'grades',
-            'attendance'
-        ));
+        // This method has been deprecated - redirecting to the main grade entry
+        return redirect()->route('teacher.grades.entry', ['classId' => $classId, 'term' => $term])
+            ->with('info', 'Using the standard grade entry form.');
     }
 
     /**
@@ -1751,19 +1781,9 @@ class TeacherController extends Controller
      */
     public function showGradeEntryInline($classId)
     {
-        $teacherId = Auth::id();
-        $class = ClassModel::where('id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->with('students.user', 'course')
-            ->firstOrFail();
-
-        $range = AssessmentRange::where('class_id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->first();
-
-        $grades = Grade::where('class_id', $classId)->get();
-
-        return view('teacher.grades.entry_inline', compact('class', 'range', 'grades'));
+        // This method has been deprecated - redirecting to the main grade entry
+        return redirect()->route('teacher.grades.entry', ['classId' => $classId])
+            ->with('info', 'Using the standard grade entry form.');
     }
 
     /**
@@ -1942,9 +1962,9 @@ class TeacherController extends Controller
             'subject_id' => 'required|exists:subjects,id',
             'section' => 'required|string|in:A,B,C,D,E',
             'year' => 'required|integer|in:1,2,3,4',
+            'academic_year' => 'required|string',
             'capacity' => 'required|integer|min:1|max:100',
             'description' => 'nullable|string|max:500',
-            'academic_year' => 'required|string',
             'semester' => 'required|string|in:First,Second,Summer',
             'auto_assign' => 'boolean',
             'create_assignment' => 'boolean',
@@ -1963,6 +1983,7 @@ class TeacherController extends Controller
             'teacher_id' => Auth::id(),
             'section' => $validated['section'],
             'year' => $validated['year'] ?? null,
+            'academic_year' => $validated['academic_year'] ?? null,
             'capacity' => $validated['capacity'],
             'class_level' => (int) $validated['year'],
             'description' => $validated['description'] ?? null,
@@ -1971,11 +1992,13 @@ class TeacherController extends Controller
 
         // Create teacher assignments if requested
         $teacherId = Auth::id();
-        $course = \App\Models\Course::find($validated['course_id']);
+        $course = Course::find($validated['course_id']);
 
-        // Auto-assign the creating teacher
+        $assignmentIds = [];
+
+        // Auto-assign the creating teacher to the class
         if ($request->boolean('auto_assign')) {
-            \App\Models\TeacherAssignment::create([
+            $assignment = TeacherAssignment::create([
                 'teacher_id' => $teacherId,
                 'class_id' => $class->id,
                 'subject_id' => $validated['subject_id'],
@@ -1986,12 +2009,14 @@ class TeacherController extends Controller
                 'status' => 'active',
                 'notes' => 'Auto-assigned when creating class',
             ]);
+
+            $assignmentIds[] = $assignment->id;
         }
 
         // Create additional assignments if requested
         if ($request->boolean('create_assignment') && $request->filled('additional_teachers')) {
             foreach ($request->additional_teachers as $additionalTeacherId) {
-                \App\Models\TeacherAssignment::create([
+                $assignment = TeacherAssignment::create([
                     'teacher_id' => $additionalTeacherId,
                     'class_id' => $class->id,
                     'subject_id' => $validated['subject_id'],
@@ -2002,37 +2027,51 @@ class TeacherController extends Controller
                     'status' => 'active',
                     'notes' => 'Assigned by '.Auth::user()->name,
                 ]);
+
+                $assignmentIds[] = $assignment->id;
             }
         }
 
         // Assign students to class if provided
-        if ($request->filled('assigned_students')) {
-            $studentIds = explode(',', $request->assigned_students);
+        if ($request->has('assigned_students')) {
+            $submittedStudentIds = array_filter(array_map('trim', explode(',', $request->input('assigned_students', ''))));
+            $validStudentIds = Student::whereIn('id', $submittedStudentIds)->pluck('id')->toArray();
 
-            // Validate that all student IDs exist
-            $validStudentIds = Student::whereIn('id', $studentIds)->pluck('id')->toArray();
+            // Ensure there's at least one assignment for student assignment tracking
+            if (empty($assignmentIds)) {
+                $assignment = TeacherAssignment::firstOrCreate([
+                    'teacher_id' => $teacherId,
+                    'class_id' => $class->id,
+                ], [
+                    'subject_id' => $validated['subject_id'],
+                    'course_id' => $validated['course_id'],
+                    'department' => $course->department ?? null,
+                    'academic_year' => $validated['academic_year'],
+                    'semester' => $validated['semester'],
+                    'status' => 'active',
+                    'notes' => 'Auto-assigned when creating class',
+                ]);
+                $assignmentIds[] = $assignment->id;
+            }
 
-            foreach ($validStudentIds as $studentId) {
-                // Check if assignment already exists to avoid duplicates
-                $exists = \DB::table('assignment_students')
-                    ->where('assignment_id', $class->id)
-                    ->where('student_id', $studentId)
-                    ->exists();
-
-                if (! $exists) {
-                    // Create student assignment record
-                    \DB::table('assignment_students')->insert([
-                        'assignment_id' => $class->id,
-                        'student_id' => $studentId,
-                        'status' => 'assigned',
-                        'assigned_at' => now(),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    // Update student's class assignment
-                    Student::where('id', $studentId)->update(['class_id' => $class->id]);
+            foreach ($assignmentIds as $assignmentId) {
+                $assignment = TeacherAssignment::find($assignmentId);
+                if ($assignment) {
+                    $assignment->assignStudents($validStudentIds);
                 }
+            }
+
+            // Update students' class assignment and related school/department information
+            if (!empty($validStudentIds)) {
+                $studentUpdate = ['class_id' => $class->id];
+                if (!empty($course->college)) {
+                    $studentUpdate['school'] = $course->college;
+                }
+                if (!empty($course->department)) {
+                    $studentUpdate['department'] = $course->department;
+                }
+
+                Student::whereIn('id', $validStudentIds)->update($studentUpdate);
             }
         }
 
@@ -2078,6 +2117,7 @@ class TeacherController extends Controller
             'course_id' => 'required|exists:courses,id',
             'section' => 'required|string|in:A,B,C,D,E',
             'year' => 'required|integer|in:1,2,3,4',
+            'academic_year' => 'required|string',
             'capacity' => 'required|integer|min:1|max:100',
             'description' => 'nullable|string|max:500',
         ]);
@@ -2089,56 +2129,54 @@ class TeacherController extends Controller
             ]);
         }
 
-        $class->update($validated);
+        $class->update([
+            'class_name' => $validated['class_name'],
+            'course_id' => $validated['course_id'],
+            'section' => $validated['section'],
+            'year' => $validated['year'],
+            'academic_year' => $validated['academic_year'],
+            'capacity' => $validated['capacity'],
+            'description' => $validated['description'] ?? null,
+        ]);
 
-        // Assign students to class if provided
-        if ($request->filled('assigned_students')) {
-            $studentIds = explode(',', $request->assigned_students);
+        // Sync class student assignments if provided (supports adding/removing students)
+        if ($request->has('assigned_students')) {
+            $submittedStudentIds = array_filter(array_map('trim', explode(',', $request->input('assigned_students', ''))));
+            $validStudentIds = Student::whereIn('id', $submittedStudentIds)->pluck('id')->toArray();
 
-            // Validate that all student IDs exist
-            $validStudentIds = Student::whereIn('id', $studentIds)->pluck('id')->toArray();
+            $currentStudentIds = $class->students()->pluck('id')->toArray();
+            $toAdd = array_diff($validStudentIds, $currentStudentIds);
+            $toRemove = array_diff($currentStudentIds, $validStudentIds);
 
-            foreach ($validStudentIds as $studentId) {
-                // Check if assignment already exists to avoid duplicates
-                $exists = \DB::table('assignment_students')
-                    ->where('assignment_id', $class->id)
-                    ->where('student_id', $studentId)
-                    ->exists();
+            // Ensure there is a teacher assignment record for this class
+            $assignment = TeacherAssignment::firstOrCreate(
+                [
+                    'teacher_id' => Auth::id(),
+                    'class_id' => $class->id,
+                ],
+                [
+                    'subject_id' => 1, // Default subject
+                    'status' => 'active',
+                    'notes' => 'Auto-created for student assignment',
+                ]
+            );
 
-                if (! $exists) {
-                    // Create a teacher assignment for this class if it doesn't exist
-                    $assignment = \DB::table('teacher_assignments')
-                        ->where('class_id', $class->id)
-                        ->first();
+            // Sync the pivot table for assignment_students
+            $assignment->syncStudents($validStudentIds);
 
-                    if (! $assignment) {
-                        // Create a default teacher assignment
-                        $assignmentId = \DB::table('teacher_assignments')->insertGetId([
-                            'teacher_id' => Auth::id(),
-                            'class_id' => $class->id,
-                            'subject_id' => 1, // Default subject
-                            'status' => 'active',
-                            'notes' => 'Auto-created for student assignment',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    } else {
-                        $assignmentId = $assignment->id;
-                    }
-
-                    // Create student assignment record
-                    \DB::table('assignment_students')->insert([
-                        'assignment_id' => $assignmentId,
-                        'student_id' => $studentId,
-                        'status' => 'assigned',
-                        'assigned_at' => now(),
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    // Update student's class assignment
-                    Student::where('id', $studentId)->update(['class_id' => $class->id]);
+            // Update students' class assignment and school/department when added
+            if (! empty($toAdd)) {
+                $studentUpdate = ['class_id' => $class->id];
+                if (!empty($class->course->college)) {
+                    $studentUpdate['school'] = $class->course->college;
                 }
+                if (!empty($class->course->department)) {
+                    $studentUpdate['department'] = $class->course->department;
+                }
+                Student::whereIn('id', $toAdd)->update($studentUpdate);
+            }
+            if (! empty($toRemove)) {
+                Student::whereIn('id', $toRemove)->update(['class_id' => null]);
             }
         }
 
@@ -2150,6 +2188,47 @@ class TeacherController extends Controller
 
         return redirect()->route('teacher.classes.show', $class->id)
             ->with('success', $message);
+    }
+
+    /**
+     * Ajax helper: Get filtered students for assignment modals
+     */
+    public function getStudents(Request $request)
+    {
+        $query = Student::with(['user', 'class.course']);
+
+        if ($request->year) {
+            $query->where('year', $request->year);
+        }
+
+        if ($request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('student_id', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $students = $query->get();
+
+        $studentData = $students->map(function ($student) {
+            return [
+                'id' => $student->id,
+                'name' => $student->user->name,
+                'student_id' => $student->student_id,
+                'course_id' => $student->class->course->id ?? null,
+                'course_name' => $student->class->course->program_name ?? 'Unknown',
+                'department' => $student->class->course->department ?? 'Unknown',
+                'year' => $student->year,
+                'section' => $student->section,
+                'class_id' => $student->class_id ?? null,
+                'class_name' => $student->class->class_name ?? 'Unassigned',
+            ];
+        });
+
+        return response()->json(['students' => $studentData]);
     }
 
     /**
@@ -2174,6 +2253,33 @@ class TeacherController extends Controller
 
         return redirect()->route('teacher.classes')
             ->with('success', "Class '{$className}' has been deleted successfully!");
+    }
+
+    /**
+     * Remove a student from a class (unassign without deleting)
+     */
+    public function removeStudentFromClass($classId, $studentId)
+    {
+        $teacherId = Auth::id();
+        $class = ClassModel::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->firstOrFail();
+
+        $student = Student::where('id', $studentId)
+            ->where('class_id', $classId)
+            ->firstOrFail();
+
+        // Unassign student from class
+        $student->class_id = null;
+        $student->save();
+
+        // Remove student from any teacher assignment for this class
+        $assignments = TeacherAssignment::where('class_id', $classId)->get();
+        foreach ($assignments as $assignment) {
+            $assignment->students()->detach($studentId);
+        }
+
+        return response()->json(['success' => true]);
     }
 
     /**
@@ -2319,6 +2425,99 @@ class TeacherController extends Controller
     }
 
     /**
+     * AJAX: Save a single GradeEntry cell (auto-save on blur)
+     */
+    public function saveGradeEntryCell(Request $request, $classId)
+    {
+        $request->validate([
+            'student_id' => 'required|integer',
+            'term'       => 'required|in:midterm,final',
+            'field'      => 'required|string',
+            'value'      => 'nullable|numeric|min:0|max:100',
+        ]);
+
+        $teacherId = Auth::id();
+        ClassModel::where('id', $classId)->where('teacher_id', $teacherId)->firstOrFail();
+
+        $allowedFields = [
+            'exam_pr','exam_md','exam_fn',
+            'quiz_1','quiz_2','quiz_3','quiz_4','quiz_5',
+            'output_1','output_2','output_3',
+            'classpart_1','classpart_2','classpart_3',
+            'activity_1','activity_2','activity_3',
+            'assignment_1','assignment_2','assignment_3',
+            'behavior_1','behavior_2','behavior_3',
+            'attendance_1','attendance_2','attendance_3',
+            'awareness_1','awareness_2','awareness_3',
+        ];
+
+        if (!in_array($request->field, $allowedFields)) {
+            return response()->json(['success' => false, 'message' => 'Invalid field'], 422);
+        }
+
+        $entry = GradeEntry::updateOrCreate(
+            ['student_id' => $request->student_id, 'class_id' => $classId, 'teacher_id' => $teacherId, 'term' => $request->term],
+            [$request->field => $request->value ?? 0]
+        );
+
+        $computed = $entry->computeAverages(['knowledge' => 40, 'skills' => 50, 'attitude' => 10]);
+        $entry->update($computed);
+
+        return response()->json(['success' => true, 'computed' => $computed]);
+    }
+
+    /**
+     * AJAX: Clear a single GradeEntry cell (set to 0)
+     */
+    public function clearGradeEntryCell(Request $request, $classId)
+    {
+        $request->validate([
+            'student_id' => 'required|integer',
+            'term'       => 'required|in:midterm,final',
+            'field'      => 'required|string',
+        ]);
+
+        $teacherId = Auth::id();
+        ClassModel::where('id', $classId)->where('teacher_id', $teacherId)->firstOrFail();
+
+        $entry = GradeEntry::where('student_id', $request->student_id)
+            ->where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->where('term', $request->term)
+            ->first();
+
+        if ($entry) {
+            $entry->update([$request->field => 0]);
+            $computed = $entry->computeAverages(['knowledge' => 40, 'skills' => 50, 'attitude' => 10]);
+            $entry->update($computed);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * AJAX: Clear all grade entry data for a student in a term
+     */
+    public function clearStudentGradeEntry(Request $request, $classId)
+    {
+        $request->validate([
+            'student_id' => 'required|integer',
+            'term'       => 'required|in:midterm,final',
+        ]);
+
+        $teacherId = Auth::id();
+        ClassModel::where('id', $classId)->where('teacher_id', $teacherId)->firstOrFail();
+
+        GradeEntry::where('student_id', $request->student_id)
+            ->where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->where('term', $request->term)
+            ->delete();
+
+        return response()->json(['success' => true, 'message' => 'Student grades cleared']);
+    }
+
+    /**
      * Calculate all component scores and final grade from individual entries
      */
     private function calculateGradeScores($grade)
@@ -2448,24 +2647,9 @@ class TeacherController extends Controller
      */
     public function showGradeEntryNew($classId)
     {
-        $teacherId = Auth::id();
-        $class = ClassModel::where('teacher_id', $teacherId)
-            ->with('course', 'students')
-            ->findOrFail($classId);
-
-        $students = $class->students()->get();
-
-        // Get assessment ranges
-        $range = AssessmentRange::where('class_id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->first();
-
-        $grades = Grade::where('class_id', $classId)
-            ->where('teacher_id', $teacherId)
-            ->get()
-            ->keyBy('student_id');
-
-        return view('teacher.grades.entry_new', compact('class', 'students', 'grades', 'range'));
+        // This method has been deprecated - redirecting to the main grade entry
+        return redirect()->route('teacher.grades.entry', ['classId' => $classId])
+            ->with('info', 'Using the standard grade entry form.');
     }
 
     /**
@@ -2744,11 +2928,18 @@ class TeacherController extends Controller
     public function gradeResults()
     {
         $teacherId = Auth::id();
+        $selectedClassId = request()->query('class_id');
 
-        // Get all teacher's classes with students and grades
-        $classes = ClassModel::where('teacher_id', $teacherId)
-            ->with(['students.user', 'course'])
-            ->get();
+        // Get teacher's classes with students and grades
+        $classesQuery = ClassModel::where('teacher_id', $teacherId)
+            ->with(['students.user', 'course']);
+
+        if ($selectedClassId) {
+            $classesQuery->where('id', $selectedClassId);
+        }
+
+        $classes = $classesQuery->get();
+        $selectedClass = $selectedClassId ? $classes->first() : null;
 
         $classGradeResults = [];
 
@@ -2831,16 +3022,15 @@ class TeacherController extends Controller
                 ? round(($classStats['passed_count'] / $classStats['total_students']) * 100, 1)
                 : 0;
 
-            if ($graderCount > 0) {
-                $classGradeResults[] = [
-                    'class' => $class,
-                    'course' => $class->course,
-                    'students' => $studentResults,
-                    'stats' => $classStats,
-                ];
-            }
+            // Always include the class so the teacher can see the summary even if grades are not yet entered
+            $classGradeResults[] = [
+                'class' => $class,
+                'course' => $class->course,
+                'students' => $studentResults,
+                'stats' => $classStats,
+            ];
         }
 
-        return view('teacher.grades.grade_results', compact('classGradeResults'));
+        return view('teacher.grades.grade_results', compact('classGradeResults', 'selectedClass'));
     }
 }

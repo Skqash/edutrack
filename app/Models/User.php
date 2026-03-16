@@ -70,6 +70,11 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    public function schoolRequests()
+    {
+        return $this->hasMany(SchoolRequest::class);
+    }
+
     public function classes()
     {
         return $this->hasMany(ClassModel::class, 'teacher_id');

@@ -1,7 +1,6 @@
 @extends('layouts.admin')
 
 @section('content')
-
     <!-- Dashboard Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -57,6 +56,24 @@
         </div>
     </div>
 
+    <!-- Pending Requests Widget -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card stat-card border-0 shadow-sm">
+                <div class="card-body">
+                    <i class="fas fa-envelope-open-text icon" style="color: #8e44ad;"></i>
+                    <div class="stat-label text-muted">Pending School Requests</div>
+                    <div class="stat-value fw-bold">{{ $pendingSchoolRequests ?? 0 }}</div>
+                    <small class="text-muted">
+                        <a href="{{ route('admin.school-requests.index') }}" class="text-decoration-none">
+                            View requests <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Charts Row -->
     <div class="row mb-4">
         <div class="col-lg-6 mb-4">
@@ -93,12 +110,14 @@
                 <div class="card-header bg-white border-bottom">
                     <ul class="nav nav-tabs card-header-tabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active fw-bold" id="grades-tab" data-bs-toggle="tab" data-bs-target="#grades-tab-pane" type="button" role="tab">
+                            <button class="nav-link active fw-bold" id="grades-tab" data-bs-toggle="tab"
+                                data-bs-target="#grades-tab-pane" type="button" role="tab">
                                 <i class="fas fa-award me-2"></i> Grades by Class
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link fw-bold" id="attendance-tab" data-bs-toggle="tab" data-bs-target="#attendance-tab-pane" type="button" role="tab">
+                            <button class="nav-link fw-bold" id="attendance-tab" data-bs-toggle="tab"
+                                data-bs-target="#attendance-tab-pane" type="button" role="tab">
                                 <i class="fas fa-clipboard-list me-2"></i> Attendance by Class
                             </button>
                         </li>
@@ -114,7 +133,7 @@
                                     <label class="form-label fw-bold">Select Class</label>
                                     <select class="form-select" id="gradeClassSelect" onchange="loadGradesData()">
                                         <option value="">All Classes</option>
-                                        @foreach($classes as $class)
+                                        @foreach ($classes as $class)
                                             <option value="{{ $class->id }}">{{ $class->class_name }}</option>
                                         @endforeach
                                     </select>
@@ -123,7 +142,7 @@
                                     <label class="form-label fw-bold">Select Teacher</label>
                                     <select class="form-select" id="gradeTeacherSelect" onchange="loadGradesData()">
                                         <option value="">All Teachers</option>
-                                        @foreach($teachers as $teacher)
+                                        @foreach ($teachers as $teacher)
                                             <option value="{{ $teacher->id }}">{{ $teacher->name }}</option>
                                         @endforeach
                                     </select>
@@ -132,14 +151,15 @@
                                     <label class="form-label fw-bold">Grading Period</label>
                                     <select class="form-select" id="gradePeriodSelect" onchange="loadGradesData()">
                                         <option value="">All Periods</option>
-                                        @foreach($periods as $period)
+                                        @foreach ($periods as $period)
                                             <option value="{{ $period }}">{{ ucfirst($period) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-lg-3 col-md-6 mb-3">
                                     <label class="form-label fw-bold">Search Student</label>
-                                    <input type="text" class="form-control" id="gradeSearchInput" placeholder="Student name..." onkeyup="loadGradesData()">
+                                    <input type="text" class="form-control" id="gradeSearchInput"
+                                        placeholder="Student name..." onkeyup="loadGradesData()">
                                 </div>
                             </div>
 
@@ -156,16 +176,18 @@
                             <div class="row mb-4">
                                 <div class="col-lg-3 col-md-6 mb-3">
                                     <label class="form-label fw-bold">Select Class</label>
-                                    <select class="form-select" id="attendanceClassSelect" onchange="loadAttendanceData()">
+                                    <select class="form-select" id="attendanceClassSelect"
+                                        onchange="loadAttendanceData()">
                                         <option value="">All Classes</option>
-                                        @foreach($classes as $class)
+                                        @foreach ($classes as $class)
                                             <option value="{{ $class->id }}">{{ $class->class_name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-lg-3 col-md-6 mb-3">
                                     <label class="form-label fw-bold">Status</label>
-                                    <select class="form-select" id="attendanceStatusSelect" onchange="loadAttendanceData()">
+                                    <select class="form-select" id="attendanceStatusSelect"
+                                        onchange="loadAttendanceData()">
                                         <option value="">All Status</option>
                                         <option value="Present">Present</option>
                                         <option value="Absent">Absent</option>
@@ -174,11 +196,13 @@
                                 </div>
                                 <div class="col-lg-3 col-md-6 mb-3">
                                     <label class="form-label fw-bold">From Date</label>
-                                    <input type="date" class="form-control" id="attendanceDateFrom" onchange="loadAttendanceData()">
+                                    <input type="date" class="form-control" id="attendanceDateFrom"
+                                        onchange="loadAttendanceData()">
                                 </div>
                                 <div class="col-lg-3 col-md-6 mb-3">
                                     <label class="form-label fw-bold">To Date</label>
-                                    <input type="date" class="form-control" id="attendanceDateTo" onchange="loadAttendanceData()">
+                                    <input type="date" class="form-control" id="attendanceDateTo"
+                                        onchange="loadAttendanceData()">
                                 </div>
                             </div>
 
@@ -278,7 +302,8 @@
                 new Chart(enrollmentCtx, {
                     type: 'line',
                     data: {
-                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
+                            'Dec'],
                         datasets: [{
                             label: 'Student Enrollment',
                             data: [850, 920, 980, 1050, 1120, 1150, 1180, 1220, 1250, 1280, 1285, 1285],
@@ -292,10 +317,20 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        plugins: { legend: { display: true } },
+                        plugins: {
+                            legend: {
+                                display: true
+                            }
+                        },
                         scales: {
-                            y: { beginAtZero: false },
-                            x: { grid: { display: false } }
+                            y: {
+                                beginAtZero: false
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
                         }
                     }
                 });
@@ -322,7 +357,11 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: true,
-                        plugins: { legend: { position: 'bottom' } }
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
                     }
                 });
             }
@@ -346,7 +385,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success || !data.data.grades.data || data.data.grades.data.length === 0) {
-                        document.getElementById('gradesContainer').innerHTML = 
+                        document.getElementById('gradesContainer').innerHTML =
                             '<div class="alert alert-info text-center"><i class="fas fa-info-circle me-2"></i> No grades found</div>';
                         return;
                     }
@@ -412,9 +451,9 @@
                         `;
 
                         classData.items.forEach(grade => {
-                            const statusBadge = grade.final_grade >= 75 
-                                ? '<span class="badge bg-success">Passed</span>'
-                                : '<span class="badge bg-danger">Failed</span>';
+                            const statusBadge = grade.final_grade >= 75 ?
+                                '<span class="badge bg-success">Passed</span>' :
+                                '<span class="badge bg-danger">Failed</span>';
 
                             html += `
                                 <tr>
@@ -442,7 +481,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('gradesContainer').innerHTML = 
+                    document.getElementById('gradesContainer').innerHTML =
                         '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i> Error loading grades</div>';
                 });
         }
@@ -465,7 +504,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success || !data.data.attendance.data || data.data.attendance.data.length === 0) {
-                        document.getElementById('attendanceContainer').innerHTML = 
+                        document.getElementById('attendanceContainer').innerHTML =
                             '<div class="alert alert-info text-center"><i class="fas fa-info-circle me-2"></i> No attendance records found</div>';
                         return;
                     }
@@ -560,7 +599,7 @@
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('attendanceContainer').innerHTML = 
+                    document.getElementById('attendanceContainer').innerHTML =
                         '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i> Error loading attendance</div>';
                 });
         }
@@ -571,5 +610,4 @@
             loadGradesData();
         });
     </script>
-
 @endsection

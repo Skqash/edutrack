@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\ClassModel;
 use App\Models\Course;
 use App\Models\Grade;
+use App\Models\SchoolRequest;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\User;
@@ -27,6 +28,7 @@ class DashboardController extends Controller
                 'totalCourses' => Course::count(),
                 'totalSubjects' => Subject::count(),
                 'totalClasses' => ClassModel::count(),
+                'pendingSchoolRequests' => SchoolRequest::where('status', 'pending')->count(),
             ];
         });
 

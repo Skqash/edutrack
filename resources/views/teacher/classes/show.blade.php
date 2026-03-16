@@ -13,7 +13,8 @@
                     <a href="{{ route('teacher.classes.edit', $class->id) }}" class="btn btn-warning btn-sm">
                         <i class="fas fa-edit me-1"></i> Edit
                     </a>
-                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteClassModal">
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#deleteClassModal">
                         <i class="fas fa-trash me-1"></i> Delete
                     </button>
                     <a href="{{ route('teacher.classes') }}" class="btn btn-outline-secondary btn-sm">
@@ -432,4 +433,34 @@
         </div>
     </div>
 
+    <script>
+        function removeStudent(studentId) {
+            if (!confirm('Remove this student from the class?')) {
+                return;
+            }
+
+            const urlTemplate =
+                "{{ route('teacher.classes.students.remove', ['classId' => $class->id, 'studentId' => '__STUDENT_ID__']) }}";
+            const url = urlTemplate.replace('__STUDENT_ID__', studentId);
+
+            fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Failed to remove student');
+                    }
+                })
+                .catch(() => {
+                    alert('Failed to remove student');
+                });
+        }
+    </script>
 @endsection

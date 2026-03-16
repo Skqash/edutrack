@@ -308,6 +308,10 @@
                 <i class="fas fa-chart-line"></i> Grade Results & Summary
             </h1>
             <p class="page-subtitle">Calculated grades by class with pass/fail status and decimal scale (1.0-5.0)</p>
+            @if (!empty($selectedClass))
+                <p class="page-subtitle"><strong>Showing results for:</strong> {{ $selectedClass->class_name }}
+                    ({{ $selectedClass->course->course_name ?? 'Course' }})</p>
+            @endif
 
             <div class="action-buttons">
                 <a href="{{ route('teacher.dashboard') }}" class="btn btn-outline-secondary">
@@ -355,7 +359,7 @@
                     <div class="class-header">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <h3 class="class-title">{{ $classResult['class']->name }}</h3>
+                                <h3 class="class-title">{{ $classResult['class']->class_name }}</h3>
                                 <div class="class-subtitle">
                                     <i class="fas fa-book"></i> {{ $classResult['course']->name ?? 'Course' }}
                                 </div>

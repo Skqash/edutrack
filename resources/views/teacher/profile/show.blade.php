@@ -178,6 +178,20 @@
                         </div>
 
                         <div class="info-group">
+                            <div class="info-label">Campus</div>
+                            <div class="info-value">
+                                {{ $teacher->campus ?? 'Victorias Campus' }}
+                            </div>
+                        </div>
+
+                        <div class="info-group">
+                            <div class="info-label">Connected School</div>
+                            <div class="info-value">
+                                {{ $teacher->connected_school ?? 'Not connected yet' }}
+                            </div>
+                        </div>
+
+                        <div class="info-group">
                             <div class="info-label">Biography</div>
                             <div class="info-value">
                                 @if ($teacher->bio)
@@ -220,6 +234,9 @@
                         <a href="{{ route('teacher.dashboard') }}" class="btn btn-sm btn-outline-primary">
                             <i class="fas fa-arrow-left me-1"></i> Back
                         </a>
+                        <a href="{{ route('teacher.school-request.create') }}" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-school me-1"></i> School Connection
+                        </a>
                     </div>
                 </div>
             </div>
@@ -252,6 +269,66 @@
                             {{ $user->updated_at->diffForHumans() }}
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- School Connection Request Status -->
+            <div class="card profile-card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-school me-2"></i> School Connection
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (isset($schoolRequest) && $schoolRequest)
+                        <div class="info-group">
+                            <div class="info-label">Requested Institution</div>
+                            <div class="info-value">{{ $schoolRequest->school_name }}</div>
+                        </div>
+
+                        <div class="info-group">
+                            <div class="info-label">Request Status</div>
+                            <div class="info-value">
+                                <span
+                                    class="badge bg-{{ $schoolRequest->status === 'approved' ? 'success' : ($schoolRequest->status === 'rejected' ? 'danger' : 'secondary') }}">
+                                    {{ ucfirst($schoolRequest->status) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        @if ($schoolRequest->admin_note)
+                            <div class="info-group">
+                                <div class="info-label">Admin Note</div>
+                                <div class="info-value">{{ $schoolRequest->admin_note }}</div>
+                            </div>
+                        @endif
+
+                        <div class="info-group">
+                            <div class="info-label">Submitted</div>
+                            <div class="info-value small text-muted">{{ $schoolRequest->created_at->diffForHumans() }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <a href="{{ route('teacher.school-requests.history') }}"
+                                class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-history me-1"></i> View Request History
+                            </a>
+                            <a href="{{ route('teacher.school-request.create') }}"
+                                class="btn btn-sm btn-outline-success">
+                                <i class="fas fa-plus me-1"></i> New Request
+                            </a>
+                        </div>
+                    @else
+                        <div class="alert alert-info mb-0">
+                            You have not submitted a school connection request yet.
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('teacher.school-request.create') }}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus me-1"></i> Submit Your First Request
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
 

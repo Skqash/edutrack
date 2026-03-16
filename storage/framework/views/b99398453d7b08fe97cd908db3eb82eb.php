@@ -1,271 +1,909 @@
 <?php $__env->startSection('content'); ?>
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-12">
+    <style>
+        /* Enhanced Modern Design System */
+        :root {
+            --primary-color: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --light-bg: #f8fafc;
+            --white: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .create-class-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced Page Header */
+        .page-header-create {
+            background: linear-gradient(135deg, var(--white) 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header-create::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+            border-radius: 50%;
+            transform: translate(50%, -50%);
+            opacity: 0.05;
+        }
+
+        .page-header-create h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header-create p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        /* Enhanced Form Card */
+        .form-card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .form-card:hover {
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        .form-card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .form-card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-card-body {
+            padding: 2.5rem;
+        }
+
+        /* Enhanced Form Groups */
+        .form-group-modern {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .form-label-modern {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-label-modern i {
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .form-control-modern,
+        .form-select-modern {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--white);
+            position: relative;
+        }
+
+        .form-control-modern:focus,
+        .form-select-modern:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-control-modern:hover,
+        .form-select-modern:hover {
+            border-color: var(--primary-light);
+        }
+
+        .form-text-modern {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-text-modern i {
+            margin-right: 0.25rem;
+            font-size: 0.75rem;
+        }
+
+        /* Enhanced Buttons */
+        .btn-submit-modern {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--white);
+            padding: 1rem 2.5rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-submit-modern::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-submit-modern:hover::before {
+            left: 100%;
+        }
+
+        .btn-submit-modern:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-cancel-modern {
+            background: var(--white);
+            color: var(--text-secondary);
+            padding: 1rem 2.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .btn-cancel-modern:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            text-decoration: none;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--border-color);
+            justify-content: flex-end;
+        }
+
+        .required-mark {
+            color: var(--danger-color);
+            margin-left: 0.25rem;
+            font-weight: 700;
+        }
+
+        /* Enhanced Row Spacing */
+        .row {
+            margin-bottom: 0;
+        }
+
+        .row>div {
+            padding-right: 1rem;
+            padding-left: 1rem;
+        }
+
+        /* Validation States */
+        .is-invalid {
+            border-color: var(--danger-color) !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        .is-valid {
+            border-color: var(--success-color) !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2310b981' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+
+        /* Progress Indicator */
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-step::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: var(--border-color);
+            z-index: -1;
+        }
+
+        .progress-step:last-child::before {
+            display: none;
+        }
+
+        .progress-step.active::before {
+            background: var(--primary-color);
+        }
+
+        .progress-step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .progress-step.active .progress-step-circle {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+        }
+
+        .progress-step-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 80px;
+        }
+
+        .progress-step.active .progress-step-label {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .create-class-container {
+                margin: 1rem auto;
+                padding: 1rem;
+            }
+
+            .form-card-body {
+                padding: 1.5rem;
+            }
+
+            .page-header-create {
+                padding: 1.5rem;
+            }
+
+            .page-header-create h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn-submit-modern,
+            .btn-cancel-modern {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .progress-indicator {
+                display: none;
+            }
+
+            .row>div {
+                padding-right: 0.5rem;
+                padding-left: 0.5rem;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .btn-submit-modern.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: var(--white);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+
+    <div class="create-class-container">
+        <!-- Page Header -->
+        <div class="page-header-create">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="h3 fw-bold mb-0">Create New Class</h1>
-                    <p class="text-muted mb-0">Set up a new class and configure basic settings</p>
+                    <h1 class="h3 fw-bold mb-1">Create New Class</h1>
+                    <p class="text-muted mb-0">Set up a new class for your students</p>
                 </div>
-                <a href="<?php echo e(route('teacher.classes')); ?>" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Classes
+                <a href="<?php echo e(route('teacher.classes')); ?>" class="btn-cancel-modern">
+                    <i class="fas fa-arrow-left"></i>
+                    Back
                 </a>
             </div>
         </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>New Class Information</h5>
-                </div>
-                <div class="card-body">
-                    <form action="<?php echo e(route('teacher.classes.store')); ?>" method="POST" class="card-body">
-                        <?php echo csrf_field(); ?>
-                        <div class="modal-body">
-                            <div class="row g-3 mb-4">
-                                <!-- Subject Selection -->
-                                <div class="col-md-12">
-                                    <div class="form-group mb-3">
-                                        <label for="subjectSelect" class="form-label fw-bold">
-                                            <i class="fas fa-book me-2"></i>Select Subject <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                            <input type="text" class="form-control" id="subjectSearch" 
-                                                   placeholder="Search subjects..." autocomplete="off">
-                                        </div>
-                                        <select class="form-select <?php $__errorArgs = ['subject_id'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>" id="subjectSelect"
-                                                name="subject_id" required style="margin-top: 8px;" onchange="showSubjectDetails(this.value)">
-                                                    <option value="">-- Select a Subject --</option>
-                                                    <?php if(!empty($assignedSubjects)): ?>
-                                                        <?php $__currentLoopData = $assignedSubjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <option value="<?php echo e($subject->id); ?>" 
-                                                                    data-code="<?php echo e($subject->subject_code); ?>"
-                                                                    data-name="<?php echo e($subject->subject_name); ?>"
-                                                                    data-units="<?php echo e($subject->credit_hours); ?>"
-                                                                    data-course="<?php echo e($subject->course_name ?? 'N/A'); ?>"
-                                                                    data-course-id="<?php echo e($subject->course_id ?? ''); ?>">
-                                                                <?php echo e($subject->subject_code); ?> - <?php echo e($subject->subject_name); ?>
 
-                                                            </option>
-                                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    <?php else: ?>
-                                                        <!-- Fallback: Show all subjects if none assigned -->
-                                                        <?php
-                                                            $allSubjects = \App\Models\Subject::limit(10)->get();
-                                                        ?>
-                                                        <?php $__currentLoopData = $allSubjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                            <option value="<?php echo e($subject->id); ?>" 
-                                                                    data-code="<?php echo e($subject->subject_code); ?>"
-                                                                    data-name="<?php echo e($subject->subject_name); ?>"
-                                                                    data-units="<?php echo e($subject->credit_hours); ?>"
-                                                                    data-course="<?php echo e($subject->course_name ?? 'N/A'); ?>"
-                                                                    data-course-id="<?php echo e($subject->course_id ?? ''); ?>">
-                                                                <?php echo e($subject->subject_code); ?> - <?php echo e($subject->subject_name); ?>
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-step active" id="step1">
+                <div class="progress-step-circle">1</div>
+                <div class="progress-step-label">Basic Info</div>
+            </div>
+            <div class="progress-step" id="step2">
+                <div class="progress-step-circle">2</div>
+                <div class="progress-step-label">Class Details</div>
+            </div>
+            <div class="progress-step" id="step3">
+                <div class="progress-step-circle">3</div>
+                <div class="progress-step-label">Review</div>
+            </div>
+        </div>
 
-                                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                                    <?php endif; ?>
-                                                </select>
-                                            <?php $__errorArgs = ['subject_id'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?>
-                                                <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
-                                            <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                            <small class="text-muted d-block mt-1">Select from your assigned subjects</small>
-                                        </div>
-                                </div>
-                                
-                                <!-- Class Name -->
-                                <div class="col-md-12">
-                                    <div class="form-group mb-3">
-                                        <label for="class_name" class="form-label fw-bold">
-                                            <i class="fas fa-chalkboard me-2"></i>Class Name
-                                        </label>
-                                        <input type="text" class="form-control <?php $__errorArgs = ['class_name'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>" id="class_name" 
-                                               name="class_name" required placeholder="e.g., BSIT - 1A">
-                                    <?php $__errorArgs = ['class_name'];
-$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
-if ($__bag->has($__errorArgs[0])) :
-if (isset($message)) { $__messageOriginal = $message; }
-$message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
-                                    <?php unset($message);
-if (isset($__messageOriginal)) { $message = $__messageOriginal; }
-endif;
-unset($__errorArgs, $__bag); ?>
-                                        <small class="text-muted d-block mt-1">Use descriptive class names</small>
-                                    </div>
-                                </div>
-                                
-                                <!-- Academic Year & Semester -->
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="year" class="form-label">Academic Year</label>
-                                            <select id="year" class="form-select" name="year">
-                                                <option value="">Select Year</option>
-                                                <option value="1">1st Year</option>
-                                                <option value="2">2nd Year</option>
-                                                <option value="3">3rd Year</option>
-                                                <option value="4">4th Year</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="semester" class="form-label">Semester</label>
-                                            <select id="semester" class="form-select" name="semester">
-                                                <option value="">Select Semester</option>
-                                                <option value="First">First</option>
-                                                <option value="Second">Second</option>
-                                                <option value="Summer">Summer</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Capacity -->
-                                <div class="col-md-12">
-                                    <div class="form-group mb-3">
-                                        <label for="capacity" class="form-label">
-                                            <i class="fas fa-users me-2"></i>Class Capacity
-                                        </label>
-                                        <input type="number" class="form-control <?php $__errorArgs = ['capacity'];
+        <!-- Form Card -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <h2 class="h5 mb-0">
+                    <i class="fas fa-chalkboard me-2"></i>
+                    Class Information
+                </h2>
+            </div>
+
+            <div class="form-card-body">
+                <form action="<?php echo e(route('teacher.classes.store')); ?>" method="POST">
+                    <?php echo csrf_field(); ?>
+
+                    <!-- Class Name -->
+                    <div class="form-group-modern">
+                        <label for="class_name" class="form-label-modern">
+                            <i class="fas fa-chalkboard-teacher me-1"></i>
+                            Class Name
+                            <span class="required-mark">*</span>
+                        </label>
+                        <input type="text" class="form-control-modern <?php $__errorArgs = ['class_name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" id="capacity" 
-                                               name="capacity" min="1" placeholder="Maximum number of students">
-                                    <?php $__errorArgs = ['capacity'];
+unset($__errorArgs, $__bag); ?>"
+                            id="class_name" name="class_name" value="<?php echo e(old('class_name')); ?>"
+                            placeholder="e.g., BSIT 1-A, CS 101, Math 201" required>
+                        <?php $__errorArgs = ['class_name'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
-                                    <?php unset($message);
+                            <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                        <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                        <small class="text-muted d-block mt-1">Maximum number of students</small>
-                                    </div>
-                                </div>
-                                
-                                <!-- Description -->
-                                <div class="col-md-12">
-                                    <div class="form-group mb-3">
-                                        <label for="description" class="form-label fw-bold">
-                                            <i class="fas fa-file-alt me-2"></i>Description (Optional)
-                                        </label>
-                                        <textarea class="form-control <?php $__errorArgs = ['description'];
+                        <small class="form-text-modern">
+                            <i class="fas fa-info-circle"></i>
+                            Enter a descriptive name for your class (e.g., BSIT 1-A, CS 101, Math 201)
+                        </small>
+                    </div>
+
+                    <!-- Subject Selection -->
+                    <div class="form-group-modern">
+                        <label for="subject_id" class="form-label-modern">
+                            <i class="fas fa-book-open me-1"></i>
+                            Subject
+                            <span class="required-mark">*</span>
+                        </label>
+                        <select class="form-select-modern <?php $__errorArgs = ['subject_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
-unset($__errorArgs, $__bag); ?>" id="description" 
-                                                  rows="3" placeholder="Add notes about this class..."><?php echo e(old('description')); ?></textarea>
-                                    <?php $__errorArgs = ['description'];
+unset($__errorArgs, $__bag); ?>" id="subject_id"
+                            name="subject_id" required>
+                            <option value="">-- Select Subject --</option>
+                            <?php if(isset($assignedSubjects) && $assignedSubjects->count() > 0): ?>
+                                <?php $__currentLoopData = $assignedSubjects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subject): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($subject->id); ?>"
+                                        <?php echo e(old('subject_id') == $subject->id ? 'selected' : ''); ?>
+
+                                        data-code="<?php echo e($subject->subject_code ?? ''); ?>"
+                                        data-units="<?php echo e($subject->credit_hours ?? 3); ?>"
+                                        data-course="<?php echo e($subject->course->course_name ?? ''); ?>">
+                                        <?php echo e($subject->subject_code ?? ''); ?> - <?php echo e($subject->subject_name); ?>
+
+                                        <?php if($subject->course): ?>
+                                            (<?php echo e($subject->course->course_name); ?>)
+                                        <?php endif; ?>
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php else: ?>
+                                <option value="" disabled>No subjects available</option>
+                            <?php endif; ?>
+                        </select>
+                        <?php $__errorArgs = ['subject_id'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                                        <div class="invalid-feedback d-block"><?php echo e($message); ?></div>
-                                    <?php unset($message);
+                            <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                        <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-                                        <small class="text-muted d-block mt-1">Optional: Add any relevant information about this class</small>
+                        <small class="form-text-modern">
+                            <i class="fas fa-info-circle"></i>
+                            Select the subject you will be teaching in this class
+                        </small>
+                    </div>
+
+                    <!-- Course Selection -->
+                    <div class="form-group-modern">
+                        <label for="course_id" class="form-label-modern">
+                            <i class="fas fa-book me-1"></i>
+                            Course/Program
+                            <span class="required-mark">*</span>
+                        </label>
+                        <select class="form-select-modern <?php $__errorArgs = ['course_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="course_id"
+                            name="course_id" required>
+                            <option value="">-- Select Course --</option>
+                            <?php if(isset($courses)): ?>
+                                <?php $__currentLoopData = $courses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $course): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($course->id); ?>" data-school="<?php echo e($course->college ?? ''); ?>"
+                                        data-department="<?php echo e($course->department ?? ''); ?>"
+                                        <?php echo e(old('course_id') == $course->id ? 'selected' : ''); ?>>
+                                        <?php echo e($course->course_name); ?> (<?php echo e($course->course_code ?? 'N/A'); ?>)
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php endif; ?>
+                        </select>
+                        <?php $__errorArgs = ['course_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        <small class="form-text-modern">
+                            <i class="fas fa-info-circle"></i>
+                            Select the course/program this class belongs to. If the subject you selected has a matching
+                            course, it will be automatically selected.
+                        </small>
+                    </div>
+
+                    <!-- Year and Section Row -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group-modern">
+                                <label for="year" class="form-label-modern">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Year Level
+                                </label>
+                                <select class="form-select-modern <?php $__errorArgs = ['year'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="year"
+                                    name="year">
+                                    <option value="">-- Select Year --</option>
+                                    <option value="1" <?php echo e(old('year') == '1' ? 'selected' : ''); ?>>1st Year</option>
+                                    <option value="2" <?php echo e(old('year') == '2' ? 'selected' : ''); ?>>2nd Year</option>
+                                    <option value="3" <?php echo e(old('year') == '3' ? 'selected' : ''); ?>>3rd Year</option>
+                                    <option value="4" <?php echo e(old('year') == '4' ? 'selected' : ''); ?>>4th Year</option>
+                                </select>
+                                <?php $__errorArgs = ['year'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group-modern">
+                                <label for="section" class="form-label-modern">
+                                    <i class="fas fa-users me-1"></i>
+                                    Section
+                                </label>
+                                <select class="form-select-modern <?php $__errorArgs = ['section'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="section"
+                                    name="section">
+                                    <option value="">-- Select Section --</option>
+                                    <option value="A" <?php echo e(old('section') == 'A' ? 'selected' : ''); ?>>Section A
+                                    </option>
+                                    <option value="B" <?php echo e(old('section') == 'B' ? 'selected' : ''); ?>>Section B
+                                    </option>
+                                    <option value="C" <?php echo e(old('section') == 'C' ? 'selected' : ''); ?>>Section C
+                                    </option>
+                                    <option value="D" <?php echo e(old('section') == 'D' ? 'selected' : ''); ?>>Section D
+                                    </option>
+                                    <option value="E" <?php echo e(old('section') == 'E' ? 'selected' : ''); ?>>Section E
+                                    </option>
+                                </select>
+                                <?php $__errorArgs = ['section'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="form-group-modern">
+                                <label for="capacity" class="form-label-modern">
+                                    <i class="fas fa-user-friends me-1"></i>
+                                    Capacity
+                                </label>
+                                <input type="number" class="form-control-modern <?php $__errorArgs = ['capacity'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                    id="capacity" name="capacity" value="<?php echo e(old('capacity', 40)); ?>" min="1"
+                                    max="100" placeholder="40">
+                                <?php $__errorArgs = ['capacity'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Semester and Academic Year Row -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group-modern">
+                                <label for="semester" class="form-label-modern">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Semester
+                                    <span class="required-mark">*</span>
+                                </label>
+                                <select class="form-select-modern <?php $__errorArgs = ['semester'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="semester"
+                                    name="semester" required>
+                                    <option value="">-- Select Semester --</option>
+                                    <option value="First" <?php echo e(old('semester') == 'First' ? 'selected' : ''); ?>>First
+                                        Semester</option>
+                                    <option value="Second" <?php echo e(old('semester') == 'Second' ? 'selected' : ''); ?>>Second
+                                        Semester</option>
+                                    <option value="Summer" <?php echo e(old('semester') == 'Summer' ? 'selected' : ''); ?>>Summer
+                                    </option>
+                                </select>
+                                <?php $__errorArgs = ['semester'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-group-modern">
+                                <label for="academic_year" class="form-label-modern">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Academic Year
+                                    <span class="required-mark">*</span>
+                                </label>
+                                <input type="text"
+                                    class="form-control-modern <?php $__errorArgs = ['academic_year'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                    id="academic_year" name="academic_year"
+                                    value="<?php echo e(old('academic_year', date('Y') . '-' . (date('Y') + 1))); ?>"
+                                    placeholder="e.g., 2024-2025" required>
+                                <?php $__errorArgs = ['academic_year'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                                <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                <small class="form-text-modern">Format: YYYY-YYYY (e.g., 2024-2025)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group-modern">
+                        <label for="description" class="form-label-modern">
+                            <i class="fas fa-align-left me-1"></i>
+                            Description (Optional)
+                        </label>
+                        <textarea class="form-control-modern <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" id="description" name="description"
+                            rows="4" placeholder="Add any additional information about this class..."><?php echo e(old('description')); ?></textarea>
+                        <?php $__errorArgs = ['description'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <div class="text-danger form-text-modern"><?php echo e($message); ?></div>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        <small class="form-text-modern">Optional: Add notes or special instructions for this class</small>
+                    </div>
+
+                    <!-- Student Assignment -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <i class="fas fa-user-graduate me-1"></i>
+                            Assign Students (Optional)
+                        </label>
+                        <div class="form-text-modern mb-2">
+                            You can select existing students to add to this class. The selected students will have their
+                            class and school/department information updated automatically.
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <span class="text-muted small">Quick presets:</span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="presetAll">All
+                                        Students</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="presetYear1">Year
+                                        1</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="presetYear2">Year
+                                        2</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="presetYear3">Year
+                                        3</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="presetYear4">Year
+                                        4</button>
+                                    <button type="button" class="btn btn-sm btn-outline-info ms-auto"
+                                        id="previewChangesBtn">
+                                        <i class="fas fa-eye me-1"></i> Preview Changes
+                                    </button>
+                                </div>
+                                <small class="form-text-modern">Use presets to auto-select students by year. Preview shows
+                                    what will be updated before saving.</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="student_year_filter" class="form-label-modern">Filter by Year</label>
+                                <select id="student_year_filter" class="form-select-modern">
+                                    <option value="">All Years</option>
+                                    <option value="1">1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="student_search" class="form-label-modern">Search by Student ID or Name</label>
+                                <input type="text" id="student_search" class="form-control-modern"
+                                    placeholder="Search students...">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="fw-semibold">Available Students</span>
+                                        <span class="badge bg-secondary ms-2" id="availableCount">0</span>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            id="selectAllAvailable">Select All</button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                            id="deselectAllAvailable">Clear</button>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <!-- Student Assignment -->
-                            <div class="card border-info bg-light">
-                                <div class="card-header py-2">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-user-graduate me-2"></i>Add Students to Class
-                                    </h6>
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <span class="fw-semibold">Selected Students</span>
+                                        <span class="badge bg-success ms-2" id="selectedCount">0</span>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                            id="selectAllSelected">Select All</button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            id="deselectAllSelected">Clear</button>
+                                    </div>
                                 </div>
-                                <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle"></i> 
-                                        Select students to enroll in this class. You can add students now or after creating the class.
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label for="student_year_filter" class="form-label">Year</label>
-                                                <select id="student_year_filter" class="form-select form-select-sm">
-                                                    <option value="">All Years</option>
-                                                    <option value="1">1st Year</option>
-                                                    <option value="2">2nd Year</option>
-                                                    <option value="3">3rd Year</option>
-                                                    <option value="4">4th Year</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label for="student_search" class="form-label">Search by Student ID or Name</label>
-                                                <input type="text" id="student_search" class="form-control form-control-sm" placeholder="Search students...">
-                                            </div>
+                            </div>
+                        </div>
+
+                        <div class="border rounded p-3" style="height: 320px; overflow-y: auto;">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div id="availableStudents" class="h-100">
+                                        <div class="text-center text-muted">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading students...
                                         </div>
                                     </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label class="form-label mb-0">
-                                                    <strong>Available Students</strong>
-                                                    <span class="badge bg-secondary ms-2" id="availableCount">0</span>
-                                                </label>
-                                                <div>
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllAvailable">Select All</button>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllAvailable">Clear</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <label class="form-label mb-0">
-                                                    <strong>Selected Students</strong>
-                                                    <span class="badge bg-success ms-2" id="selectedCount">0</span>
-                                                </label>
-                                                <div>
-                                                    <button type="button" class="btn btn-sm btn-outline-success" id="selectAllSelected">Select All</button>
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" id="deselectAllSelected">Clear</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="border rounded p-2" style="height: 200px; overflow-y: auto;">
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="selectedStudents" class="h-100">
                                         <div class="text-center text-muted">
                                             <i class="fas fa-spinner fa-spin"></i> Loading students...
                                         </div>
@@ -274,228 +912,507 @@ unset($__errorArgs, $__bag); ?>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Hidden input to store selected student IDs -->
-                    <input type="hidden" name="assigned_students" id="assigned_students" value="">
-                    
-                    <!-- Submit Buttons -->
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Create Class
+
+                    <!-- Hidden input for selected students -->
+                    <input type="hidden" name="assigned_students" id="assigned_students"
+                        value="<?php echo e(old('assigned_students', '')); ?>">
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit-modern">
+                            <i class="fas fa-check"></i>
+                            Create Class
                         </button>
-                        <a href="<?php echo e(route('teacher.classes')); ?>" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-2"></i>Cancel
+                        <a href="<?php echo e(route('teacher.classes')); ?>" class="btn-cancel-modern">
+                            <i class="fas fa-times"></i>
+                            Cancel
                         </a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-.btn-primary {
-    background: linear-gradient(45deg, #007bff, #0056b3);
-    color: white;
-    border: none;
-}
-
-.btn-primary:hover {
-    background: linear-gradient(45deg, #0056b3, #004085);
-    color: white;
-    border: none;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,.2);
-}
-
-.card {
-    border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,.075);
-}
-
-.student-item {
-    transition: all 0.2s ease-in-out;
-}
-
-.student-item:hover {
-    background-color: #f8f9fa;
-}
-
-.border-info {
-    border-left: 4px solid #17a2b8 !important;
-}
-
-.bg-light {
-    background-color: #f8f9fa !important;
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const studentYearFilter = document.getElementById('student_year_filter');
-    const studentSearch = document.getElementById('student_search');
-    const availableStudentsDiv = document.getElementById('availableStudents');
-    const selectedStudentsDiv = document.getElementById('selectedStudents');
-    const availableCount = document.getElementById('availableCount');
-    const selectedCount = document.getElementById('selectedCount');
-    const assignedStudentsInput = document.getElementById('assigned_students');
-    
-    let allStudents = [];
-    let selectedStudents = new Set();
-    
-    // Load students function
-    function loadStudents() {
-        fetch('/admin/classes/get-students', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                year: studentYearFilter.value,
-                search: studentSearch.value
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            allStudents = data.students || [];
-            renderAvailableStudents();
-            renderSelectedStudents();
-        })
-        .catch(error => {
-            console.error('Error loading students:', error);
-            availableStudentsDiv.innerHTML = '<div class="text-center text-danger">Error loading students</div>';
-        });
-    }
-    
-    // Event listeners for filters
-    studentYearFilter.addEventListener('change', loadStudents);
-    studentSearch.addEventListener('input', debounce(loadStudents, 300));
-    
-    // Select/Clear buttons
-    document.getElementById('selectAllAvailable').addEventListener('click', function() {
-        const checkboxes = availableStudentsDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = true);
-        updateSelectedCount();
-    });
-    
-    document.getElementById('deselectAllAvailable').addEventListener('click', function() {
-        const checkboxes = availableStudentsDiv.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = false);
-        updateSelectedCount();
-    });
-    
-    // Toggle student selection
-    function toggleStudent(studentId) {
-        const checkbox = document.querySelector(`input[value="${studentId}"]`);
-        if (checkbox) {
-            if (selectedStudents.has(studentId)) {
-                selectedStudents.delete(studentId);
-                checkbox.checked = false;
-            } else {
-                selectedStudents.add(studentId);
-                checkbox.checked = true;
-            }
-            updateSelectedCount();
-        }
-    }
-    
-    // Update selected count display
-    function updateSelectedCount() {
-        const selectedStudentsList = Array.from(selectedStudents);
-        selectedCount.textContent = selectedStudentsList.length;
-        assignedStudentsInput.value = selectedStudentsList.join(',');
-    }
-    
-    // Render available students
-    function renderAvailableStudents() {
-        const filteredStudents = filterStudents();
-        const availableStudents = filteredStudents.filter(student => !selectedStudents.has(studentId));
-        
-        availableCount.textContent = availableStudents.length;
-        
-        if (availableStudents.length === 0) {
-            availableStudentsDiv.innerHTML = '<div class="text-center text-muted">No available students</div>';
-            return;
-        }
-        
-        let html = '';
-        availableStudents.forEach(student => {
-            html += `
-                <div class="student-item d-flex align-items-center p-2 border-bottom hover-bg-light">
-                    <input type="checkbox" class="form-check-input me-2" value="${student.id}" 
-                           onchange="toggleStudent(${student.id})">
-                    <div class="flex-grow-1">
-                        <div class="fw-bold">${student.name}</div>
-                        <small class="text-muted">
-                            ${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}
-                        </small>
+    <!-- Preview Changes Modal -->
+    <div class="modal fade" id="previewChangesModal" tabindex="-1" aria-labelledby="previewChangesModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="previewChangesModalLabel">Preview Changes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>Class</strong>: <span id="previewClassName">-</span><br>
+                        <strong>Course</strong>: <span id="previewCourseName">-</span><br>
+                        <strong>School</strong>: <span id="previewSchool">-</span><br>
+                        <strong>Department</strong>: <span id="previewDepartment">-</span><br>
+                        <strong>Selected Students</strong>: <span id="previewStudentCount">0</span>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Saving will update the selected students' assigned class, school, and
+                        department.
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="mb-2">Preview Student List (first 20)</h6>
+                        <ul class="list-group" id="previewStudentList" style="max-height: 250px; overflow-y: auto;"></ul>
                     </div>
                 </div>
-            `;
-        });
-        
-        availableStudentsDiv.innerHTML = html;
-    }
-    
-    // Render selected students
-    function renderSelectedStudents() {
-        const selectedStudentsList = Array.from(selectedStudents);
-        
-        if (selectedStudentsList.length === 0) {
-            selectedStudentsDiv.innerHTML = '<div class="text-center text-muted">No students selected</div>';
-            assignedStudentsInput.value = '';
-            return;
-        }
-        
-        let html = '';
-        selectedStudentsList.forEach(student => {
-            html += `
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="confirmPreviewSaveBtn">Proceed to Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const subjectSelect = document.getElementById('subject_id');
+            const courseSelect = document.getElementById('course_id');
+            const classNameInput = document.getElementById('class_name');
+            const form = document.querySelector('form');
+            const submitBtn = document.querySelector('.btn-submit-modern');
+
+            // Student assignment controls
+            const studentYearFilter = document.getElementById('student_year_filter');
+            const studentSearch = document.getElementById('student_search');
+            const availableStudentsDiv = document.getElementById('availableStudents');
+            const selectedStudentsDiv = document.getElementById('selectedStudents');
+            const assignedStudentsInput = document.getElementById('assigned_students');
+            const availableCount = document.getElementById('availableCount');
+            const selectedCount = document.getElementById('selectedCount');
+            const getStudentsUrl = '<?php echo e(route('teacher.classes.get-students')); ?>';
+
+            let allStudents = [];
+            const selectedStudents = new Set();
+
+            // Initialize selection from previous input (if any)
+            if (assignedStudentsInput && assignedStudentsInput.value) {
+                (assignedStudentsInput.value || '').split(',').map(id => Number(id.trim())).filter(id => !isNaN(id))
+                    .forEach(id => selectedStudents.add(id));
+            }
+
+            // Helper: get selected course meta (school / department)
+            function getCourseMeta() {
+                const option = courseSelect?.options[courseSelect.selectedIndex];
+                return {
+                    courseName: option?.text || '',
+                    school: option?.dataset?.school || '',
+                    department: option?.dataset?.department || '',
+                };
+            }
+
+            // Preview button state
+            function updatePreviewButtonState() {
+                const btn = document.getElementById('previewChangesBtn');
+                if (!btn) return;
+                btn.disabled = selectedStudents.size === 0;
+            }
+
+            // Select all students currently visible in the filtered list
+            function selectAllFiltered() {
+                filterStudents().forEach(student => selectedStudents.add(student.id));
+                renderAvailableStudents();
+                renderSelectedStudents();
+            }
+
+            // Show preview modal with summary
+            function showPreview() {
+                const className = classNameInput.value.trim() || 'N/A';
+                const courseMeta = getCourseMeta();
+                const studentCount = selectedStudents.size;
+                const studentsPreview = Array.from(selectedStudents)
+                    .map(id => allStudents.find(s => s.id === id))
+                    .filter(Boolean)
+                    .slice(0, 20);
+
+                document.getElementById('previewClassName').textContent = className;
+                document.getElementById('previewCourseName').textContent = courseMeta.courseName || 'N/A';
+                document.getElementById('previewSchool').textContent = courseMeta.school || 'N/A';
+                document.getElementById('previewDepartment').textContent = courseMeta.department || 'N/A';
+                document.getElementById('previewStudentCount').textContent = studentCount;
+
+                const list = document.getElementById('previewStudentList');
+                if (list) {
+                    list.innerHTML = studentsPreview.length ?
+                        studentsPreview.map(s => `<li class="list-group-item">${s.name} (${s.student_id})</li>`)
+                        .join('') :
+                        '<li class="list-group-item text-muted">No students selected</li>';
+                }
+
+                const modalEl = document.getElementById('previewChangesModal');
+                if (modalEl) {
+                    const modal = new bootstrap.Modal(modalEl);
+                    modal.show();
+                }
+            }
+
+            // Progress tracking
+            function updateProgress() {
+                const steps = document.querySelectorAll('.progress-step');
+                let currentStep = 1;
+
+                // Check form completion
+                const basicInfoComplete = classNameInput.value.trim() !== '' && subjectSelect.value !== '';
+                const detailsComplete = courseSelect.value !== '' &&
+                    document.getElementById('semester').value !== '' &&
+                    document.getElementById('academic_year').value.trim() !== '';
+
+                // Update progress steps
+                if (basicInfoComplete) {
+                    steps[0].classList.add('active');
+                    steps[1].classList.add('active');
+                    currentStep = 2;
+                }
+
+                if (detailsComplete) {
+                    steps[1].classList.add('active');
+                    steps[2].classList.add('active');
+                    currentStep = 3;
+                }
+
+                return currentStep;
+            }
+
+            // Auto-populate course when subject is selected
+            if (subjectSelect) {
+                subjectSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+
+                    if (selectedOption.value) {
+                        const subjectCode = selectedOption.dataset.code || '';
+                        const courseName = selectedOption.dataset.course || '';
+
+                        // Try to find and select the matching course
+                        if (courseName) {
+                            for (let i = 0; i < courseSelect.options.length; i++) {
+                                if (courseSelect.options[i].text.includes(courseName)) {
+                                    courseSelect.value = courseSelect.options[i].value;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Suggest a class name if empty
+                        if (!classNameInput.value && subjectCode) {
+                            const year = document.getElementById('year').value || '';
+                            const section = document.getElementById('section').value || '';
+                            if (year && section) {
+                                classNameInput.value = `${subjectCode} - Year ${year} Section ${section}`;
+                            }
+                        }
+                    }
+
+                    updateProgress();
+                });
+            }
+
+            // Update class name suggestion when year or section changes
+            const yearSelect = document.getElementById('year');
+            const sectionSelect = document.getElementById('section');
+
+            function updateClassNameSuggestion() {
+                if (!classNameInput.value) {
+                    const subjectOption = subjectSelect.options[subjectSelect.selectedIndex];
+                    const subjectCode = subjectOption.dataset.code || '';
+                    const year = yearSelect.value;
+                    const section = sectionSelect.value;
+
+                    if (subjectCode && year && section) {
+                        classNameInput.value = `${subjectCode} - Year ${year} Section ${section}`;
+                    }
+                }
+
+                updateProgress();
+            }
+
+            if (yearSelect) yearSelect.addEventListener('change', updateClassNameSuggestion);
+            if (sectionSelect) sectionSelect.addEventListener('change', updateClassNameSuggestion);
+
+            // Real-time validation
+            function validateField(field) {
+                const value = field.value.trim();
+                const formGroup = field.closest('.form-group-modern');
+
+                if (field.hasAttribute('required') && value === '') {
+                    field.classList.add('is-invalid');
+                    field.classList.remove('is-valid');
+                } else if (value !== '') {
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                } else {
+                    field.classList.remove('is-invalid', 'is-valid');
+                }
+
+                updateProgress();
+            }
+
+            // Add validation to all required fields
+            const requiredFields = form.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                field.addEventListener('blur', () => validateField(field));
+                field.addEventListener('input', () => {
+                    if (field.classList.contains('is-invalid')) {
+                        validateField(field);
+                    }
+                });
+            });
+
+            // Form submission with loading state
+            form.addEventListener('submit', function(e) {
+                // Validate all fields
+                let isValid = true;
+                requiredFields.forEach(field => {
+                    validateField(field);
+                    if (field.classList.contains('is-invalid')) {
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+
+                    // Scroll to first error
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.focus();
+                        firstError.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+
+                    return;
+                }
+
+                // Add loading state
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Class...';
+            });
+
+            // Student assignment helper functions
+            function updateSelectedCount() {
+                const ids = Array.from(selectedStudents);
+                if (selectedCount) selectedCount.textContent = ids.length;
+                if (assignedStudentsInput) assignedStudentsInput.value = ids.join(',');
+                updatePreviewButtonState();
+            }
+
+            function filterStudents() {
+                return allStudents.filter(student => {
+                    if (studentYearFilter && studentYearFilter.value && String(student.year) !== String(
+                            studentYearFilter.value)) return false;
+                    if (studentSearch && studentSearch.value) {
+                        const search = studentSearch.value.toLowerCase();
+                        return student.name.toLowerCase().includes(search) || student.student_id
+                            .toLowerCase().includes(search);
+                    }
+                    return true;
+                });
+            }
+
+            function renderAvailableStudents() {
+                const available = filterStudents().filter(student => !selectedStudents.has(student.id));
+                if (availableCount) availableCount.textContent = available.length;
+
+                if (!available.length) {
+                    availableStudentsDiv.innerHTML =
+                        '<div class="text-center text-muted">No available students</div>';
+                    return;
+                }
+
+                availableStudentsDiv.innerHTML = available.map(student => `
+            <div class="student-item d-flex align-items-center p-2 border-bottom hover-bg-light">
+                <input type="checkbox" class="form-check-input me-2" value="${student.id}" ${selectedStudents.has(student.id) ? 'checked' : ''}>
+                <div class="flex-grow-1">
+                    <div class="fw-bold">${student.name}</div>
+                    <small class="text-muted">${student.student_id} • ${student.course_name || 'N/A'} • Year ${student.year || '-'} • ${student.section || '-'}</small>
+                </div>
+            </div>
+        `).join('');
+
+                // Attach change listeners
+                availableStudentsDiv.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', () => toggleStudent(Number(checkbox.value)));
+                });
+            }
+
+            function renderSelectedStudents() {
+                const selectedIds = Array.from(selectedStudents);
+                if (selectedIds.length === 0) {
+                    selectedStudentsDiv.innerHTML =
+                        '<div class="text-center text-muted">No students selected</div>';
+                    updateSelectedCount();
+                    return;
+                }
+
+                selectedStudentsDiv.innerHTML = selectedIds.map(id => {
+                    const student = allStudents.find(s => s.id === id) || {
+                        id,
+                        name: 'Unknown',
+                        student_id: '',
+                        course_name: '',
+                        year: '',
+                        section: ''
+                    };
+                    return `
                 <div class="student-item d-flex align-items-center p-2 border-bottom">
-                    <input type="checkbox" class="form-check-input me-2" checked value="${student.id}" 
-                           onchange="toggleStudent(${student.id})">
+                    <input type="checkbox" class="form-check-input me-2" checked value="${student.id}">
                     <div class="flex-grow-1">
                         <div class="fw-bold">${student.name}</div>
-                        <small class="text-muted">
-                            ${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}
-                        </small>
+                        <small class="text-muted">${student.student_id ? student.student_id + ' • ' : ''}${student.course_name ? student.course_name + ' • ' : ''}${student.year ? 'Year ' + student.year + ' • ' : ''}${student.section || ''}</small>
                     </div>
                 </div>
             `;
-        });
-        
-        selectedStudentsDiv.innerHTML = html;
-    }
-    
-    // Filter students
-    function filterStudents() {
-        return allStudents.filter(student => {
-            if (studentYearFilter.value && student.year != studentYearFilter.value) return false;
-            if (studentSearch.value) {
-                const search = studentSearch.value.toLowerCase();
-                return student.name.toLowerCase().includes(search) || 
-                       student.student_id.toLowerCase().includes(search);
+                }).join('');
+
+                selectedStudentsDiv.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', () => toggleStudent(Number(checkbox.value)));
+                });
+
+                updateSelectedCount();
             }
-            return true;
+
+            function toggleStudent(studentId) {
+                if (selectedStudents.has(studentId)) {
+                    selectedStudents.delete(studentId);
+                } else {
+                    selectedStudents.add(studentId);
+                }
+
+                renderAvailableStudents();
+                renderSelectedStudents();
+            }
+
+            function loadStudents() {
+                return fetch(getStudentsUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                'content'),
+                        },
+                        body: JSON.stringify({
+                            year: studentYearFilter ? studentYearFilter.value : null,
+                            search: studentSearch ? studentSearch.value : null,
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        allStudents = data.students || [];
+                        renderAvailableStudents();
+                        renderSelectedStudents();
+                        updatePreviewButtonState();
+                    })
+                    .catch(() => {
+                        availableStudentsDiv.innerHTML =
+                            '<div class="text-center text-danger">Error loading students</div>';
+                    });
+            }
+
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            // Events for student selection filters
+            if (studentYearFilter) studentYearFilter.addEventListener('change', loadStudents);
+            if (studentSearch) studentSearch.addEventListener('input', debounce(loadStudents, 300));
+
+            document.getElementById('selectAllAvailable')?.addEventListener('click', () => {
+                const availableIds = Array.from(availableStudentsDiv.querySelectorAll(
+                    'input[type="checkbox"]')).map(cb => Number(cb.value));
+                availableIds.forEach(id => selectedStudents.add(id));
+                renderAvailableStudents();
+                renderSelectedStudents();
+            });
+
+            document.getElementById('deselectAllAvailable')?.addEventListener('click', () => {
+                const availableIds = Array.from(availableStudentsDiv.querySelectorAll(
+                    'input[type="checkbox"]')).map(cb => Number(cb.value));
+                availableIds.forEach(id => selectedStudents.delete(id));
+                renderAvailableStudents();
+                renderSelectedStudents();
+            });
+
+            document.getElementById('selectAllSelected')?.addEventListener('click', () => {
+                allStudents.forEach(student => selectedStudents.add(student.id));
+                renderAvailableStudents();
+                renderSelectedStudents();
+            });
+
+            document.getElementById('deselectAllSelected')?.addEventListener('click', () => {
+                selectedStudents.clear();
+                renderAvailableStudents();
+                renderSelectedStudents();
+            });
+
+            // Preset selection buttons
+            document.getElementById('presetAll')?.addEventListener('click', () => {
+                if (studentYearFilter) studentYearFilter.value = '';
+                if (studentSearch) studentSearch.value = '';
+                loadStudents().then(() => selectAllFiltered());
+            });
+            document.getElementById('presetYear1')?.addEventListener('click', () => {
+                if (studentYearFilter) studentYearFilter.value = '1';
+                loadStudents().then(() => selectAllFiltered());
+            });
+            document.getElementById('presetYear2')?.addEventListener('click', () => {
+                if (studentYearFilter) studentYearFilter.value = '2';
+                loadStudents().then(() => selectAllFiltered());
+            });
+            document.getElementById('presetYear3')?.addEventListener('click', () => {
+                if (studentYearFilter) studentYearFilter.value = '3';
+                loadStudents().then(() => selectAllFiltered());
+            });
+            document.getElementById('presetYear4')?.addEventListener('click', () => {
+                if (studentYearFilter) studentYearFilter.value = '4';
+                loadStudents().then(() => selectAllFiltered());
+            });
+
+            // Preview button
+            document.getElementById('previewChangesBtn')?.addEventListener('click', showPreview);
+            document.getElementById('confirmPreviewSaveBtn')?.addEventListener('click', () => {
+                const modalEl = document.getElementById('previewChangesModal');
+                if (modalEl) {
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+                }
+                form.requestSubmit();
+            });
+
+            // Initialize student list
+            loadStudents();
+
+            // Add input formatting for academic year
+            const academicYearInput = document.getElementById('academic_year');
+            if (academicYearInput) {
+                academicYearInput.addEventListener('input', function() {
+                    let value = this.value.replace(/[^\d-]/g, '');
+
+                    // Auto-format as YYYY-YYYY
+                    if (value.length === 4 && !value.includes('-')) {
+                        value = value + '-';
+                    } else if (value.length > 9) {
+                        value = value.substring(0, 9);
+                    }
+
+                    this.value = value;
+                    updateProgress();
+                });
+            }
+
+            // Initialize progress
+            updateProgress();
         });
-    }
-    
-    // Debounce function
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
-            clearTimeout(timeout);
-            return later();
-        };
-    }
-    
-    // Initial load
-    loadStudents();
-});
-</script>
+    </script>
+
+<?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.teacher', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/classes/create.blade.php ENDPATH**/ ?>

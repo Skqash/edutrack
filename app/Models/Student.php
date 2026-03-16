@@ -27,6 +27,8 @@ class Student extends Model
         'class_id',
         'gpa',
         'status',
+        'school',
+        'department',
     ];
 
     /**

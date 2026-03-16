@@ -11,7 +11,8 @@
                     <a href="<?php echo e(route('teacher.classes.edit', $class->id)); ?>" class="btn btn-warning btn-sm">
                         <i class="fas fa-edit me-1"></i> Edit
                     </a>
-                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteClassModal">
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#deleteClassModal">
                         <i class="fas fa-trash me-1"></i> Delete
                     </button>
                     <a href="<?php echo e(route('teacher.classes')); ?>" class="btn btn-outline-secondary btn-sm">
@@ -504,6 +505,36 @@ unset($__errorArgs, $__bag); ?>
         </div>
     </div>
 
+    <script>
+        function removeStudent(studentId) {
+            if (!confirm('Remove this student from the class?')) {
+                return;
+            }
+
+            const urlTemplate =
+                "<?php echo e(route('teacher.classes.students.remove', ['classId' => $class->id, 'studentId' => '__STUDENT_ID__'])); ?>";
+            const url = urlTemplate.replace('__STUDENT_ID__', studentId);
+
+            fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Failed to remove student');
+                    }
+                })
+                .catch(() => {
+                    alert('Failed to remove student');
+                });
+        }
+    </script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('layouts.teacher', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/classes/show.blade.php ENDPATH**/ ?>

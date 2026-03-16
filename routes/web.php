@@ -13,6 +13,7 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\SchoolRequestController;
 use App\Http\Controllers\Super\DashboardController as SuperDashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -180,12 +181,17 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/dashboard', [\App\Http\Controllers\TeacherController::class, 'dashboard'])->name('dashboard');
     Route::get('/classes', [\App\Http\Controllers\TeacherController::class, 'classes'])->name('classes');
     Route::get('/subjects', [\App\Http\Controllers\TeacherController::class, 'subjectsIndex'])->name('subjects');
+    Route::post('/subjects/request', [\App\Http\Controllers\TeacherController::class, 'requestSubject'])->name('subjects.request');
+    Route::post('/subjects/create', [\App\Http\Controllers\TeacherController::class, 'createSubject'])->name('subjects.create');
     Route::get('/classes/create', [\App\Http\Controllers\TeacherController::class, 'createClass'])->name('classes.create');
     Route::post('/classes', [\App\Http\Controllers\TeacherController::class, 'storeClass'])->name('classes.store');
     Route::get('/classes/{classId}', [\App\Http\Controllers\TeacherController::class, 'classDetail'])->name('classes.show');
     Route::get('/classes/{classId}/edit', [\App\Http\Controllers\TeacherController::class, 'editClass'])->name('classes.edit');
     Route::put('/classes/{classId}', [\App\Http\Controllers\TeacherController::class, 'updateClass'])->name('classes.update');
     Route::delete('/classes/{classId}', [\App\Http\Controllers\TeacherController::class, 'destroyClass'])->name('classes.destroy');
+
+    // AJAX / helper endpoints
+    Route::post('/classes/get-students', [\App\Http\Controllers\TeacherController::class, 'getStudents'])->name('classes.get-students');
 
     // Students
     Route::get('/students/add', [\App\Http\Controllers\TeacherController::class, 'showAddStudent'])->name('students.add');
@@ -194,6 +200,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/students/search', [\App\Http\Controllers\TeacherController::class, 'searchStudents'])->name('students.search');
     Route::post('/students/add-existing', [\App\Http\Controllers\TeacherController::class, 'addExistingStudents'])->name('students.add-existing');
     Route::get('/classes/{classId}/students', [\App\Http\Controllers\TeacherController::class, 'indexStudents'])->name('students.index');
+    Route::delete('/classes/{classId}/students/{studentId}', [\App\Http\Controllers\TeacherController::class, 'removeStudentFromClass'])->name('classes.students.remove');
     Route::get('/students/{studentId}/edit', [\App\Http\Controllers\TeacherController::class, 'editStudent'])->name('students.edit');
     Route::put('/students/{studentId}', [\App\Http\Controllers\TeacherController::class, 'updateStudent'])->name('students.update');
     Route::delete('/students/{studentId}', [\App\Http\Controllers\TeacherController::class, 'destroyStudent'])->name('students.destroy');
@@ -215,6 +222,9 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
 
     // Utility Routes
     Route::post('/grades/save-field', [\App\Http\Controllers\TeacherController::class, 'saveGradeField'])->name('grades.save-field');
+    Route::post('/grades/entry/{classId}/save-cell', [\App\Http\Controllers\TeacherController::class, 'saveGradeEntryCell'])->name('grades.entry.save-cell');
+    Route::delete('/grades/entry/{classId}/clear-cell', [\App\Http\Controllers\TeacherController::class, 'clearGradeEntryCell'])->name('grades.entry.clear-cell');
+    Route::delete('/grades/entry/{classId}/clear-student', [\App\Http\Controllers\TeacherController::class, 'clearStudentGradeEntry'])->name('grades.entry.clear-student');
     Route::get('/grades/scores/{studentId}/{classId}/{term}', [\App\Http\Controllers\TeacherController::class, 'getStudentScores'])->name('grades.scores');
     Route::get('/grades/analytics/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeAnalytics'])->name('grades.analytics');
     Route::get('/grades/results', [\App\Http\Controllers\TeacherController::class, 'gradeResults'])->name('grades.results');
@@ -230,14 +240,15 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/attendance/history/{classId}', [\App\Http\Controllers\TeacherController::class, 'attendanceHistory'])->name('attendance.history');
 
     // Assignment Management
-    Route::get('/assignments/list/{classId}', [\App\Http\Controllers\TeacherController::class, 'listAssignments'])->name('assignments.list');
-    Route::get('/assignments/create/{classId}', [\App\Http\Controllers\TeacherController::class, 'createAssignment'])->name('assignments.create');
-    Route::post('/assignments/store/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeAssignment'])->name('assignments.store');
-    Route::get('/assignments/edit/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'editAssignment'])->name('assignments.edit');
-    Route::post('/assignments/update/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'updateAssignment'])->name('assignments.update');
-    Route::delete('/assignments/delete/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'deleteAssignment'])->name('assignments.delete');
-    Route::get('/assignments/grade/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'gradeAssignments'])->name('assignments.grade');
-    Route::post('/assignments/score/{classId}/{assignmentId}/{submissionId}', [\App\Http\Controllers\TeacherController::class, 'submitAssignmentScore'])->name('assignments.score');
+    // TODO: Implement assignment management feature
+    // Route::get('/assignments/list/{classId}', [\App\Http\Controllers\TeacherController::class, 'listAssignments'])->name('assignments.list');
+    // Route::get('/assignments/create/{classId}', [\App\Http\Controllers\TeacherController::class, 'createAssignment'])->name('assignments.create');
+    // Route::post('/assignments/store/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeAssignment'])->name('assignments.store');
+    // Route::get('/assignments/edit/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'editAssignment'])->name('assignments.edit');
+    // Route::post('/assignments/update/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'updateAssignment'])->name('assignments.update');
+    // Route::delete('/assignments/delete/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'deleteAssignment'])->name('assignments.delete');
+    // Route::get('/assignments/grade/{classId}/{assignmentId}', [\App\Http\Controllers\TeacherController::class, 'gradeAssignments'])->name('assignments.grade');
+    // Route::post('/assignments/score/{classId}/{assignmentId}/{submissionId}', [\App\Http\Controllers\TeacherController::class, 'submitAssignmentScore'])->name('assignments.score');
 
     // Legacy routes (keeping for backward compatibility)
     Route::get('/grades/entry/old/{classId}', [\App\Http\Controllers\TeacherController::class, 'gradeEntry'])->name('grades.entry.old');
@@ -252,12 +263,24 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::post('/settings/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/theme', [\App\Http\Controllers\SettingsController::class, 'changeTheme'])->name('settings.theme');
 
+    // School connection request (teacher)
+    Route::get('/school-request', [SchoolRequestController::class, 'create'])->name('school-request.create');
+    Route::post('/school-request', [SchoolRequestController::class, 'store'])->name('school-request.store');
+    Route::get('/school-requests', [SchoolRequestController::class, 'history'])->name('school-requests.history');
+
     // Profile routes
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'showTeacherProfile'])->name('profile.show');
     Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'editTeacherProfile'])->name('profile.edit');
     Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'updateTeacherProfile'])->name('profile.update');
     Route::get('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
     Route::post('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.change-password.update');
+});
+
+/* -------- ADMIN (ADMIN + SUPER CAN ACCESS) -------- */
+Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/school-requests', [SchoolRequestController::class, 'index'])->name('school-requests.index');
+    Route::get('/school-requests/{schoolRequest}', [SchoolRequestController::class, 'show'])->name('school-requests.show');
+    Route::post('/school-requests/{schoolRequest}', [SchoolRequestController::class, 'update'])->name('school-requests.update');
 });
 
 /* -------- STUDENT (STUDENT + SUPER CAN ACCESS) -------- */

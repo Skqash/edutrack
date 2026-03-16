@@ -35,7 +35,7 @@
                         <div class="d-flex align-items-center gap-3 flex-grow-1">
                             <i class="fas fa-door-open fa-lg"></i>
                             <div>
-                                <h5 class="mb-0">{{ $class->name }}</h5>
+                                <h5 class="mb-0">{{ $class->class_name ?? $class->name }}</h5>
                                 <small>
                                     @if ($class->course && $class->course->course_name)
                                         {{ $class->course->course_name }}
