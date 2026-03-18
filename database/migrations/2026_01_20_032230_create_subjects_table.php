@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id();
             $table->string('subject_code')->unique();
             $table->string('subject_name');
-            $table->string('category');
+            $table->string('category')->nullable();
             $table->integer('credit_hours')->default(3);
-            $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
-            $table->foreignId('instructor_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('course_id')->nullable()->constrained('courses')->onDelete('set null');
+            $table->foreignId('instructor_id')->nullable()->constrained('users')->onDelete('set null');
             $table->text('description')->nullable();
+            $table->string('type')->nullable();
+            $table->string('program')->nullable();
             $table->timestamps();
         });
     }

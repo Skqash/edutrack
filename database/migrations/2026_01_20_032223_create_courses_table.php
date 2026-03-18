@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('courses', function (Blueprint $table) {
             $table->id();
-            $table->string('course_code')->unique();
-            $table->string('course_name');
+            $table->string('program_code')->unique();
+            $table->string('program_name');
+            $table->string('department')->nullable();
             $table->text('description')->nullable();
-            $table->foreignId('instructor_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('head_id')->nullable()->constrained('users')->onDelete('set null');
             $table->enum('status', ['Active', 'Inactive'])->default('Active');
-            $table->integer('credit_hours')->default(3);
+            $table->string('duration')->nullable();
+            $table->integer('max_students')->nullable();
+            $table->integer('current_students')->default(0);
             $table->timestamps();
         });
     }

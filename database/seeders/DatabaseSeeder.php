@@ -72,26 +72,27 @@ class DatabaseSeeder extends Seeder
         /* ============= COURSES ============= */
         $courses = [];
         $courseData = [
-            ['code' => 'CS101', 'name' => 'Introduction to Programming', 'credits' => 3, 'desc' => 'Learn basic programming concepts and languages', 'teacher' => 0],
-            ['code' => 'CS102', 'name' => 'Data Structures', 'credits' => 4, 'desc' => 'Study arrays, linked lists, trees, and graphs', 'teacher' => 4],
-            ['code' => 'CS201', 'name' => 'Web Development', 'credits' => 4, 'desc' => 'Frontend and backend web development', 'teacher' => 4],
-            ['code' => 'CS301', 'name' => 'Artificial Intelligence', 'credits' => 4, 'desc' => 'Machine learning and AI algorithms', 'teacher' => 4],
-            ['code' => 'MATH201', 'name' => 'Calculus I', 'credits' => 4, 'desc' => 'Advanced calculus concepts', 'teacher' => 1],
-            ['code' => 'MATH301', 'name' => 'Linear Algebra', 'credits' => 3, 'desc' => 'Matrices and vector spaces', 'teacher' => 1],
-            ['code' => 'ENG102', 'name' => 'English Literature', 'credits' => 3, 'desc' => 'Classic and modern literature', 'teacher' => 2],
-            ['code' => 'PHY101', 'name' => 'Physics I', 'credits' => 4, 'desc' => 'Mechanics and waves', 'teacher' => 0],
-            ['code' => 'CHEM101', 'name' => 'Chemistry I', 'credits' => 4, 'desc' => 'General chemistry principles', 'teacher' => 3],
-            ['code' => 'BIO101', 'name' => 'Biology I', 'credits' => 3, 'desc' => 'Cell biology and genetics', 'teacher' => 5],
+            ['program_code' => 'BSCS', 'program_name' => 'Bachelor of Science in Computer Science', 'department' => 'Computer Science', 'desc' => 'Covers programming, algorithms, data structures, and software engineering.', 'duration' => '4 years', 'max_students' => 50],
+            ['program_code' => 'BSIT', 'program_name' => 'Bachelor of Science in Information Technology', 'department' => 'Information Technology', 'desc' => 'Focuses on web development, networking, and database management.', 'duration' => '4 years', 'max_students' => 50],
+            ['program_code' => 'BSECE', 'program_name' => 'Bachelor of Science in Electronics Engineering', 'department' => 'Electronics Engineering', 'desc' => 'Covers circuit analysis, digital electronics, and communications.', 'duration' => '5 years', 'max_students' => 40],
+            ['program_code' => 'BSME', 'program_name' => 'Bachelor of Science in Mechanical Engineering', 'department' => 'Mechanical Engineering', 'desc' => 'Study of mechanics, thermodynamics, and materials science.', 'duration' => '5 years', 'max_students' => 40],
+            ['program_code' => 'BSBA', 'program_name' => 'Bachelor of Science in Business Administration', 'department' => 'Business Administration', 'desc' => 'Covers management, marketing, finance, and entrepreneurship.', 'duration' => '4 years', 'max_students' => 60],
+            ['program_code' => 'BSMATH', 'program_name' => 'Bachelor of Science in Mathematics', 'department' => 'Mathematics', 'desc' => 'Advanced mathematics including calculus, algebra, and statistics.', 'duration' => '4 years', 'max_students' => 40],
+            ['program_code' => 'BSENG', 'program_name' => 'Bachelor of Arts in English', 'department' => 'Languages', 'desc' => 'English language, literature, and communication.', 'duration' => '4 years', 'max_students' => 45],
+            ['program_code' => 'BSPHY', 'program_name' => 'Bachelor of Science in Physics', 'department' => 'Physics', 'desc' => 'Classical and modern physics principles.', 'duration' => '4 years', 'max_students' => 35],
+            ['program_code' => 'BSCHEM', 'program_name' => 'Bachelor of Science in Chemistry', 'department' => 'Chemistry', 'desc' => 'General and applied chemistry.', 'duration' => '4 years', 'max_students' => 35],
+            ['program_code' => 'BSBIO', 'program_name' => 'Bachelor of Science in Biology', 'department' => 'Biology', 'desc' => 'Cell biology, genetics, and ecology.', 'duration' => '4 years', 'max_students' => 40],
         ];
 
         foreach ($courseData as $cData) {
             $course = Course::create([
-                'course_code' => $cData['code'],
-                'course_name' => $cData['name'],
+                'program_code' => $cData['program_code'],
+                'program_name' => $cData['program_name'],
+                'department' => $cData['department'],
                 'description' => $cData['desc'],
-                'instructor_id' => $teachers[$cData['teacher']]->id,
                 'status' => 'Active',
-                'credit_hours' => $cData['credits'],
+                'duration' => $cData['duration'],
+                'max_students' => $cData['max_students'],
             ]);
             $courses[] = $course;
         }
@@ -99,16 +100,16 @@ class DatabaseSeeder extends Seeder
         /* ============= SUBJECTS ============= */
         $subjects = [];
         $subjectData = [
-            ['code' => 'SCI101', 'name' => 'Physics I', 'category' => 'Science', 'credits' => 4, 'course' => 0, 'teacher' => 0],
-            ['code' => 'MATH101', 'name' => 'Algebra Fundamentals', 'category' => 'Mathematics', 'credits' => 3, 'course' => 4, 'teacher' => 1],
-            ['code' => 'ENG101', 'name' => 'English Grammar', 'category' => 'Languages', 'credits' => 3, 'course' => 6, 'teacher' => 2],
-            ['code' => 'CS201', 'name' => 'Data Structures', 'category' => 'Computer Science', 'credits' => 4, 'course' => 1, 'teacher' => 4],
-            ['code' => 'CS202', 'name' => 'Web Development Basics', 'category' => 'Computer Science', 'credits' => 3, 'course' => 2, 'teacher' => 4],
-            ['code' => 'CHEM101', 'name' => 'General Chemistry', 'category' => 'Science', 'credits' => 4, 'course' => 8, 'teacher' => 3],
-            ['code' => 'BIO101', 'name' => 'Cell Biology', 'category' => 'Science', 'credits' => 3, 'course' => 9, 'teacher' => 5],
-            ['code' => 'HIST101', 'name' => 'World History', 'category' => 'Social Studies', 'credits' => 3, 'course' => 6, 'teacher' => 6],
-            ['code' => 'ECO101', 'name' => 'Microeconomics', 'category' => 'Economics', 'credits' => 3, 'course' => 4, 'teacher' => 7],
-            ['code' => 'MATH301', 'name' => 'Matrix Theory', 'category' => 'Mathematics', 'credits' => 3, 'course' => 5, 'teacher' => 1],
+            ['code' => 'SCI101', 'name' => 'Physics I', 'category' => 'Science', 'credit_hours' => 4, 'course' => 7, 'teacher' => 0],
+            ['code' => 'MATH101', 'name' => 'Algebra Fundamentals', 'category' => 'Mathematics', 'credit_hours' => 3, 'course' => 5, 'teacher' => 1],
+            ['code' => 'ENG101', 'name' => 'English Grammar', 'category' => 'Languages', 'credit_hours' => 3, 'course' => 6, 'teacher' => 2],
+            ['code' => 'CS201', 'name' => 'Data Structures', 'category' => 'Computer Science', 'credit_hours' => 4, 'course' => 0, 'teacher' => 4],
+            ['code' => 'CS202', 'name' => 'Web Development Basics', 'category' => 'Computer Science', 'credit_hours' => 3, 'course' => 1, 'teacher' => 4],
+            ['code' => 'CHEM101', 'name' => 'General Chemistry', 'category' => 'Science', 'credit_hours' => 4, 'course' => 8, 'teacher' => 3],
+            ['code' => 'BIO101', 'name' => 'Cell Biology', 'category' => 'Science', 'credit_hours' => 3, 'course' => 9, 'teacher' => 5],
+            ['code' => 'HIST101', 'name' => 'World History', 'category' => 'Social Studies', 'credit_hours' => 3, 'course' => 6, 'teacher' => 6],
+            ['code' => 'ECO101', 'name' => 'Microeconomics', 'category' => 'Economics', 'credit_hours' => 3, 'course' => 4, 'teacher' => 7],
+            ['code' => 'MATH301', 'name' => 'Matrix Theory', 'category' => 'Mathematics', 'credit_hours' => 3, 'course' => 5, 'teacher' => 1],
         ];
 
         foreach ($subjectData as $sData) {
@@ -116,7 +117,7 @@ class DatabaseSeeder extends Seeder
                 'subject_code' => $sData['code'],
                 'subject_name' => $sData['name'],
                 'category' => $sData['category'],
-                'credit_hours' => $sData['credits'],
+                'credit_hours' => $sData['credit_hours'],
                 'course_id' => $courses[$sData['course']]->id,
                 'instructor_id' => $teachers[$sData['teacher']]->id,
                 'description' => 'Comprehensive course on ' . $sData['name'],

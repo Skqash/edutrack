@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Course;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class CourseSeeder extends Seeder
@@ -12,67 +11,54 @@ class CourseSeeder extends Seeder
     {
         $courses = [
             [
-                'course_code' => 'CS101',
-                'course_name' => 'Introduction to Programming',
-                'credit_hours' => 3,
-                'description' => 'Learn basic programming concepts and languages',
+                'program_code' => 'BSCS',
+                'program_name' => 'Bachelor of Science in Computer Science',
+                'department' => 'Computer Science',
+                'description' => 'Covers programming, algorithms, data structures, and software engineering.',
+                'status' => 'Active',
+                'duration' => '4 years',
+                'max_students' => 50,
             ],
             [
-                'course_code' => 'CS102',
-                'course_name' => 'Data Structures',
-                'credit_hours' => 4,
-                'description' => 'Study arrays, linked lists, trees, and graphs',
+                'program_code' => 'BSIT',
+                'program_name' => 'Bachelor of Science in Information Technology',
+                'department' => 'Information Technology',
+                'description' => 'Focuses on web development, networking, and database management.',
+                'status' => 'Active',
+                'duration' => '4 years',
+                'max_students' => 50,
             ],
             [
-                'course_code' => 'CS201',
-                'course_name' => 'Web Development',
-                'credit_hours' => 4,
-                'description' => 'Frontend and backend web development',
+                'program_code' => 'BSECE',
+                'program_name' => 'Bachelor of Science in Electronics Engineering',
+                'department' => 'Electronics Engineering',
+                'description' => 'Covers circuit analysis, digital electronics, and communications.',
+                'status' => 'Active',
+                'duration' => '5 years',
+                'max_students' => 40,
             ],
             [
-                'course_code' => 'CS202',
-                'course_name' => 'Database Management',
-                'credit_hours' => 3,
-                'description' => 'SQL and NoSQL database systems',
+                'program_code' => 'BSME',
+                'program_name' => 'Bachelor of Science in Mechanical Engineering',
+                'department' => 'Mechanical Engineering',
+                'description' => 'Study of mechanics, thermodynamics, and materials science.',
+                'status' => 'Active',
+                'duration' => '5 years',
+                'max_students' => 40,
             ],
             [
-                'course_code' => 'CS301',
-                'course_name' => 'Artificial Intelligence',
-                'credit_hours' => 4,
-                'description' => 'Machine learning and AI algorithms',
-            ],
-            [
-                'course_code' => 'ECE101',
-                'course_name' => 'Circuit Analysis',
-                'credit_hours' => 3,
-                'description' => 'Basic electrical circuits and analysis',
-            ],
-            [
-                'course_code' => 'ECE102',
-                'course_name' => 'Digital Electronics',
-                'credit_hours' => 4,
-                'description' => 'Digital systems and logic gates',
-            ],
-            [
-                'course_code' => 'ME101',
-                'course_name' => 'Mechanics of Materials',
-                'credit_hours' => 3,
-                'description' => 'Study of stress, strain, and material properties',
+                'program_code' => 'BSBA',
+                'program_name' => 'Bachelor of Science in Business Administration',
+                'department' => 'Business Administration',
+                'description' => 'Covers management, marketing, finance, and entrepreneurship.',
+                'status' => 'Active',
+                'duration' => '4 years',
+                'max_students' => 60,
             ],
         ];
 
-        // Get teachers
-        $teachers = User::where('role', 'teacher')->get();
-
-        foreach ($courses as $index => $course) {
-            Course::create([
-                'course_code' => $course['course_code'],
-                'course_name' => $course['course_name'],
-                'instructor_id' => $teachers[$index % count($teachers)]->id,
-                'credit_hours' => $course['credit_hours'],
-                'description' => $course['description'],
-                'status' => 'Active',
-            ]);
+        foreach ($courses as $course) {
+            Course::create($course);
         }
     }
 }
