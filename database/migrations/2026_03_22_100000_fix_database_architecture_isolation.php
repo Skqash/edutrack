@@ -11,25 +11,23 @@ return new class extends Migration
         // 1. Add school_id to teachers table (CRITICAL - missing isolation field)
         if (!Schema::hasColumn('teachers', 'school_id')) {
             Schema::table('teachers', function (Blueprint $table) {
-                $table->unsignedBigInteger('school_id')->nullable()->after('campus');
+                $table->unsignedBigInteger('school_id')->nullable();
                 $table->index('school_id');
             });
         }
 
-        // 2. Add campus and school_id to course_instructors (for data isolation)
         if (!Schema::hasColumn('course_instructors', 'campus')) {
             Schema::table('course_instructors', function (Blueprint $table) {
-                $table->string('campus')->nullable()->after('role');
-                $table->unsignedBigInteger('school_id')->nullable()->after('campus');
+                $table->string('campus')->nullable();
+                $table->unsignedBigInteger('school_id')->nullable();
                 $table->index(['campus', 'school_id']);
             });
         }
 
-        // 3. Add campus and school_id to course_access_requests (for data isolation)
         if (!Schema::hasColumn('course_access_requests', 'campus')) {
             Schema::table('course_access_requests', function (Blueprint $table) {
-                $table->string('campus')->nullable()->after('teacher_id');
-                $table->unsignedBigInteger('school_id')->nullable()->after('campus');
+                $table->string('campus')->nullable();
+                $table->unsignedBigInteger('school_id')->nullable();
                 $table->index(['campus', 'school_id']);
             });
         }

@@ -165,6 +165,7 @@ class CPSUAccurateSeeder extends Seeder
             ['name' => 'Dr. Ana Reyes', 'email' => 'ana.reyes@cpsu.edu.ph', 'status' => 'approved'],
         ];
 
+        $mainAdmin = User::where('email', 'admin.main@cpsu.edu.ph')->first();
         foreach ($mainTeachers as $teacher) {
             User::updateOrCreate(
                 ['email' => $teacher['email']],
@@ -175,7 +176,7 @@ class CPSUAccurateSeeder extends Seeder
                     'campus' => 'CPSU Main Campus - Kabankalan City',
                     'campus_status' => $teacher['status'],
                     'campus_approved_at' => $teacher['status'] === 'approved' ? now() : null,
-                    'campus_approved_by' => $teacher['status'] === 'approved' ? 2 : null,
+                    'campus_approved_by' => $teacher['status'] === 'approved' ? $mainAdmin?->id : null,
                     'status' => 'Active',
                 ]
             );
@@ -189,6 +190,7 @@ class CPSUAccurateSeeder extends Seeder
             ['name' => 'Ms. Lisa Fernandez', 'email' => 'lisa.fernandez@cpsu.edu.ph', 'status' => 'pending'],
         ];
 
+        $victoriasAdmin = User::where('email', 'admin.victorias@cpsu.edu.ph')->first();
         foreach ($victoriasTeachers as $teacher) {
             User::updateOrCreate(
                 ['email' => $teacher['email']],
@@ -199,7 +201,7 @@ class CPSUAccurateSeeder extends Seeder
                     'campus' => 'CPSU Victorias Campus',
                     'campus_status' => $teacher['status'],
                     'campus_approved_at' => $teacher['status'] === 'approved' ? now() : null,
-                    'campus_approved_by' => $teacher['status'] === 'approved' ? 3 : null,
+                    'campus_approved_by' => $teacher['status'] === 'approved' ? $victoriasAdmin?->id : null,
                     'status' => 'Active',
                 ]
             );
@@ -211,6 +213,7 @@ class CPSUAccurateSeeder extends Seeder
             ['name' => 'Dr. Elena Rodriguez', 'email' => 'elena.rodriguez@cpsu.edu.ph', 'status' => 'approved'],
         ];
 
+        $sipalayAdmin = User::where('email', 'admin.sipalay@cpsu.edu.ph')->first();
         foreach ($sipalayTeachers as $teacher) {
             User::updateOrCreate(
                 ['email' => $teacher['email']],
@@ -221,7 +224,7 @@ class CPSUAccurateSeeder extends Seeder
                     'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
                     'campus_status' => $teacher['status'],
                     'campus_approved_at' => $teacher['status'] === 'approved' ? now() : null,
-                    'campus_approved_by' => $teacher['status'] === 'approved' ? 4 : null,
+                    'campus_approved_by' => $teacher['status'] === 'approved' ? $sipalayAdmin?->id : null,
                     'status' => 'Active',
                 ]
             );
@@ -367,236 +370,272 @@ class CPSUAccurateSeeder extends Seeder
     }
     private function createSubjects(): void
     {
-        $this->command->info('📚 Creating CPSU subjects...');
+        $this->command->info('📚 Creating CPSU subjects and assigning to teachers...');
 
-        // Get courses for proper relationships
+        // Schools
+        $mainSchool      = \App\Models\School::where('short_name', 'CPSU-Main')->first();
+        $victoriasSchool = \App\Models\School::where('short_name', 'CPSU-Victorias')->first();
+        $sipalaySchool   = \App\Models\School::where('short_name', 'CPSU-Sipalay')->first();
+
+        // Courses
         $bsitMain = Course::where('program_code', 'BSIT-MAIN')->first();
-        $bsitVic = Course::where('program_code', 'BSIT-VIC')->first();
-        $beedVic = Course::where('program_code', 'BEED-VIC')->first();
-        $bshmVic = Course::where('program_code', 'BSHM-VIC')->first();
+        $bscsMain = Course::where('program_code', 'BSCS-MAIN')->first();
+        $bsafeMain = Course::where('program_code', 'BSAFE-MAIN')->first();
+        $bsitVic  = Course::where('program_code', 'BSIT-VIC')->first();
+        $beedVic  = Course::where('program_code', 'BEED-VIC')->first();
+        $bshmVic  = Course::where('program_code', 'BSHM-VIC')->first();
         $bsafeSip = Course::where('program_code', 'BSAFE-SIP')->first();
+        $bsceSip  = Course::where('program_code', 'BSCE-SIP')->first();
 
         $subjects = [
-            // Main Campus Subjects (Kabankalan)
-            [
-                'subject_code' => 'IT101-MAIN',
-                'subject_name' => 'Introduction to Computing',
-                'program_id' => $bsitMain?->id,
-                'campus' => 'CPSU Main Campus - Kabankalan City',
-                'year_level' => 1,
-                'semester' => '1',
-                'category' => 'Major',
-                'credit_hours' => 3,
-            ],
-            [
-                'subject_code' => 'PROG101-MAIN',
-                'subject_name' => 'Programming Fundamentals',
-                'program_id' => $bsitMain?->id,
-                'campus' => 'CPSU Main Campus - Kabankalan City',
-                'year_level' => 1,
-                'semester' => '2',
-                'category' => 'Major',
-                'credit_hours' => 3,
-            ],
+            // ── Main Campus ──────────────────────────────────────
+            ['subject_code' => 'IT101-MAIN',   'subject_name' => 'Introduction to Computing',        'program_id' => $bsitMain?->id,  'campus' => 'CPSU Main Campus - Kabankalan City', 'school_id' => $mainSchool?->id,      'year_level' => 1, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'PROG101-MAIN', 'subject_name' => 'Programming Fundamentals',         'program_id' => $bsitMain?->id,  'campus' => 'CPSU Main Campus - Kabankalan City', 'school_id' => $mainSchool?->id,      'year_level' => 1, 'semester' => '2', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'CS101-MAIN',   'subject_name' => 'Discrete Mathematics',             'program_id' => $bscsMain?->id,  'campus' => 'CPSU Main Campus - Kabankalan City', 'school_id' => $mainSchool?->id,      'year_level' => 1, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'AGRI101-MAIN', 'subject_name' => 'Introduction to Agriculture',      'program_id' => $bsafeMain?->id, 'campus' => 'CPSU Main Campus - Kabankalan City', 'school_id' => $mainSchool?->id,      'year_level' => 1, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
 
-            // Victorias Campus Subjects (Your campus)
-            [
-                'subject_code' => 'IT101-VIC',
-                'subject_name' => 'Introduction to Computing',
-                'program_id' => $bsitVic?->id,
-                'campus' => 'CPSU Victorias Campus',
-                'year_level' => 1,
-                'semester' => '1',
-                'category' => 'Major',
-                'credit_hours' => 3,
-            ],
-            [
-                'subject_code' => 'PROG101-VIC',
-                'subject_name' => 'Programming Fundamentals',
-                'program_id' => $bsitVic?->id,
-                'campus' => 'CPSU Victorias Campus',
-                'year_level' => 1,
-                'semester' => '2',
-                'category' => 'Major',
-                'credit_hours' => 3,
-            ],
-            [
-                'subject_code' => 'EDUC101-VIC',
-                'subject_name' => 'Foundations of Education',
-                'program_id' => $beedVic?->id,
-                'campus' => 'CPSU Victorias Campus',
-                'year_level' => 1,
-                'semester' => '1',
-                'category' => 'Major',
-                'credit_hours' => 3,
-            ],
-            [
-                'subject_code' => 'HM101-VIC',
-                'subject_name' => 'Introduction to Hospitality Management',
-                'program_id' => $bshmVic?->id,
-                'campus' => 'CPSU Victorias Campus',
-                'year_level' => 1,
-                'semester' => '1',
-                'category' => 'Major',
-                'credit_hours' => 3,
-            ],
+            // ── Victorias Campus ─────────────────────────────────
+            ['subject_code' => 'IT101-VIC',    'subject_name' => 'Introduction to Computing',        'program_id' => $bsitVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 1, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'PROG101-VIC',  'subject_name' => 'Programming Fundamentals',         'program_id' => $bsitVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 1, 'semester' => '2', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'WEBDEV-VIC',   'subject_name' => 'Web Development',                  'program_id' => $bsitVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 2, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'DBMS-VIC',     'subject_name' => 'Database Management Systems',      'program_id' => $bsitVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 2, 'semester' => '2', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'EDUC101-VIC',  'subject_name' => 'Foundations of Education',         'program_id' => $beedVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 1, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'EDUC201-VIC',  'subject_name' => 'Child and Adolescent Development', 'program_id' => $beedVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 2, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'HM101-VIC',    'subject_name' => 'Introduction to Hospitality Mgmt', 'program_id' => $bshmVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 1, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
+            ['subject_code' => 'HM201-VIC',    'subject_name' => 'Food and Beverage Management',     'program_id' => $bshmVic?->id,   'campus' => 'CPSU Victorias Campus',              'school_id' => $victoriasSchool?->id, 'year_level' => 2, 'semester' => '1', 'category' => 'Major',            'credit_hours' => 3],
 
-            // Sipalay Campus Subjects
-            [
-                'subject_code' => 'AGRI101-SIP',
-                'subject_name' => 'Introduction to Agriculture',
-                'program_id' => $bsafeSip?->id,
-                'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
-                'year_level' => 1,
-                'semester' => '1',
-                'category' => 'Major',
-                'credit_hours' => 3,
-            ],
+            // ── Sipalay Campus ───────────────────────────────────
+            ['subject_code' => 'AGRI101-SIP',  'subject_name' => 'Introduction to Agriculture',      'program_id' => $bsafeSip?->id,  'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla', 'school_id' => $sipalaySchool?->id, 'year_level' => 1, 'semester' => '1', 'category' => 'Major',  'credit_hours' => 3],
+            ['subject_code' => 'AGRI201-SIP',  'subject_name' => 'Soil Science and Management',      'program_id' => $bsafeSip?->id,  'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla', 'school_id' => $sipalaySchool?->id, 'year_level' => 2, 'semester' => '1', 'category' => 'Major',  'credit_hours' => 3],
+            ['subject_code' => 'CE101-SIP',    'subject_name' => 'Engineering Drawing',              'program_id' => $bsceSip?->id,   'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla', 'school_id' => $sipalaySchool?->id, 'year_level' => 1, 'semester' => '1', 'category' => 'Major',  'credit_hours' => 3],
 
-            // General Education Subjects (Available across campuses)
-            [
-                'subject_code' => 'GE101',
-                'subject_name' => 'Understanding the Self',
-                'program_id' => null,
-                'campus' => null,
-                'year_level' => 1,
-                'semester' => '1',
-                'category' => 'General Education',
-                'credit_hours' => 3,
-            ],
-            [
-                'subject_code' => 'GE102',
-                'subject_name' => 'Readings in Philippine History',
-                'program_id' => null,
-                'campus' => null,
-                'year_level' => 1,
-                'semester' => '2',
-                'category' => 'General Education',
-                'credit_hours' => 3,
-            ],
+            // ── General Education (campus-neutral) ───────────────
+            ['subject_code' => 'GE101', 'subject_name' => 'Understanding the Self',          'program_id' => null, 'campus' => null, 'school_id' => null, 'year_level' => 1, 'semester' => '1', 'category' => 'General Education', 'credit_hours' => 3],
+            ['subject_code' => 'GE102', 'subject_name' => 'Readings in Philippine History',  'program_id' => null, 'campus' => null, 'school_id' => null, 'year_level' => 1, 'semester' => '2', 'category' => 'General Education', 'credit_hours' => 3],
         ];
 
-        foreach ($subjects as $subject) {
+        foreach ($subjects as $s) {
             Subject::updateOrCreate(
-                ['subject_code' => $subject['subject_code']],
+                ['subject_code' => $s['subject_code']],
                 [
-                    'subject_name' => $subject['subject_name'],
-                    'program_id' => $subject['program_id'],
-                    'campus' => $subject['campus'],
-                    'year_level' => $subject['year_level'],
-                    'semester' => $subject['semester'],
-                    'category' => $subject['category'],
-                    'credit_hours' => $subject['credit_hours'],
-                    'description' => $subject['subject_name'] . ' - Year ' . $subject['year_level'] . ' Semester ' . $subject['semester'],
+                    'subject_name' => $s['subject_name'],
+                    'program_id'   => $s['program_id'],
+                    'campus'       => $s['campus'],
+                    'school_id'    => $s['school_id'],
+                    'year_level'   => $s['year_level'],
+                    'semester'     => $s['semester'],
+                    'category'     => $s['category'],
+                    'credit_hours' => $s['credit_hours'],
+                    'description'  => $s['subject_name'] . ' — Year ' . $s['year_level'] . ', Sem ' . $s['semester'],
                 ]
             );
+        }
+
+        // ── Assign subjects to teachers via pivot ─────────────────
+        $this->command->info('🔗 Assigning subjects to teachers...');
+
+        $assignments = [
+            // Main Campus teachers
+            'maria.santos@cpsu.edu.ph'    => ['IT101-MAIN', 'PROG101-MAIN', 'GE101'],
+            'juan.delacruz@cpsu.edu.ph'   => ['CS101-MAIN', 'PROG101-MAIN', 'GE102'],
+            'ana.reyes@cpsu.edu.ph'       => ['AGRI101-MAIN', 'GE101', 'GE102'],
+
+            // Victorias Campus teachers
+            'roberto.garcia@cpsu.edu.ph'  => ['IT101-VIC', 'PROG101-VIC', 'WEBDEV-VIC', 'DBMS-VIC'],
+            'carmen.lopez@cpsu.edu.ph'    => ['EDUC101-VIC', 'EDUC201-VIC', 'GE101'],
+            'miguel.torres@cpsu.edu.ph'   => ['HM101-VIC', 'HM201-VIC', 'GE102'],
+            'lisa.fernandez@cpsu.edu.ph'  => ['IT101-VIC', 'WEBDEV-VIC'],
+
+            // Sipalay Campus teachers
+            'carlos.mendoza@cpsu.edu.ph'  => ['AGRI101-SIP', 'AGRI201-SIP', 'GE101'],
+            'elena.rodriguez@cpsu.edu.ph' => ['CE101-SIP', 'AGRI101-SIP', 'GE102'],
+
+            // Independent teachers — GE subjects only
+            'john.smith@gmail.com'        => ['GE101', 'GE102'],
+            'sarah.johnson@yahoo.com'     => ['GE101', 'GE102'],
+        ];
+
+        foreach ($assignments as $email => $codes) {
+            $teacher = User::where('email', $email)->first();
+            if (!$teacher) continue;
+
+            foreach ($codes as $code) {
+                $subject = Subject::where('subject_code', $code)->first();
+                if (!$subject) continue;
+
+                // syncWithoutDetaching so re-seeding doesn't duplicate
+                $teacher->subjects()->syncWithoutDetaching([
+                    $subject->id => [
+                        'status'      => 'active',
+                        'assigned_at' => now(),
+                    ],
+                ]);
+            }
         }
     }
 
     private function createStudents(): void
     {
-        $this->command->info('👨‍🎓 Creating CPSU students...');
+        $this->command->info('👨‍🎓 Creating CPSU students with real names...');
 
-        // Main Campus Students (Kabankalan)
-        for ($i = 1; $i <= 8; $i++) {
-            $user = User::updateOrCreate(
-                ['email' => "student{$i}.main@cpsu.edu.ph"],
-                [
-                    'name' => "Main Student {$i}",
-                    'password' => Hash::make('student123'),
-                    'role' => 'student',
-                    'campus' => 'CPSU Main Campus - Kabankalan City',
-                    'campus_status' => 'approved',
-                    'status' => 'Active',
-                ]
-            );
+        $mainSchool      = \App\Models\School::where('short_name', 'CPSU-Main')->first();
+        $victoriasSchool = \App\Models\School::where('short_name', 'CPSU-Victorias')->first();
+        $sipalaySchool   = \App\Models\School::where('short_name', 'CPSU-Sipalay')->first();
 
+        $bsitMain = Course::where('program_code', 'BSIT-MAIN')->first();
+        $bscsMain = Course::where('program_code', 'BSCS-MAIN')->first();
+        $bsafeMain = Course::where('program_code', 'BSAFE-MAIN')->first();
+
+        $bsitVic  = Course::where('program_code', 'BSIT-VIC')->first();
+        $beedVic  = Course::where('program_code', 'BEED-VIC')->first();
+        $bshmVic  = Course::where('program_code', 'BSHM-VIC')->first();
+
+        $bsafeSip = Course::where('program_code', 'BSAFE-SIP')->first();
+        $bsceSip  = Course::where('program_code', 'BSCE-SIP')->first();
+
+        // ── MAIN CAMPUS STUDENTS ──────────────────────────────────────────────
+        $mainStudents = [
+            ['first_name' => 'Jose',       'middle_name' => 'Rizal',      'last_name' => 'Dela Cruz',    'gender' => 'Male',   'year' => 1, 'section' => 'A', 'course' => $bsitMain],
+            ['first_name' => 'Maria',      'middle_name' => 'Clara',      'last_name' => 'Santos',       'gender' => 'Female', 'year' => 1, 'section' => 'A', 'course' => $bsitMain],
+            ['first_name' => 'Juan',       'middle_name' => 'Pablo',      'last_name' => 'Reyes',        'gender' => 'Male',   'year' => 2, 'section' => 'A', 'course' => $bscsMain],
+            ['first_name' => 'Ana',        'middle_name' => 'Liza',       'last_name' => 'Garcia',       'gender' => 'Female', 'year' => 2, 'section' => 'B', 'course' => $bscsMain],
+            ['first_name' => 'Pedro',      'middle_name' => 'Jose',       'last_name' => 'Mendoza',      'gender' => 'Male',   'year' => 3, 'section' => 'A', 'course' => $bsafeMain],
+            ['first_name' => 'Luisa',      'middle_name' => 'Marie',      'last_name' => 'Torres',       'gender' => 'Female', 'year' => 3, 'section' => 'B', 'course' => $bsafeMain],
+            ['first_name' => 'Ramon',      'middle_name' => 'Antonio',    'last_name' => 'Villanueva',   'gender' => 'Male',   'year' => 4, 'section' => 'A', 'course' => $bsitMain],
+            ['first_name' => 'Cristina',   'middle_name' => 'Joy',        'last_name' => 'Aquino',       'gender' => 'Female', 'year' => 4, 'section' => 'A', 'course' => $bscsMain],
+        ];
+
+        foreach ($mainStudents as $i => $s) {
+            $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $slug = strtolower(str_replace(' ', '.', $s['last_name']));
             Student::updateOrCreate(
-                ['user_id' => $user->id],
+                ['student_id' => "2024-MAIN-{$num}"],
                 [
-                    'student_id' => "2024-MAIN-" . str_pad($i, 4, '0', STR_PAD_LEFT),
-                    'year' => rand(1, 4),
-                    'section' => ['A', 'B'][rand(0, 1)],
-                    'status' => 'Active',
-                    'campus' => 'CPSU Main Campus - Kabankalan City',
+                    'first_name'      => $s['first_name'],
+                    'middle_name'     => $s['middle_name'],
+                    'last_name'       => $s['last_name'],
+                    'email'           => "{$slug}.main{$num}@cpsu.edu.ph",
+                    'password'        => Hash::make('student123'),
+                    'gender'          => $s['gender'],
+                    'year'            => $s['year'],
+                    'year_level'      => $s['year'],
+                    'section'         => $s['section'],
+                    'course_id'       => $s['course']?->id,
+                    'department'      => $s['course']?->program_code,
+                    'status'          => 'Active',
+                    'campus'          => 'CPSU Main Campus - Kabankalan City',
+                    'school_id'       => $mainSchool?->id,
+                    'enrollment_date' => '2024-08-01',
+                    'academic_year'   => '2024-2025',
                 ]
             );
         }
 
-        // Victorias Campus Students (Your campus)
-        for ($i = 1; $i <= 12; $i++) {
-            $user = User::updateOrCreate(
-                ['email' => "student{$i}.victorias@cpsu.edu.ph"],
-                [
-                    'name' => "Victorias Student {$i}",
-                    'password' => Hash::make('student123'),
-                    'role' => 'student',
-                    'campus' => 'CPSU Victorias Campus',
-                    'campus_status' => 'approved',
-                    'status' => 'Active',
-                ]
-            );
+        // ── VICTORIAS CAMPUS STUDENTS ─────────────────────────────────────────
+        $victoriasStudents = [
+            ['first_name' => 'Rodrigo',    'middle_name' => 'Andres',     'last_name' => 'Fernandez',    'gender' => 'Male',   'year' => 1, 'section' => 'A', 'course' => $bsitVic],
+            ['first_name' => 'Maricel',    'middle_name' => 'Grace',      'last_name' => 'Lopez',        'gender' => 'Female', 'year' => 1, 'section' => 'A', 'course' => $bsitVic],
+            ['first_name' => 'Danilo',     'middle_name' => 'Cruz',       'last_name' => 'Ramos',        'gender' => 'Male',   'year' => 1, 'section' => 'B', 'course' => $beedVic],
+            ['first_name' => 'Rosario',    'middle_name' => 'Luz',        'last_name' => 'Castillo',     'gender' => 'Female', 'year' => 1, 'section' => 'B', 'course' => $beedVic],
+            ['first_name' => 'Eduardo',    'middle_name' => 'Manuel',     'last_name' => 'Bautista',     'gender' => 'Male',   'year' => 2, 'section' => 'A', 'course' => $bsitVic],
+            ['first_name' => 'Lourdes',    'middle_name' => 'Faith',      'last_name' => 'Navarro',      'gender' => 'Female', 'year' => 2, 'section' => 'A', 'course' => $bshmVic],
+            ['first_name' => 'Renato',     'middle_name' => 'Dario',      'last_name' => 'Morales',      'gender' => 'Male',   'year' => 2, 'section' => 'B', 'course' => $bshmVic],
+            ['first_name' => 'Teresita',   'middle_name' => 'Ann',        'last_name' => 'Pascual',      'gender' => 'Female', 'year' => 3, 'section' => 'A', 'course' => $beedVic],
+            ['first_name' => 'Alfredo',    'middle_name' => 'Luis',       'last_name' => 'Soriano',      'gender' => 'Male',   'year' => 3, 'section' => 'B', 'course' => $bsitVic],
+            ['first_name' => 'Natividad',  'middle_name' => 'Rose',       'last_name' => 'Domingo',      'gender' => 'Female', 'year' => 3, 'section' => 'C', 'course' => $bshmVic],
+            ['first_name' => 'Bernardo',   'middle_name' => 'King',       'last_name' => 'Aguilar',      'gender' => 'Male',   'year' => 4, 'section' => 'A', 'course' => $bsitVic],
+            ['first_name' => 'Corazon',    'middle_name' => 'Hope',       'last_name' => 'Salazar',      'gender' => 'Female', 'year' => 4, 'section' => 'A', 'course' => $beedVic],
+        ];
 
+        foreach ($victoriasStudents as $i => $s) {
+            $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $slug = strtolower(str_replace(' ', '.', $s['last_name']));
             Student::updateOrCreate(
-                ['user_id' => $user->id],
+                ['student_id' => "2024-VIC-{$num}"],
                 [
-                    'student_id' => "2024-VIC-" . str_pad($i, 4, '0', STR_PAD_LEFT),
-                    'year' => rand(1, 4),
-                    'section' => ['A', 'B', 'C'][rand(0, 2)],
-                    'status' => 'Active',
-                    'campus' => 'CPSU Victorias Campus',
+                    'first_name'      => $s['first_name'],
+                    'middle_name'     => $s['middle_name'],
+                    'last_name'       => $s['last_name'],
+                    'email'           => "{$slug}.vic{$num}@cpsu.edu.ph",
+                    'password'        => Hash::make('student123'),
+                    'gender'          => $s['gender'],
+                    'year'            => $s['year'],
+                    'year_level'      => $s['year'],
+                    'section'         => $s['section'],
+                    'course_id'       => $s['course']?->id,
+                    'department'      => $s['course']?->program_code,
+                    'status'          => 'Active',
+                    'campus'          => 'CPSU Victorias Campus',
+                    'school_id'       => $victoriasSchool?->id,
+                    'enrollment_date' => '2024-08-01',
+                    'academic_year'   => '2024-2025',
                 ]
             );
         }
 
-        // Sipalay Campus Students
-        for ($i = 1; $i <= 6; $i++) {
-            $user = User::updateOrCreate(
-                ['email' => "student{$i}.sipalay@cpsu.edu.ph"],
-                [
-                    'name' => "Sipalay Student {$i}",
-                    'password' => Hash::make('student123'),
-                    'role' => 'student',
-                    'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
-                    'campus_status' => 'approved',
-                    'status' => 'Active',
-                ]
-            );
+        // ── SIPALAY CAMPUS STUDENTS ───────────────────────────────────────────
+        $sipalayStudents = [
+            ['first_name' => 'Ernesto',    'middle_name' => 'Delos',      'last_name' => 'Santos',       'gender' => 'Male',   'year' => 1, 'section' => 'A', 'course' => $bsafeSip],
+            ['first_name' => 'Florencia',  'middle_name' => 'Mae',        'last_name' => 'Reyes',        'gender' => 'Female', 'year' => 1, 'section' => 'A', 'course' => $bsafeSip],
+            ['first_name' => 'Gregorio',   'middle_name' => 'Paul',       'last_name' => 'Cruz',         'gender' => 'Male',   'year' => 2, 'section' => 'A', 'course' => $bsceSip],
+            ['first_name' => 'Herminia',   'middle_name' => 'Joy',        'last_name' => 'Villanueva',   'gender' => 'Female', 'year' => 2, 'section' => 'A', 'course' => $bsceSip],
+            ['first_name' => 'Isidro',     'middle_name' => 'Mark',       'last_name' => 'Dela Rosa',    'gender' => 'Male',   'year' => 3, 'section' => 'A', 'course' => $bsafeSip],
+            ['first_name' => 'Josefina',   'middle_name' => 'Claire',     'last_name' => 'Macaraeg',     'gender' => 'Female', 'year' => 3, 'section' => 'A', 'course' => $bsceSip],
+        ];
 
+        foreach ($sipalayStudents as $i => $s) {
+            $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $slug = strtolower(str_replace(' ', '.', $s['last_name']));
             Student::updateOrCreate(
-                ['user_id' => $user->id],
+                ['student_id' => "2024-SIP-{$num}"],
                 [
-                    'student_id' => "2024-SIP-" . str_pad($i, 4, '0', STR_PAD_LEFT),
-                    'year' => rand(1, 4),
-                    'section' => 'A',
-                    'status' => 'Active',
-                    'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
+                    'first_name'      => $s['first_name'],
+                    'middle_name'     => $s['middle_name'],
+                    'last_name'       => $s['last_name'],
+                    'email'           => "{$slug}.sip{$num}@cpsu.edu.ph",
+                    'password'        => Hash::make('student123'),
+                    'gender'          => $s['gender'],
+                    'year'            => $s['year'],
+                    'year_level'      => $s['year'],
+                    'section'         => $s['section'],
+                    'course_id'       => $s['course']?->id,
+                    'department'      => $s['course']?->program_code,
+                    'status'          => 'Active',
+                    'campus'          => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
+                    'school_id'       => $sipalaySchool?->id,
+                    'enrollment_date' => '2024-08-01',
+                    'academic_year'   => '2024-2025',
                 ]
             );
         }
 
-        // Independent Students
-        for ($i = 1; $i <= 3; $i++) {
-            $user = User::updateOrCreate(
-                ['email' => "independent.student{$i}@gmail.com"],
-                [
-                    'name' => "Independent Student {$i}",
-                    'password' => Hash::make('student123'),
-                    'role' => 'student',
-                    'campus' => null,
-                    'campus_status' => 'approved',
-                    'status' => 'Active',
-                ]
-            );
+        // ── INDEPENDENT STUDENTS ──────────────────────────────────────────────
+        $independentStudents = [
+            ['first_name' => 'Kevin',      'middle_name' => 'James',      'last_name' => 'Tan',          'gender' => 'Male',   'year' => 1, 'section' => 'A'],
+            ['first_name' => 'Patricia',   'middle_name' => 'Anne',       'last_name' => 'Lim',          'gender' => 'Female', 'year' => 1, 'section' => 'A'],
+            ['first_name' => 'Michael',    'middle_name' => 'John',       'last_name' => 'Go',           'gender' => 'Male',   'year' => 2, 'section' => 'A'],
+        ];
 
+        foreach ($independentStudents as $i => $s) {
+            $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
+            $slug = strtolower($s['last_name']);
             Student::updateOrCreate(
-                ['user_id' => $user->id],
+                ['student_id' => "2024-IND-{$num}"],
                 [
-                    'student_id' => "2024-IND-" . str_pad($i, 4, '0', STR_PAD_LEFT),
-                    'year' => 1,
-                    'section' => 'A',
-                    'status' => 'Active',
-                    'campus' => null,
+                    'first_name'      => $s['first_name'],
+                    'middle_name'     => $s['middle_name'],
+                    'last_name'       => $s['last_name'],
+                    'email'           => "{$slug}.ind{$num}@gmail.com",
+                    'password'        => Hash::make('student123'),
+                    'gender'          => $s['gender'],
+                    'year'            => $s['year'],
+                    'year_level'      => $s['year'],
+                    'section'         => $s['section'],
+                    'status'          => 'Active',
+                    'campus'          => null,
+                    'school_id'       => null,
+                    'enrollment_date' => '2024-08-01',
+                    'academic_year'   => '2024-2025',
                 ]
             );
         }
@@ -605,85 +644,88 @@ class CPSUAccurateSeeder extends Seeder
     {
         $this->command->info('🏫 Creating CPSU classes...');
 
-        // Get teachers and courses
-        $mainTeacher = User::where('email', 'maria.santos@cpsu.edu.ph')->first();
+        $mainTeacher      = User::where('email', 'maria.santos@cpsu.edu.ph')->first();
         $victoriasTeacher = User::where('email', 'roberto.garcia@cpsu.edu.ph')->first();
-        $sipalayTeacher = User::where('email', 'carlos.mendoza@cpsu.edu.ph')->first();
-        $indTeacher = User::where('email', 'john.smith@gmail.com')->first();
-        
+        $sipalayTeacher   = User::where('email', 'carlos.mendoza@cpsu.edu.ph')->first();
+        $indTeacher       = User::where('email', 'john.smith@gmail.com')->first();
+
         $bsitMain = Course::where('program_code', 'BSIT-MAIN')->first();
-        $bsitVic = Course::where('program_code', 'BSIT-VIC')->first();
-        $beedVic = Course::where('program_code', 'BEED-VIC')->first();
+        $bsitVic  = Course::where('program_code', 'BSIT-VIC')->first();
+        $beedVic  = Course::where('program_code', 'BEED-VIC')->first();
         $bsafeSip = Course::where('program_code', 'BSAFE-SIP')->first();
-        $wdbInd = Course::where('program_code', 'WDB-IND')->first();
+        $wdbInd   = Course::where('program_code', 'WDB-IND')->first();
+
+        // Subjects for Victorias
+        $it101Vic  = Subject::where('subject_code', 'IT101-VIC')->first();
+        $educ101   = Subject::where('subject_code', 'EDUC101-VIC')->first();
+        $it101Main = Subject::where('subject_code', 'IT101-MAIN')->first();
+        $agri101   = Subject::where('subject_code', 'AGRI101-SIP')->first();
 
         $classes = [
-            // Main Campus Classes (Kabankalan)
             [
-                'class_name' => 'BSIT 1-A Main Campus',
-                'teacher_id' => $mainTeacher?->id,
-                'course_id' => $bsitMain?->id,
-                'class_level' => 1,
-                'section' => 'A',
-                'total_students' => 25,
+                'class_name'    => 'BSIT 1-A Main Campus',
+                'teacher_id'    => $mainTeacher?->id,
+                'course_id'     => $bsitMain?->id,
+                'subject_id'    => $it101Main?->id,
+                'class_level'   => 1,
+                'section'       => 'A',
+                'total_students'=> 25,
                 'academic_year' => '2024-2025',
-                'semester' => 'First',
-                'status' => 'Active',
-                'campus' => 'CPSU Main Campus - Kabankalan City',
-            ],
-
-            // Victorias Campus Classes (Your campus)
-            [
-                'class_name' => 'BSIT 1-A Victorias',
-                'teacher_id' => $victoriasTeacher?->id,
-                'course_id' => $bsitVic?->id,
-                'class_level' => 1,
-                'section' => 'A',
-                'total_students' => 30,
-                'academic_year' => '2024-2025',
-                'semester' => 'First',
-                'status' => 'Active',
-                'campus' => 'CPSU Victorias Campus',
+                'semester'      => 'First',
+                'status'        => 'Active',
+                'campus'        => 'CPSU Main Campus - Kabankalan City',
             ],
             [
-                'class_name' => 'BEED 1-A Victorias',
-                'teacher_id' => $victoriasTeacher?->id,
-                'course_id' => $beedVic?->id,
-                'class_level' => 1,
-                'section' => 'A',
-                'total_students' => 28,
+                'class_name'    => 'BSIT 1-A Victorias',
+                'teacher_id'    => $victoriasTeacher?->id,
+                'course_id'     => $bsitVic?->id,
+                'subject_id'    => $it101Vic?->id,
+                'class_level'   => 1,
+                'section'       => 'A',
+                'total_students'=> 30,
                 'academic_year' => '2024-2025',
-                'semester' => 'First',
-                'status' => 'Active',
-                'campus' => 'CPSU Victorias Campus',
+                'semester'      => 'First',
+                'status'        => 'Active',
+                'campus'        => 'CPSU Victorias Campus',
             ],
-
-            // Sipalay Campus Classes
             [
-                'class_name' => 'BSAFE 1-A Sipalay',
-                'teacher_id' => $sipalayTeacher?->id,
-                'course_id' => $bsafeSip?->id,
-                'class_level' => 1,
-                'section' => 'A',
-                'total_students' => 20,
+                'class_name'    => 'BEED 1-A Victorias',
+                'teacher_id'    => $victoriasTeacher?->id,
+                'course_id'     => $beedVic?->id,
+                'subject_id'    => $educ101?->id,
+                'class_level'   => 1,
+                'section'       => 'A',
+                'total_students'=> 28,
                 'academic_year' => '2024-2025',
-                'semester' => 'First',
-                'status' => 'Active',
-                'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
+                'semester'      => 'First',
+                'status'        => 'Active',
+                'campus'        => 'CPSU Victorias Campus',
             ],
-
-            // Independent Classes
             [
-                'class_name' => 'Web Dev Bootcamp Batch 1',
-                'teacher_id' => $indTeacher?->id,
-                'course_id' => $wdbInd?->id,
-                'class_level' => 1,
-                'section' => 'A',
-                'total_students' => 15,
+                'class_name'    => 'BSAFE 1-A Sipalay',
+                'teacher_id'    => $sipalayTeacher?->id,
+                'course_id'     => $bsafeSip?->id,
+                'subject_id'    => $agri101?->id,
+                'class_level'   => 1,
+                'section'       => 'A',
+                'total_students'=> 20,
                 'academic_year' => '2024-2025',
-                'semester' => 'First',
-                'status' => 'Active',
-                'campus' => null,
+                'semester'      => 'First',
+                'status'        => 'Active',
+                'campus'        => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
+            ],
+            [
+                'class_name'    => 'Web Dev Bootcamp Batch 1',
+                'teacher_id'    => $indTeacher?->id,
+                'course_id'     => $wdbInd?->id,
+                'subject_id'    => null,
+                'class_level'   => 1,
+                'section'       => 'A',
+                'total_students'=> 15,
+                'academic_year' => '2024-2025',
+                'semester'      => 'First',
+                'status'        => 'Active',
+                'campus'        => null,
             ],
         ];
 
@@ -701,47 +743,45 @@ class CPSUAccurateSeeder extends Seeder
     {
         $this->command->info('📝 Creating CPSU course access requests...');
 
-        // Get teachers and courses
-        $mainTeacher = User::where('email', 'maria.santos@cpsu.edu.ph')->first();
+        $mainTeacher      = User::where('email', 'maria.santos@cpsu.edu.ph')->first();
         $victoriasTeacher = User::where('email', 'roberto.garcia@cpsu.edu.ph')->first();
-        $pendingTeacher = User::where('email', 'lisa.fernandez@cpsu.edu.ph')->first();
-        
+        $pendingTeacher   = User::where('email', 'lisa.fernandez@cpsu.edu.ph')->first();
+        $mainAdmin        = User::where('email', 'admin.main@cpsu.edu.ph')->first();
+        $victoriasAdmin   = User::where('email', 'admin.victorias@cpsu.edu.ph')->first();
+
         $bsitMain = Course::where('program_code', 'BSIT-MAIN')->first();
-        $bsitVic = Course::where('program_code', 'BSIT-VIC')->first();
-        $beedVic = Course::where('program_code', 'BEED-VIC')->first();
+        $bsitVic  = Course::where('program_code', 'BSIT-VIC')->first();
+        $beedVic  = Course::where('program_code', 'BEED-VIC')->first();
 
         $requests = [
             [
-                'teacher_id' => $mainTeacher?->id,
-                'course_id' => $bsitMain?->id,
-                'status' => 'approved',
-                'reason' => 'I am qualified to teach BSIT courses at Main Campus',
-                'approved_by' => 2,
+                'teacher_id'  => $mainTeacher?->id,
+                'course_id'   => $bsitMain?->id,
+                'status'      => 'approved',
+                'reason'      => 'I am qualified to teach BSIT courses at Main Campus',
+                'approved_by' => $mainAdmin?->id,
                 'approved_at' => now(),
             ],
             [
-                'teacher_id' => $victoriasTeacher?->id,
-                'course_id' => $bsitVic?->id,
-                'status' => 'approved',
-                'reason' => 'I have experience teaching IT subjects at Victorias Campus',
-                'approved_by' => 3,
+                'teacher_id'  => $victoriasTeacher?->id,
+                'course_id'   => $bsitVic?->id,
+                'status'      => 'approved',
+                'reason'      => 'I have experience teaching IT subjects at Victorias Campus',
+                'approved_by' => $victoriasAdmin?->id,
                 'approved_at' => now(),
             ],
             [
                 'teacher_id' => $pendingTeacher?->id,
-                'course_id' => $beedVic?->id,
-                'status' => 'pending',
-                'reason' => 'I would like to teach Education courses at Victorias Campus',
+                'course_id'  => $beedVic?->id,
+                'status'     => 'pending',
+                'reason'     => 'I would like to teach Education courses at Victorias Campus',
             ],
         ];
 
         foreach ($requests as $request) {
             if ($request['teacher_id'] && $request['course_id']) {
                 CourseAccessRequest::updateOrCreate(
-                    [
-                        'teacher_id' => $request['teacher_id'],
-                        'course_id' => $request['course_id']
-                    ],
+                    ['teacher_id' => $request['teacher_id'], 'course_id' => $request['course_id']],
                     $request
                 );
             }

@@ -13,33 +13,46 @@ class AdminAttendanceController extends Controller
 {
     public function index()
     {
-        // Get all classes with their attendance records and students
+        // Get all classes with their attendance records
         $classes = ClassModel::with(['attendance' => function ($query) {
             $query->with('student')->orderBy('date', 'desc');
-        }, 'students'])->get();
+        }, 'course'])->get();
 
         // Group attendance by class and add statistics
         $attendanceByClass = [];
         foreach ($classes as $class) {
             $attendances = $class->attendance;
+
+            // Load students by course_id to include non-primary class students
+            if ($class->course_id) {
+                $students = \App\Models\Student::where('course_id', $class->course_id)
+                    ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
+                    ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
+                    ->orderBy('last_name')->orderBy('first_name')
+                    ->get();
+            } else {
+                $students = $class->students()->orderBy('last_name')->orderBy('first_name')->get();
+            }
+
             $stats = [
-                'total' => $attendances->count(),
+                'total'   => $attendances->count(),
                 'present' => $attendances->where('status', 'Present')->count(),
-                'absent' => $attendances->where('status', 'Absent')->count(),
-                'late' => $attendances->where('status', 'Late')->count(),
-                'leave' => $attendances->where('status', 'Leave')->count(),
+                'absent'  => $attendances->where('status', 'Absent')->count(),
+                'late'    => $attendances->where('status', 'Late')->count(),
+                'leave'   => $attendances->where('status', 'Leave')->count(),
             ];
             $attendanceByClass[$class->id] = [
-                'class' => $class,
+                'class'      => $class,
+                'students'   => $students,
                 'attendance' => $attendances,
-                'stats' => $stats,
+                'stats'      => $stats,
             ];
         }
 
         // Get total counts
         $totalStudents = Student::count();
         $totalTeachers = User::where('role', 'teacher')->count();
-        $totalClasses = ClassModel::count();
+        $totalClasses  = ClassModel::count();
         $totalSubjects = Subject::count();
 
         return view('admin.attendance.index', compact('attendanceByClass', 'totalStudents', 'totalTeachers', 'totalClasses', 'totalSubjects'));

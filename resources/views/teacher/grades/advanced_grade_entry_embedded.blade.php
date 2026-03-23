@@ -208,7 +208,7 @@
                             @forelse($class->students as $student)
                                 <tr data-student-id="{{ $student->id }}">
                                     <td class="fw-semibold student-name-cell">
-                                        <div class="student-name">{{ $student->name ?? 'N/A' }}</div>
+                                        <div class="student-name">{{ trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? '')) ?: 'N/A' }}</div>
                                         <div class="student-id-number">{{ $student->student_id ?? 'N/A' }}</div>
                                     </td>
                                     
@@ -1225,8 +1225,12 @@ function calculateAllGrades() {
         if (sAve) sAve.textContent = skillsAvg.toFixed(2);
         if (aAve) aAve.textContent = attitudeAvg.toFixed(2);
         
-        // Calculate final grade using KSA weights (K:40%, S:50%, A:10%)
-        let finalGrade = (knowledgeAvg * 0.4) + (skillsAvg * 0.5) + (attitudeAvg * 0.1);
+        // Calculate final grade using KSA weights from settings
+        const kWeight = {{ $ksaSettings->knowledge_weight ?? 0.4 }};
+        const sWeight = {{ $ksaSettings->skills_weight ?? 0.5 }};
+        const aWeight = {{ $ksaSettings->attitude_weight ?? 0.1 }};
+        const passingGrade = {{ $ksaSettings->passing_grade ?? 74 }};
+        let finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
         
         // Apply attendance if configured
         const attendanceScoreElement = row.querySelector('.attendance-score');
@@ -1243,17 +1247,17 @@ function calculateAllGrades() {
                     // Add attendance contribution to knowledge
                     const attendanceContribution = attendanceScore * weightDecimal;
                     knowledgeAvg = (knowledgeAvg * (1 - weightDecimal)) + attendanceContribution;
-                    finalGrade = (knowledgeAvg * 0.4) + (skillsAvg * 0.5) + (attitudeAvg * 0.1);
+                    finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
                 } else if (attendanceCategory === 'skills') {
                     // Add attendance contribution to skills
                     const attendanceContribution = attendanceScore * weightDecimal;
                     skillsAvg = (skillsAvg * (1 - weightDecimal)) + attendanceContribution;
-                    finalGrade = (knowledgeAvg * 0.4) + (skillsAvg * 0.5) + (attitudeAvg * 0.1);
+                    finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
                 } else if (attendanceCategory === 'attitude') {
                     // Add attendance contribution to attitude
                     const attendanceContribution = attendanceScore * weightDecimal;
                     attitudeAvg = (attitudeAvg * (1 - weightDecimal)) + attendanceContribution;
-                    finalGrade = (knowledgeAvg * 0.4) + (skillsAvg * 0.5) + (attitudeAvg * 0.1);
+                    finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
                 }
             }
         }
@@ -1266,18 +1270,20 @@ function calculateAllGrades() {
             gradeDisplay.textContent = finalGrade.toFixed(2);
             gradeDisplay.dataset.grade = finalGrade;
             
-            // Update badge color
+            // Update badge color based on CHED scale (passing >= 74, decimal <= 3.0)
             if (hasInvalidInput) {
                 gradeDisplay.className = 'badge bg-danger calculated-grade';
                 gradeDisplay.textContent = 'ERROR';
-            } else if (finalGrade >= 90) {
+            } else if (finalGrade >= 95) {
                 gradeDisplay.className = 'badge bg-success calculated-grade';
-            } else if (finalGrade >= 75) {
+            } else if (finalGrade >= 86) {
                 gradeDisplay.className = 'badge bg-primary calculated-grade';
-            } else if (finalGrade >= 60) {
-                gradeDisplay.className = 'badge bg-warning calculated-grade';
-            } else {
+            } else if (finalGrade >= 74) {
+                gradeDisplay.className = 'badge bg-info calculated-grade';
+            } else if (finalGrade > 0) {
                 gradeDisplay.className = 'badge bg-danger calculated-grade';
+            } else {
+                gradeDisplay.className = 'badge bg-secondary calculated-grade';
             }
         }
         
@@ -1285,7 +1291,7 @@ function calculateAllGrades() {
             if (hasInvalidInput) {
                 statusBadge.textContent = 'Invalid';
                 statusBadge.className = 'badge bg-danger status-badge';
-            } else if (finalGrade >= 75) {
+            } else if (finalGrade >= passingGrade) {
                 statusBadge.textContent = 'Passed';
                 statusBadge.className = 'badge bg-success status-badge';
             } else if (finalGrade > 0) {

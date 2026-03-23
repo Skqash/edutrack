@@ -48,7 +48,7 @@
 
             {{-- Class info + date + term --}}
             <div class="card border-0 shadow-sm mb-3">
-                <parameter name="card-body py-3">
+                <div class="card-body py-3">
                     <div class="row align-items-center g-2">
                         <div class="col-12 col-md">
                             <div class="fw-bold text-primary">
@@ -279,7 +279,13 @@
 
 <script>
     document.getElementById('attendanceDate').addEventListener('change', function () {
-        document.getElementById('dateInput').value = this.value;
+        const newDate = this.value;
+        if (!newDate) return;
+        // Reload page with new date so server returns correct existing attendance
+        const url = new URL(window.location.href);
+        url.searchParams.set('date', newDate);
+        url.searchParams.set('term', document.getElementById('termSelect').value);
+        window.location.href = url.toString();
     });
     
     document.getElementById('termSelect').addEventListener('change', function () {
@@ -309,7 +315,10 @@
         // Show confirmation before reloading
         if (confirm(`Switch to ${selectedTerm} term? Any unsaved attendance will be lost.`)) {
             // Reload page to get attendance for selected term
-            window.location.href = '{{ route("teacher.attendance.manage", $class->id) }}?term=' + selectedTerm;
+            const url = new URL(window.location.href);
+            url.searchParams.set('term', selectedTerm);
+            url.searchParams.set('date', document.getElementById('attendanceDate').value);
+            window.location.href = url.toString();
         } else {
             // Revert selection if cancelled
             this.value = '{{ $currentTerm }}';

@@ -654,10 +654,15 @@
                             <h6 class="mb-3"><i class="fas fa-balance-scale me-2"></i>KSA Weight Distribution</h6>
                             <div class="row mb-3">
                                 <div class="col-md-8 mx-auto">
+                                    @php
+                                        $kPct = $ksaSettings->knowledge_percentage ?? 40;
+                                        $sPct = $ksaSettings->skills_percentage ?? 50;
+                                        $aPct = $ksaSettings->attitude_percentage ?? 10;
+                                    @endphp
                                     <div class="ksa-progress-bar">
-                                        <div class="ksa-segment knowledge" style="width: 40%">Knowledge 40%</div>
-                                        <div class="ksa-segment skills" style="width: 50%">Skills 50%</div>
-                                        <div class="ksa-segment attitude" style="width: 10%">Attitude 10%</div>
+                                        <div class="ksa-segment knowledge" style="width: {{ $kPct }}%">Knowledge {{ $kPct }}%</div>
+                                        <div class="ksa-segment skills" style="width: {{ $sPct }}%">Skills {{ $sPct }}%</div>
+                                        <div class="ksa-segment attitude" style="width: {{ $aPct }}%">Attitude {{ $aPct }}%</div>
                                     </div>
                                 </div>
                             </div>
@@ -1462,6 +1467,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Small delay to ensure tab is visible
             setTimeout(loadComponentsForSettings, 100);
         });
+    }
+    
+    // Auto-activate settings tab if ?tab=settings is in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'settings' && settingsTab) {
+        const tabInstance = new bootstrap.Tab(settingsTab);
+        tabInstance.show();
+        setTimeout(loadComponentsForSettings, 150);
     }
     
     // Also load on page load if Settings tab is active

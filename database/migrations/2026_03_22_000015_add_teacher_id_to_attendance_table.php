@@ -16,7 +16,7 @@ return new class extends Migration
         if (Schema::hasTable('attendance')) {
             Schema::table('attendance', function (Blueprint $table) {
                 if (!Schema::hasColumn('attendance', 'teacher_id')) {
-                    $table->foreignId('teacher_id')->nullable()->after('class_id')->constrained('users')->onDelete('cascade');
+                    $table->foreignId('teacher_id')->nullable()->constrained('users')->onDelete('cascade');
                 }
             });
 

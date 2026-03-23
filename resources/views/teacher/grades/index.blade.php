@@ -370,7 +370,7 @@
         <div class="classes-grid">
             @forelse($classes as $class)
                 <div class="class-card fade-in" data-class-name="{{ $class->class_name }}"
-                    data-course-id="{{ $class->program->id ?? '' }}" data-course="{{ $class->program->program_name ?? '' }}"
+                    data-course-id="{{ $class->course->id ?? '' }}" data-course="{{ $class->course->program_name ?? '' }}"
                     data-year="{{ $class->year ?? '' }}" data-section="{{ $class->section ?? '' }}">
                     <div class="class-header">
                         <div class="class-title">
@@ -386,12 +386,12 @@
                     <div class="class-body">
                         <div class="stat-row">
                             <div class="stat-item">
-                                <div class="stat-value">{{ $class->students->count() }}</div>
+                                <div class="stat-value">{{ $class->student_count ?? 0 }}</div>
                                 <div class="stat-label">Total Students</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">{{ $class->capacity ?? 0 }}</div>
-                                <div class="stat-label">Capacity</div>
+                                <div class="stat-value">{{ $class->units ?? 'N/A' }}</div>
+                                <div class="stat-label">Units</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-value">{{ $class->year ?? 'N/A' }}</div>
@@ -399,29 +399,26 @@
                             </div>
                         </div>
 
-                        @if ($class->program)
+                        @if ($class->course)
                             <div class="mb-3">
                                 <small class="text-muted d-block mb-1">Program</small>
-                                <div class="fw-semibold">{{ $class->program->program_name }}</div>
-                                <small class="text-muted">{{ $class->program->program_code ?? 'N/A' }}</small>
+                                <div class="fw-semibold">{{ $class->course->program_name }}</div>
+                                <small class="text-muted">{{ $class->course->program_code ?? 'N/A' }}</small>
                             </div>
                         @endif
 
                         <div class="progress-section">
+                            @php
+                                $totalStudents = $class->student_count ?? 0;
+                                $maxDisplay = max($totalStudents, 1);
+                                $percentage = min(($totalStudents / $maxDisplay) * 100, 100);
+                                $progressColor = $totalStudents > 0 ? 'var(--success-color)' : 'var(--secondary-color)';
+                            @endphp
                             <div class="progress-label">
-                                <span>Enrollment</span>
-                                <span>{{ $class->students->count() }}/{{ $class->capacity ?? 0 }}</span>
+                                <span>Enrolled Students</span>
+                                <span>{{ $totalStudents }}</span>
                             </div>
                             <div class="progress-bar-custom">
-                                @php
-                                    $percentage = ($class->students->count() / ($class->capacity ?? 1)) * 100;
-                                    $progressColor =
-                                        $percentage >= 90
-                                            ? 'var(--danger-color)'
-                                            : ($percentage >= 75
-                                                ? 'var(--warning-color)'
-                                                : 'var(--success-color)');
-                                @endphp
                                 <div class="progress-fill"
                                     style="width: {{ $percentage }}%; background: {{ $progressColor }};"></div>
                             </div>

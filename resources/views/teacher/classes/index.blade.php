@@ -504,7 +504,7 @@
                 <div class="class-body">
                     <div class="stat-row">
                         <div class="stat-item">
-                            <div class="stat-value">{{ $class->students->count() }}</div>
+                            <div class="stat-value">{{ $class->student_count ?? 0 }}</div>
                             <div class="stat-label">Enrolled Students</div>
                         </div>
                         <div class="stat-item">
@@ -540,10 +540,10 @@
                         </button>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item"
-                                    href="{{ route('teacher.grades.entry', $class->id) }}?term=midterm">
+                                    href="{{ route('teacher.grades.content', $class->id) }}?term=midterm">
                                     <i class="fas fa-edit text-primary"></i> Midterm Grades
                                 </a></li>
-                            <li><a class="dropdown-item" href="{{ route('teacher.grades.entry', $class->id) }}?term=final">
+                            <li><a class="dropdown-item" href="{{ route('teacher.grades.content', $class->id) }}?term=final">
                                     <i class="fas fa-edit text-success"></i> Final Grades
                                 </a></li>
                             <li>

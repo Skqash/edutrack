@@ -1,1020 +1,713 @@
 @extends('layouts.teacher')
 
 @section('content')
-    <style>
-        /* Enhanced Professional Dashboard Styling */
-        body {
-            background-color: #f8f9fa;
-        }
+<style>
+/* ── Base ─────────────────────────────────────────── */
+:root {
+    --primary: #4f46e5;
+    --primary-light: #eef2ff;
+    --success: #16a34a;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --info: #0891b2;
+    --surface: #ffffff;
+    --bg: #f1f5f9;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,.12), 0 8px 24px rgba(0,0,0,.08);
+}
+body { background: var(--bg); }
 
-        .dashboard-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 16px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
-        }
+/* ── Hero Header ──────────────────────────────────── */
+.dash-hero {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(79,70,229,.25);
+}
+.dash-hero .greeting { font-size: clamp(1.1rem, 3vw, 1.5rem); font-weight: 700; }
+.dash-hero .sub { font-size: .85rem; opacity: .85; }
+.hero-avatar {
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+}
+.campus-pill {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: rgba(255,255,255,.15);
+    border-radius: 20px; padding: .25rem .75rem;
+    font-size: .78rem; margin-top: .5rem;
+}
+.status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4ade80; flex-shrink: 0;
+}
+.status-dot.pending { background: #fbbf24; }
+.status-dot.rejected { background: #f87171; }
 
-        .stat-card {
-            transition: all 0.3s ease;
-            border: none;
-            background: #ffffff;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            cursor: pointer;
-            border-radius: 12px;
-            overflow: hidden;
-        }
+/* ── Stat Cards ───────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin-bottom: 1.5rem; }
+@media (min-width: 768px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
 
-        .stat-card:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            transform: translateY(-4px);
-        }
+.stat-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 1.1rem 1rem;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s;
+    border: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+    display: block;
+}
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); color: inherit; }
+.stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: .6rem; }
+.stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1; }
+.stat-label { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+.stat-bar { height: 3px; border-radius: 2px; background: var(--border); margin-top: .75rem; overflow: hidden; }
+.stat-bar-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
 
-        .campus-status-card {
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
+/* ── Section Cards ────────────────────────────────── */
+.dash-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+.dash-card-header {
+    padding: .9rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: #fafafa;
+}
+.dash-card-header h6 { margin: 0; font-weight: 700; font-size: .9rem; color: var(--text); }
+.dash-card-body { padding: 1.1rem; }
 
-        .campus-status-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: currentColor;
-        }
+/* ── Class Cards ──────────────────────────────────── */
+.class-grid { display: grid; grid-template-columns: 1fr; gap: .75rem; }
+@media (min-width: 576px) { .class-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 992px) { .class-grid { grid-template-columns: repeat(3, 1fr); } }
 
-        .campus-approved {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-        }
+.class-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all .2s;
+    background: var(--surface);
+    position: relative;
+    overflow: hidden;
+}
+.class-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), #7c3aed);
+}
+.class-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.class-name { font-weight: 700; font-size: .9rem; color: var(--text); margin-bottom: .4rem; }
+.class-meta { font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: .3rem; margin-bottom: .25rem; }
+.class-actions { display: flex; gap: .4rem; margin-top: .75rem; }
+.class-actions .btn { flex: 1; font-size: .75rem; padding: .3rem .5rem; border-radius: 8px; }
 
-        .campus-pending {
-            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-            color: white;
-        }
+/* ── Quick Actions ────────────────────────────────── */
+.qa-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+@media (max-width: 480px) { .qa-grid { grid-template-columns: repeat(3, 1fr); } }
 
-        .campus-rejected {
-            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-            color: white;
-        }
+.qa-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: .9rem .6rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none; color: inherit;
+    display: block;
+}
+.qa-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); color: inherit; }
+.qa-card.disabled { opacity: .45; pointer-events: none; }
+.qa-icon { font-size: 1.4rem; margin-bottom: .4rem; }
+.qa-label { font-size: .72rem; font-weight: 600; color: var(--text); line-height: 1.2; }
+.qa-badge { font-size: .65rem; margin-top: .3rem; }
 
-        .campus-independent {
-            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-            color: white;
-        }
+/* ── KSA Progress ─────────────────────────────────── */
+.ksa-item { margin-bottom: 1rem; }
+.ksa-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem; }
+.ksa-label { font-size: .82rem; font-weight: 600; }
+.ksa-bar { height: 7px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.ksa-fill { height: 100%; border-radius: 4px; transition: width .8s ease; }
+.ksa-sub { font-size: .7rem; color: var(--muted); margin-top: .2rem; }
 
-        .performance-metric {
-            text-align: center;
-            padding: 1rem;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-        }
+/* ── Activity Feed ────────────────────────────────── */
+.activity-item { display: flex; gap: .75rem; padding: .75rem 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .75rem; flex-shrink: 0; }
+.activity-body { flex: 1; min-width: 0; }
+.activity-title { font-size: .82rem; font-weight: 600; color: var(--text); }
+.activity-desc { font-size: .75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.activity-time { font-size: .68rem; color: var(--muted); margin-top: .15rem; }
 
-        .trend-up { color: #28a745; }
-        .trend-down { color: #dc3545; }
-        .trend-neutral { color: #6c757d; }
+/* ── Pending Tasks ────────────────────────────────── */
+.task-item { display: flex; align-items: center; gap: .75rem; padding: .7rem; border-radius: 10px; background: #fff8f0; border: 1px solid #fed7aa; margin-bottom: .5rem; }
+.task-item.high { background: #fff1f2; border-color: #fecaca; }
+.task-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--warning); flex-shrink: 0; }
+.task-dot.high { background: var(--danger); }
+.task-body { flex: 1; min-width: 0; }
+.task-title { font-size: .8rem; font-weight: 600; }
+.task-desc { font-size: .72rem; color: var(--muted); }
 
-        .activity-item {
-            padding: 1rem;
-            border-left: 4px solid #e9ecef;
-            margin-bottom: 1rem;
-            background: white;
-            border-radius: 0 8px 8px 0;
-            transition: all 0.3s ease;
-        }
+/* ── Campus Banner ────────────────────────────────── */
+.campus-banner {
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 1rem;
+}
+.campus-banner.approved { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.campus-banner.pending  { background: #fffbeb; border: 1px solid #fde68a; }
+.campus-banner.rejected { background: #fff1f2; border: 1px solid #fecaca; }
+.campus-banner.independent { background: #f8fafc; border: 1px solid var(--border); }
+.campus-banner-icon { font-size: 1.5rem; flex-shrink: 0; }
+.campus-banner-text .title { font-weight: 700; font-size: .9rem; }
+.campus-banner-text .desc { font-size: .75rem; color: var(--muted); }
 
-        .activity-item:hover {
-            border-left-color: #007bff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+/* ── Two-col layout ───────────────────────────────── */
+.two-col { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 992px) { .two-col { grid-template-columns: 1fr 1fr; } }
+.three-col { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+@media (min-width: 768px) { .three-col { grid-template-columns: repeat(3, 1fr); } }
 
-        .quick-action-card {
-            transition: all 0.3s ease;
-            border: none;
-            background: #ffffff;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            cursor: pointer;
-            border-radius: 12px;
-            text-decoration: none;
-            color: inherit;
-        }
+/* ── Empty States ─────────────────────────────────── */
+.empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--muted); }
+.empty-state i { font-size: 2.5rem; margin-bottom: .75rem; opacity: .4; }
+.empty-state p { font-size: .85rem; margin: 0; }
 
-        .quick-action-card:hover {
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            transform: translateY(-2px);
-            text-decoration: none;
-            color: inherit;
-        }
+/* ── Responsive tweaks ────────────────────────────── */
+@media (max-width: 575px) {
+    .dash-hero { padding: 1.25rem; }
+    .dash-card-body { padding: .85rem; }
+    .stat-value { font-size: 1.5rem; }
+    .hide-xs { display: none !important; }
+}
+</style>
 
-        .quick-action-card.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-header {
-                padding: 1.5rem;
-                margin-bottom: 1.5rem;
-            }
-            
-            .campus-status-card {
-                padding: 1rem;
-                margin-bottom: 1.5rem;
-            }
-        }
-    </style>
-
-    <!-- Enhanced Dashboard Header -->
-    <div class="dashboard-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="me-3">
-                        <i class="fas fa-chalkboard-teacher fa-2x"></i>
-                    </div>
-                    <div>
-                        <h1 class="h2 fw-bold mb-1">Welcome back, {{ auth()->user()->name }}! 👋</h1>
-                        <p class="mb-0 opacity-90">{{ now()->format('l, F j, Y') }}</p>
-                    </div>
+{{-- ── HERO HEADER ──────────────────────────────────────── --}}
+<div class="dash-hero">
+    <div class="d-flex align-items-center gap-3">
+        <div class="hero-avatar">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <div class="flex-grow-1 min-w-0">
+            <div class="greeting">Welcome back, {{ auth()->user()->name }}! 👋</div>
+            <div class="sub">{{ now()->format('l, F j, Y') }}</div>
+            @if(isset($campusInfo))
+                <div class="campus-pill">
+                    <span class="status-dot {{ $campusInfo['status'] !== 'approved' ? $campusInfo['status'] : '' }}"></span>
+                    {{ $campusInfo['name'] }}
+                    <span class="opacity-75">· {{ ucfirst($campusInfo['status']) }}</span>
                 </div>
-                
-                @if(isset($campusInfo))
-                    <div class="d-flex align-items-center">
-                        <i class="{{ $campusInfo['icon'] }} me-2"></i>
-                        <span>{{ $campusInfo['name'] }}</span>
-                        @if($campusInfo['status'] === 'approved')
-                            <span class="badge bg-success bg-opacity-25 ms-2">✓ Approved</span>
-                        @elseif($campusInfo['status'] === 'pending')
-                            <span class="badge bg-warning bg-opacity-25 ms-2">⏳ Pending</span>
-                        @elseif($campusInfo['status'] === 'rejected')
-                            <span class="badge bg-danger bg-opacity-25 ms-2">✗ Rejected</span>
-                        @endif
-                    </div>
-                @endif
-            </div>
-            <div class="col-md-4 text-md-end">
-                @if($isApproved && $myClasses && method_exists($myClasses, 'count') && $myClasses->count() > 0)
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-light btn-lg dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="fas fa-keyboard me-2"></i>Quick Grade
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            @foreach($myClasses as $class)
-                                <li class="dropdown-header">{{ $class->class_name }}</li>
-                                <li><a class="dropdown-item" href="{{ route('teacher.grades.entry', $class->id) }}?term=midterm">
-                                    <i class="fas fa-star me-2"></i>Midterm Grades
-                                </a></li>
-                                <li><a class="dropdown-item" href="{{ route('teacher.grades.entry', $class->id) }}?term=final">
-                                    <i class="fas fa-trophy me-2"></i>Final Grades
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @else
-                    <button class="btn btn-light btn-lg" disabled>
-                        <i class="fas fa-lock me-2"></i>
-                        {{ $isApproved ? 'No Classes' : 'Approval Required' }}
+            @endif
+        </div>
+        {{-- Quick Grade button (desktop) --}}
+        @if($isApproved && $myClasses && $myClasses->count() > 0)
+            <div class="d-none d-md-block flex-shrink-0">
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm dropdown-toggle fw-semibold" data-bs-toggle="dropdown">
+                        <i class="fas fa-bolt me-1"></i>Quick Grade
                     </button>
-                @endif
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        @foreach($myClasses->take(5) as $class)
+                            <li><span class="dropdown-item-text small text-muted fw-semibold">{{ $class->class_name }}</span></li>
+                            <li><a class="dropdown-item small" href="{{ route('teacher.grades.content', $class->id) }}?term=midterm">
+                                <i class="fas fa-star me-2 text-warning"></i>Midterm
+                            </a></li>
+                            <li><a class="dropdown-item small" href="{{ route('teacher.grades.content', $class->id) }}?term=final">
+                                <i class="fas fa-trophy me-2 text-success"></i>Finals
+                            </a></li>
+                            <li><hr class="dropdown-divider my-1"></li>
+                        @endforeach
+                    </ul>
+                </div>
             </div>
+        @endif
+    </div>
+</div>
+
+{{-- ── CAMPUS BANNER ────────────────────────────────────── --}}
+@if(isset($campusInfo))
+    <div class="campus-banner {{ $campusInfo['status'] }}">
+        <div class="campus-banner-icon">
+            <i class="{{ $campusInfo['icon'] }} text-{{ $campusInfo['color'] }}"></i>
+        </div>
+        <div class="campus-banner-text flex-grow-1">
+            <div class="title">{{ $campusInfo['name'] }}</div>
+            <div class="desc">{{ $campusInfo['description'] }}</div>
+        </div>
+        @if(isset($performanceMetrics))
+            <div class="d-none d-sm-flex gap-3 flex-shrink-0">
+                <div class="text-center">
+                    <div class="fw-bold" style="font-size:1.1rem">{{ $performanceMetrics['current']['grades'] }}</div>
+                    <div style="font-size:.68rem;color:var(--muted)">Grades/mo</div>
+                </div>
+                <div class="text-center">
+                    <div class="fw-bold" style="font-size:1.1rem">{{ $performanceMetrics['current']['attendance'] }}</div>
+                    <div style="font-size:.68rem;color:var(--muted)">Attendance</div>
+                </div>
+            </div>
+        @endif
+    </div>
+@endif
+
+{{-- ── STAT CARDS ───────────────────────────────────────── --}}
+<div class="stat-grid">
+    <a class="stat-card" href="{{ route('teacher.classes') }}">
+        <div class="stat-icon" style="background:#eef2ff">
+            <i class="fas fa-chalkboard-teacher" style="color:var(--primary)"></i>
+        </div>
+        <div class="stat-value" style="color:var(--primary)">{{ $statistics['totalClasses'] ?? 0 }}</div>
+        <div class="stat-label">My Classes</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:{{ min(($statistics['totalClasses'] ?? 0)*10,100) }}%;background:var(--primary)"></div></div>
+    </a>
+    <a class="stat-card" href="{{ route('teacher.classes') }}">
+        <div class="stat-icon" style="background:#f0fdf4">
+            <i class="fas fa-users" style="color:var(--success)"></i>
+        </div>
+        <div class="stat-value" style="color:var(--success)">{{ $statistics['totalStudents'] ?? 0 }}</div>
+        <div class="stat-label">Students</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:{{ min(($statistics['totalStudents'] ?? 0)*2,100) }}%;background:var(--success)"></div></div>
+    </a>
+    <a class="stat-card" href="{{ route('teacher.grades') }}">
+        <div class="stat-icon" style="background:#fffbeb">
+            <i class="fas fa-star" style="color:var(--warning)"></i>
+        </div>
+        <div class="stat-value" style="color:var(--warning)">{{ $statistics['gradesPosted'] ?? 0 }}</div>
+        <div class="stat-label">Grades Posted</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:{{ min(($statistics['gradesPosted'] ?? 0),100) }}%;background:var(--warning)"></div></div>
+    </a>
+    <a class="stat-card" href="{{ route('teacher.grades') }}">
+        <div class="stat-icon" style="background:#fff1f2">
+            <i class="fas fa-clock" style="color:var(--danger)"></i>
+        </div>
+        <div class="stat-value" style="color:var(--danger)">{{ $statistics['pendingGrades'] ?? 0 }}</div>
+        <div class="stat-label">Pending</div>
+        <div class="stat-bar"><div class="stat-bar-fill" style="width:{{ min(($statistics['pendingGrades'] ?? 0)*10,100) }}%;background:var(--danger)"></div></div>
+    </a>
+</div>
+
+{{-- ── QUICK ACTIONS (mobile-first row) ────────────────── --}}
+<div class="dash-card">
+    <div class="dash-card-header">
+        <h6><i class="fas fa-bolt me-2 text-warning"></i>Quick Actions</h6>
+    </div>
+    <div class="dash-card-body">
+        <div class="qa-grid">
+            <a class="qa-card {{ !$isApproved ? 'disabled' : '' }}" href="{{ $isApproved ? route('teacher.subjects') : '#' }}">
+                <div class="qa-icon"><i class="fas fa-book" style="color:var(--primary)"></i></div>
+                <div class="qa-label">Subjects</div>
+                @if($isApproved && isset($assignedSubjects))
+                    <div class="qa-badge"><span class="badge" style="background:var(--primary-light);color:var(--primary)">{{ $assignedSubjects->count() }}</span></div>
+                @endif
+            </a>
+            <a class="qa-card {{ !$isApproved ? 'disabled' : '' }}" href="{{ $isApproved ? route('teacher.grades') : '#' }}">
+                <div class="qa-icon"><i class="fas fa-chart-line" style="color:var(--success)"></i></div>
+                <div class="qa-label">Grades</div>
+                @if($isApproved && isset($statistics))
+                    <div class="qa-badge"><span class="badge" style="background:#f0fdf4;color:var(--success)">{{ $statistics['averages']['final_grade'] }}%</span></div>
+                @endif
+            </a>
+            <a class="qa-card {{ !$isApproved ? 'disabled' : '' }}" href="{{ $isApproved ? route('teacher.attendance') : '#' }}">
+                <div class="qa-icon"><i class="fas fa-calendar-check" style="color:var(--info)"></i></div>
+                <div class="qa-label">Attendance</div>
+                @if($isApproved && isset($statistics))
+                    <div class="qa-badge"><span class="badge" style="background:#ecfeff;color:var(--info)">{{ $statistics['attendanceRecords'] }}</span></div>
+                @endif
+            </a>
+            <a class="qa-card {{ !$isApproved ? 'disabled' : '' }}" href="{{ $isApproved ? route('teacher.classes.create') : '#' }}">
+                <div class="qa-icon"><i class="fas fa-plus-circle" style="color:#7c3aed"></i></div>
+                <div class="qa-label">New Class</div>
+            </a>
+            <a class="qa-card" href="{{ route('teacher.profile.show') }}">
+                <div class="qa-icon"><i class="fas fa-user-circle" style="color:var(--muted)"></i></div>
+                <div class="qa-label">Profile</div>
+            </a>
+            <a class="qa-card" href="{{ route('teacher.settings.index') }}">
+                <div class="qa-icon"><i class="fas fa-cog" style="color:var(--muted)"></i></div>
+                <div class="qa-label">Settings</div>
+            </a>
         </div>
     </div>
+</div>
 
-    <!-- Enhanced Campus Status Card -->
-    @if(isset($campusInfo))
-        <div class="campus-status-card campus-{{ $campusInfo['status'] }}">
-            <div class="row align-items-center">
-                <div class="col-auto">
-                    <i class="{{ $campusInfo['icon'] }} fa-3x"></i>
-                </div>
-                <div class="col">
-                    <h5 class="fw-bold mb-1">{{ $campusInfo['name'] }}</h5>
-                    <p class="mb-2 opacity-90">{{ $campusInfo['description'] }}</p>
-                    @if(isset($campusInfo['school']))
-                        <small class="opacity-75">
-                            <i class="fas fa-map-marker-alt me-1"></i>
-                            {{ $campusInfo['school']->city ?? '' }}, {{ $campusInfo['school']->province ?? '' }}
-                        </small>
-                    @endif
-                </div>
-                @if(isset($performanceMetrics))
-                    <div class="col-md-auto d-none d-md-block">
-                        <div class="row g-3">
-                            <div class="col">
-                                <div class="performance-metric">
-                                    <div class="h4 fw-bold mb-1">{{ $performanceMetrics['current']['grades'] }}</div>
-                                    <small>Grades This Month</small>
-                                    @if($performanceMetrics['trends']['grades']['direction'] !== 'neutral')
-                                        <div class="trend-{{ $performanceMetrics['trends']['grades']['direction'] }}">
-                                            <i class="fas fa-arrow-{{ $performanceMetrics['trends']['grades']['direction'] === 'up' ? 'up' : 'down' }}"></i>
-                                            {{ $performanceMetrics['trends']['grades']['percentage'] }}%
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="performance-metric">
-                                    <div class="h4 fw-bold mb-1">{{ $performanceMetrics['current']['attendance'] }}</div>
-                                    <small>Attendance Records</small>
-                                    @if($performanceMetrics['trends']['attendance']['direction'] !== 'neutral')
-                                        <div class="trend-{{ $performanceMetrics['trends']['attendance']['direction'] }}">
-                                            <i class="fas fa-arrow-{{ $performanceMetrics['trends']['attendance']['direction'] === 'up' ? 'up' : 'down' }}"></i>
-                                            {{ $performanceMetrics['trends']['attendance']['percentage'] }}%
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        </div>
-    @endif
-
-    <!-- Enhanced Statistics Cards -->
-    <div class="row mb-4 g-3">
-        <div class="col-6 col-lg-3">
-            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.classes') }}'">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="stat-icon">
-                            <i class="fas fa-chalkboard-teacher fa-2x text-primary"></i>
-                        </div>
-                        <div class="text-end">
-                            <h2 class="mb-0 fw-bold text-primary">{{ $statistics['totalClasses'] ?? 0 }}</h2>
-                            <small class="text-muted">Classes</small>
-                        </div>
-                    </div>
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-primary" style="width: {{ min(($statistics['totalClasses'] ?? 0) * 10, 100) }}%"></div>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                        <i class="fas fa-arrow-right me-1"></i>Manage Classes
-                    </small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-lg-3">
-            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.classes') }}'">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="stat-icon">
-                            <i class="fas fa-users fa-2x text-success"></i>
-                        </div>
-                        <div class="text-end">
-                            <h2 class="mb-0 fw-bold text-success">{{ $statistics['totalStudents'] ?? 0 }}</h2>
-                            <small class="text-muted">Students</small>
-                        </div>
-                    </div>
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-success" style="width: {{ min(($statistics['totalStudents'] ?? 0) * 2, 100) }}%"></div>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                        <i class="fas fa-arrow-right me-1"></i>View Students
-                    </small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-lg-3">
-            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.grades') }}'">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="stat-icon">
-                            <i class="fas fa-star fa-2x text-warning"></i>
-                        </div>
-                        <div class="text-end">
-                            <h2 class="mb-0 fw-bold text-warning">{{ $statistics['gradesPosted'] ?? 0 }}</h2>
-                            <small class="text-muted">Grades Posted</small>
-                        </div>
-                    </div>
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-warning" style="width: {{ min(($statistics['gradesPosted'] ?? 0) * 1, 100) }}%"></div>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                        <i class="fas fa-arrow-right me-1"></i>Grade Management
-                    </small>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-6 col-lg-3">
-            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.grades') }}'">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="stat-icon">
-                            <i class="fas fa-clock fa-2x text-danger"></i>
-                        </div>
-                        <div class="text-end">
-                            <h2 class="mb-0 fw-bold text-danger">{{ $statistics['pendingGrades'] ?? 0 }}</h2>
-                            <small class="text-muted">Pending</small>
-                        </div>
-                    </div>
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-danger" style="width: {{ min(($statistics['pendingGrades'] ?? 0) * 10, 100) }}%"></div>
-                    </div>
-                    <small class="text-muted mt-2 d-block">
-                        <i class="fas fa-arrow-right me-1"></i>Complete Grades
-                    </small>
-                </div>
-            </div>
-        </div>
+{{-- ── MY CLASSES ───────────────────────────────────────── --}}
+<div class="dash-card">
+    <div class="dash-card-header">
+        <h6>
+            <i class="fas fa-chalkboard-teacher me-2" style="color:var(--primary)"></i>My Classes
+            @if(isset($campusInfo) && $campusInfo['type'] === 'campus')
+                <span class="badge ms-1" style="background:var(--primary-light);color:var(--primary);font-size:.65rem">{{ $campusInfo['short_name'] }}</span>
+            @endif
+        </h6>
+        @if($isApproved)
+            <a href="{{ route('teacher.classes.create') }}" class="btn btn-sm btn-primary" style="border-radius:8px;font-size:.78rem">
+                <i class="fas fa-plus me-1"></i>Add Class
+            </a>
+        @endif
     </div>
-
-    <!-- Enhanced KSA Grading System & Recent Activities -->
-    <div class="row mb-4 g-3">
-        <!-- KSA System Overview -->
-        <div class="col-lg-8">
-            <div class="card h-100">
-                <div class="card-header bg-gradient-primary text-white">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="fas fa-star me-2"></i>KSA Grading System Overview
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-8">
-                            <p class="text-muted mb-3">Comprehensive assessment based on three key components with performance insights:</p>
-
-                            <!-- Knowledge Component -->
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-primary">
-                                        <i class="fas fa-brain me-2"></i>Knowledge (40%)
-                                    </h6>
-                                    <span class="badge bg-primary">Avg: {{ $statistics['averages']['knowledge'] ?? 0 }}%</span>
-                                </div>
-                                <div class="progress mb-2" style="height: 8px;">
-                                    <div class="progress-bar bg-primary" style="width: {{ $statistics['averages']['knowledge'] ?? 0 }}%"></div>
-                                </div>
-                                <small class="text-muted">Quizzes (40%) + Exams (60%)</small>
-                            </div>
-
-                            <!-- Skills Component -->
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-success">
-                                        <i class="fas fa-tools me-2"></i>Skills (50%)
-                                    </h6>
-                                    <span class="badge bg-success">Avg: {{ $statistics['averages']['skills'] ?? 0 }}%</span>
-                                </div>
-                                <div class="progress mb-2" style="height: 8px;">
-                                    <div class="progress-bar bg-success" style="width: {{ $statistics['averages']['skills'] ?? 0 }}%"></div>
-                                </div>
-                                <small class="text-muted">Output (40%) + Class Part (30%) + Activities (15%) + Assignments (15%)</small>
-                            </div>
-
-                            <!-- Attitude Component -->
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0 fw-bold text-info">
-                                        <i class="fas fa-handshake me-2"></i>Attitude (10%)
-                                    </h6>
-                                    <span class="badge bg-info">Avg: {{ $statistics['averages']['attitude'] ?? 0 }}%</span>
-                                </div>
-                                <div class="progress mb-2" style="height: 8px;">
-                                    <div class="progress-bar bg-info" style="width: {{ $statistics['averages']['attitude'] ?? 0 }}%"></div>
-                                </div>
-                                <small class="text-muted">Behavior (50%) + Awareness (50%)</small>
-                            </div>
-
-                            <div class="alert alert-light border-start border-4 border-primary">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Final Grade Formula:</strong>
-                                        <code>(K × 0.40) + (S × 0.50) + (A × 0.10)</code>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="h5 mb-0 text-primary">{{ $statistics['averages']['final_grade'] ?? 0 }}%</div>
-                                        <small class="text-muted">Overall Average</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="mb-3">
-                                <i class="fas fa-graduation-cap fa-4x text-primary mb-3"></i>
-                                <h5 class="fw-bold">Balanced Assessment</h5>
-                                <p class="text-muted small">Comprehensive evaluation system for holistic student development</p>
-                            </div>
-                            
-                            @if($isApproved)
-                                <div class="d-grid gap-2">
-                                    <a href="{{ route('teacher.grades.settings', ['classId' => $myClasses->first()->id ?? 1]) }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-cog me-1"></i>Grade Settings
-                                    </a>
-                                    <a href="{{ route('teacher.grades') }}" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-chart-line me-1"></i>View Analytics
-                                    </a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activities -->
-        <div class="col-lg-4">
-            <div class="card h-100">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0 fw-bold text-dark">
-                        <i class="fas fa-clock me-2"></i>Recent Activities
-                    </h6>
-                </div>
-                <div class="card-body p-0">
-                    @if(isset($recentActivities) && is_array($recentActivities) && count($recentActivities) > 0)
-                        <div class="list-group list-group-flush">
-                            @foreach(array_slice($recentActivities, 0, 5) as $activity)
-                                <div class="list-group-item border-0 py-3">
-                                    <div class="d-flex align-items-start">
-                                        <div class="me-3">
-                                            <div class="rounded-circle bg-{{ $activity['color'] }} bg-opacity-10 p-2">
-                                                <i class="{{ $activity['icon'] }} text-{{ $activity['color'] }}"></i>
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 fw-bold">{{ $activity['title'] }}</h6>
-                                            <p class="mb-1 small text-muted">{{ $activity['description'] }}</p>
-                                            <small class="text-muted">
-                                                <i class="fas fa-clock me-1"></i>
-                                                {{ $activity['time']->diffForHumans() }}
-                                            </small>
-                                        </div>
-                                        @if(isset($activity['link']))
-                                            <a href="{{ $activity['link'] }}" class="btn btn-sm btn-outline-secondary">
-                                                <i class="fas fa-arrow-right"></i>
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-history fa-2x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">No recent activities</p>
-                            <small class="text-muted">Start grading or managing attendance to see activities here</small>
-                        </div>
-                    @endif
-                </div>
-                @if(isset($recentActivities) && is_array($recentActivities) && count($recentActivities) > 5)
-                    <div class="card-footer bg-light text-center">
-                        <a href="#" class="btn btn-sm btn-outline-primary">View All Activities</a>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Enhanced My Classes Section -->
-    <div class="row mb-4 g-3">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold text-dark">
-                            <i class="fas fa-chalkboard-teacher me-2"></i>My Classes
-                            @if(isset($campusInfo) && $campusInfo['type'] === 'campus')
-                                <span class="badge bg-info ms-2">{{ $campusInfo['short_name'] }}</span>
-                            @endif
-                        </h5>
-                        @if($isApproved)
-                            <div class="btn-group">
-                                <a href="{{ route('teacher.classes.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-plus me-1"></i>Add Class
-                                </a>
-                                <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
-                                    <span class="visually-hidden">Toggle Dropdown</span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="{{ route('teacher.classes') }}">
-                                        <i class="fas fa-list me-2"></i>Manage All Classes
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="{{ route('teacher.subjects') }}">
-                                        <i class="fas fa-book me-2"></i>My Subjects
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ route('teacher.grades') }}">
-                                        <i class="fas fa-chart-line me-2"></i>Grade Analytics
-                                    </a></li>
-                                </ul>
-                            </div>
-                        @else
-                            <span class="badge bg-warning">
-                                <i class="fas fa-lock me-1"></i>Campus Approval Required
+    <div class="dash-card-body">
+        @if($isApproved && $myClasses && $myClasses->count() > 0)
+            <div class="class-grid">
+                @foreach($myClasses as $class)
+                    <div class="class-card" onclick="window.location.href='{{ route('teacher.classes.show', $class->id) }}'">
+                        <div class="class-name">{{ $class->class_name }}</div>
+                        @if($class->subject)
+                            <div class="class-meta"><i class="fas fa-book"></i>{{ Str::limit($class->subject->subject_name, 30) }}</div>
+                        @endif
+                        @if($class->course)
+                            <div class="class-meta"><i class="fas fa-graduation-cap"></i>{{ Str::limit($class->course->program_name, 30) }}</div>
+                        @endif
+                        <div class="d-flex align-items-center justify-content-between mt-2">
+                            <span class="badge" style="background:var(--primary-light);color:var(--primary);font-size:.7rem">
+                                <i class="fas fa-users me-1"></i>{{ $class->student_count ?? 0 }} students
                             </span>
+                            <span style="font-size:.7rem;color:var(--muted)">{{ $class->academic_year ?? 'Current' }}</span>
+                        </div>
+                        <div class="class-actions">
+                            <button class="btn btn-outline-success btn-sm"
+                                onclick="event.stopPropagation();window.location.href='{{ route('teacher.grades.content', $class->id) }}'"
+                                title="Grade Entry">
+                                <i class="fas fa-star me-1"></i><span class="hide-xs">Grades</span>
+                            </button>
+                            <button class="btn btn-outline-info btn-sm"
+                                onclick="event.stopPropagation();window.location.href='{{ route('teacher.attendance.manage', $class->id) }}'"
+                                title="Attendance">
+                                <i class="fas fa-calendar-check me-1"></i><span class="hide-xs">Attend.</span>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm"
+                                onclick="event.stopPropagation();window.location.href='{{ route('teacher.classes.edit', $class->id) }}'"
+                                title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @if($myClasses->count() > 6)
+                <div class="text-center mt-3">
+                    <a href="{{ route('teacher.classes') }}" class="btn btn-outline-primary btn-sm">View All Classes</a>
+                </div>
+            @endif
+        @elseif(!$isApproved)
+            <div class="empty-state">
+                <i class="fas fa-lock" style="color:var(--warning)"></i>
+                <p class="fw-semibold mt-2">Campus Approval Required</p>
+                <p>Status: <strong>{{ ucfirst(auth()->user()->campus_status ?? 'pending') }}</strong> — Contact your campus admin.</p>
+            </div>
+        @else
+            <div class="empty-state">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <p class="fw-semibold mt-2">No Classes Yet</p>
+                <p>Create your first class to start managing students and grades.</p>
+                <a href="{{ route('teacher.classes.create') }}" class="btn btn-primary btn-sm mt-2">
+                    <i class="fas fa-plus me-1"></i>Create First Class
+                </a>
+            </div>
+        @endif
+    </div>
+</div>
+
+{{-- ── KSA + ACTIVITIES (two-col on desktop) ───────────── --}}
+<div class="two-col">
+
+    {{-- KSA Overview --}}
+    <div class="dash-card" style="margin-bottom:0">
+        <div class="dash-card-header">
+            <h6><i class="fas fa-star me-2 text-warning"></i>KSA Grading Overview</h6>
+            @if($isApproved && $myClasses && $myClasses->count() > 0)
+                <a href="{{ route('teacher.grades') }}" class="btn btn-sm btn-outline-primary" style="font-size:.75rem;border-radius:8px">Analytics</a>
+            @endif
+        </div>
+        <div class="dash-card-body">
+            <div class="ksa-item">
+                <div class="ksa-header">
+                    <span class="ksa-label" style="color:var(--primary)"><i class="fas fa-brain me-1"></i>Knowledge (40%)</span>
+                    <span class="badge" style="background:var(--primary-light);color:var(--primary)">{{ $statistics['averages']['knowledge'] ?? 0 }}%</span>
+                </div>
+                <div class="ksa-bar"><div class="ksa-fill" style="width:{{ $statistics['averages']['knowledge'] ?? 0 }}%;background:var(--primary)"></div></div>
+                <div class="ksa-sub">Quizzes 40% · Exams 60%</div>
+            </div>
+            <div class="ksa-item">
+                <div class="ksa-header">
+                    <span class="ksa-label" style="color:var(--success)"><i class="fas fa-tools me-1"></i>Skills (50%)</span>
+                    <span class="badge" style="background:#f0fdf4;color:var(--success)">{{ $statistics['averages']['skills'] ?? 0 }}%</span>
+                </div>
+                <div class="ksa-bar"><div class="ksa-fill" style="width:{{ $statistics['averages']['skills'] ?? 0 }}%;background:var(--success)"></div></div>
+                <div class="ksa-sub">Output · Class Part · Activities · Assignments</div>
+            </div>
+            <div class="ksa-item">
+                <div class="ksa-header">
+                    <span class="ksa-label" style="color:var(--info)"><i class="fas fa-handshake me-1"></i>Attitude (10%)</span>
+                    <span class="badge" style="background:#ecfeff;color:var(--info)">{{ $statistics['averages']['attitude'] ?? 0 }}%</span>
+                </div>
+                <div class="ksa-bar"><div class="ksa-fill" style="width:{{ $statistics['averages']['attitude'] ?? 0 }}%;background:var(--info)"></div></div>
+                <div class="ksa-sub">Behavior 50% · Awareness 50%</div>
+            </div>
+            <div style="background:var(--primary-light);border-radius:10px;padding:.75rem 1rem;margin-top:.5rem">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div style="font-size:.75rem;color:var(--muted)">Final Grade Formula</div>
+                        <code style="font-size:.75rem">(K×0.40) + (S×0.50) + (A×0.10)</code>
+                    </div>
+                    <div class="text-end">
+                        <div style="font-size:1.4rem;font-weight:800;color:var(--primary)">{{ $statistics['averages']['final_grade'] ?? 0 }}%</div>
+                        <div style="font-size:.68rem;color:var(--muted)">Overall Avg</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Recent Activities --}}
+    <div class="dash-card" style="margin-bottom:0">
+        <div class="dash-card-header">
+            <h6><i class="fas fa-clock me-2 text-muted"></i>Recent Activities</h6>
+        </div>
+        <div class="dash-card-body" style="padding-top:.5rem;padding-bottom:.5rem">
+            @if(isset($recentActivities) && is_array($recentActivities) && count($recentActivities) > 0)
+                @foreach(array_slice($recentActivities, 0, 6) as $activity)
+                    <div class="activity-item">
+                        <div class="activity-dot bg-{{ $activity['color'] }} bg-opacity-15">
+                            <i class="{{ $activity['icon'] }} text-{{ $activity['color'] }}"></i>
+                        </div>
+                        <div class="activity-body">
+                            <div class="activity-title">{{ $activity['title'] }}</div>
+                            <div class="activity-desc">{{ $activity['description'] }}</div>
+                            <div class="activity-time"><i class="fas fa-clock me-1"></i>{{ $activity['time']->diffForHumans() }}</div>
+                        </div>
+                        @if(isset($activity['link']))
+                            <a href="{{ $activity['link'] }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;padding:.2rem .5rem;font-size:.7rem;flex-shrink:0">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
                         @endif
                     </div>
+                @endforeach
+            @else
+                <div class="empty-state" style="padding:1.5rem">
+                    <i class="fas fa-history"></i>
+                    <p class="mt-2">No recent activities yet</p>
                 </div>
-                <div class="card-body">
-                    @if($isApproved && $myClasses && method_exists($myClasses, 'count') && $myClasses->count() > 0)
-                        <div class="row g-3">
-                            @foreach($myClasses as $class)
-                                <div class="col-md-6 col-xl-4">
-                                    <div class="card quick-action-card h-100" onclick="window.location.href='{{ route('teacher.classes.show', $class->id) }}'">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                                <h6 class="card-title mb-0 fw-bold">{{ $class->class_name }}</h6>
-                                                <span class="badge bg-primary">{{ $class->students ? $class->students->count() : 0 }} students</span>
-                                            </div>
-                                            
-                                            @if($class->subject)
-                                                <div class="mb-2">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-book me-1"></i>{{ $class->subject->subject_name }}
-                                                    </small>
-                                                </div>
-                                            @endif
-                                            
-                                            @if($class->course)
-                                                <div class="mb-2">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-graduation-cap me-1"></i>{{ $class->course->program_name }}
-                                                    </small>
-                                                </div>
-                                            @endif
-
-                                            @if($class->school)
-                                                <div class="mb-2">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-university me-1"></i>{{ $class->school->short_name }}
-                                                    </small>
-                                                </div>
-                                            @endif
-                                            
-                                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                                <small class="text-muted">
-                                                    <i class="fas fa-calendar me-1"></i>{{ $class->academic_year ?? 'Current' }}
-                                                </small>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button type="button" class="btn btn-outline-success btn-sm" 
-                                                            onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('teacher.grades.entry', $class->id) }}'"
-                                                            title="Grade Entry">
-                                                        <i class="fas fa-star"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-info btn-sm" 
-                                                            onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('teacher.attendance.manage', $class->id) }}'"
-                                                            title="Attendance">
-                                                        <i class="fas fa-calendar-check"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                                            onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('teacher.classes.edit', $class->id) }}'"
-                                                            title="Edit Class">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @elseif(!$isApproved)
-                        <div class="text-center py-5">
-                            <i class="fas fa-lock fa-4x text-warning mb-3"></i>
-                            <h5 class="text-muted">Campus Approval Required</h5>
-                            <p class="text-muted">Your campus affiliation is {{ auth()->user()->campus_status ?? 'pending' }}. Contact your campus admin for approval to access classes and grading features.</p>
-                            <div class="alert alert-warning d-inline-block">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Status:</strong> {{ ucfirst(auth()->user()->campus_status ?? 'pending') }}
-                            </div>
-                        </div>
-                    @else
-                        <div class="text-center py-5">
-                            <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Classes Yet</h5>
-                            <p class="text-muted">Create your first class to start managing students, grades, and attendance.</p>
-                            <a href="{{ route('teacher.classes.create') }}" class="btn btn-primary">
-                                <i class="fas fa-plus me-2"></i>Create First Class
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 
-    <!-- Enhanced Quick Actions -->
-    <div class="row mb-4 g-3">
-        <div class="col-md-4">
-            <div class="card quick-action-card h-100 {{ !$isApproved ? 'disabled' : '' }}" 
-                 onclick="{{ $isApproved ? "window.location.href='" . route('teacher.subjects') . "'" : '' }}">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-{{ $isApproved ? 'book' : 'lock' }} fa-3x text-{{ $isApproved ? 'primary' : 'muted' }}"></i>
-                    </div>
-                    <h6 class="fw-bold {{ !$isApproved ? 'text-muted' : '' }}">My Subjects</h6>
-                    <p class="text-muted small mb-3">
-                        {{ $isApproved ? 'Manage your teaching subjects and curriculum' : 'Campus approval required' }}
-                    </p>
-                    @if($isApproved && isset($assignedSubjects))
-                        <span class="badge bg-primary">{{ $assignedSubjects ? $assignedSubjects->count() : 0 }} subjects</span>
-                    @endif
-                </div>
-            </div>
+</div>
+
+
+{{-- ── PENDING TASKS ────────────────────────────────────── --}}
+@if($isApproved && isset($pendingTasks) && is_array($pendingTasks) && count($pendingTasks) > 0)
+    <div class="dash-card" style="margin-top:1.25rem">
+        <div class="dash-card-header">
+            <h6><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Pending Tasks
+                <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">{{ count($pendingTasks) }}</span>
+            </h6>
         </div>
-        
-        <div class="col-md-4">
-            <div class="card quick-action-card h-100 {{ !$isApproved ? 'disabled' : '' }}" 
-                 onclick="{{ $isApproved ? "window.location.href='" . route('teacher.grades') . "'" : '' }}">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-{{ $isApproved ? 'chart-line' : 'lock' }} fa-3x text-{{ $isApproved ? 'success' : 'muted' }}"></i>
+        <div class="dash-card-body">
+            @foreach(array_slice($pendingTasks, 0, 4) as $task)
+                <div class="task-item {{ $task['priority'] === 'high' ? 'high' : '' }}">
+                    <div class="task-dot {{ $task['priority'] === 'high' ? 'high' : '' }}"></div>
+                    <div class="task-body">
+                        <div class="task-title">{{ $task['title'] }}</div>
+                        <div class="task-desc">{{ $task['description'] }}</div>
                     </div>
-                    <h6 class="fw-bold {{ !$isApproved ? 'text-muted' : '' }}">Grade Analytics</h6>
-                    <p class="text-muted small mb-3">
-                        {{ $isApproved ? 'View comprehensive grading statistics and reports' : 'Campus approval required' }}
-                    </p>
-                    @if($isApproved && isset($statistics))
-                        <span class="badge bg-success">{{ $statistics['averages']['final_grade'] }}% avg</span>
+                    @if(isset($task['link']))
+                        <a href="{{ $task['link'] }}" class="btn btn-sm btn-outline-warning" style="border-radius:8px;font-size:.72rem;flex-shrink:0">
+                            Act <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
                     @endif
                 </div>
-            </div>
-        </div>
-        
-        <div class="col-md-4">
-            <div class="card quick-action-card h-100 {{ !$isApproved ? 'disabled' : '' }}" 
-                 onclick="{{ $isApproved ? "window.location.href='" . route('teacher.attendance') . "'" : '' }}">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-{{ $isApproved ? 'calendar-check' : 'lock' }} fa-3x text-{{ $isApproved ? 'warning' : 'muted' }}"></i>
-                    </div>
-                    <h6 class="fw-bold {{ !$isApproved ? 'text-muted' : '' }}">Attendance Management</h6>
-                    <p class="text-muted small mb-3">
-                        {{ $isApproved ? 'Track and manage student attendance records' : 'Campus approval required' }}
-                    </p>
-                    @if($isApproved && isset($statistics))
-                        <span class="badge bg-warning">{{ $statistics['attendanceRecords'] }} records</span>
-                    @endif
-                </div>
-            </div>
+            @endforeach
         </div>
     </div>
+@endif
 
-    <!-- Pending Tasks Section -->
-    @if($isApproved && isset($pendingTasks) && is_array($pendingTasks) && count($pendingTasks) > 0)
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-warning">
-                    <div class="card-header bg-warning bg-opacity-10">
-                        <h6 class="mb-0 fw-bold text-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>Pending Tasks ({{ is_array($pendingTasks) ? count($pendingTasks) : 0 }})
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            @foreach(array_slice($pendingTasks, 0, 3) as $task)
-                                <div class="col-md-4">
-                                    <div class="alert alert-{{ $task['priority'] === 'high' ? 'danger' : ($task['priority'] === 'medium' ? 'warning' : 'info') }} mb-0">
-                                        <h6 class="alert-heading fw-bold">{{ $task['title'] }}</h6>
-                                        <p class="mb-2 small">{{ $task['description'] }}</p>
-                                        @if(isset($task['link']))
-                                            <a href="{{ $task['link'] }}" class="btn btn-sm btn-outline-{{ $task['priority'] === 'high' ? 'danger' : ($task['priority'] === 'medium' ? 'warning' : 'info') }}">
-                                                Take Action
-                                            </a>
-                                        @endif
-                                    </div>
-                                </div>
-                            @endforeach
+{{-- ── PROFILE COMPLETION + SECURITY (two-col) ─────────── --}}
+@if($isApproved)
+    <div class="two-col" style="margin-top:1.25rem">
+
+        {{-- Profile Management --}}
+        <div class="dash-card" style="margin-bottom:0">
+            <div class="dash-card-header">
+                <h6><i class="fas fa-user-cog me-2" style="color:var(--primary)"></i>Profile</h6>
+                <a href="{{ route('teacher.profile.edit') }}" class="btn btn-sm btn-outline-primary" style="font-size:.75rem;border-radius:8px">
+                    <i class="fas fa-edit me-1"></i>Edit
+                </a>
+            </div>
+            <div class="dash-card-body">
+                @if(isset($profileManagement))
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span style="font-size:.82rem;font-weight:600">Profile Completion</span>
+                            <span class="badge" style="background:var(--primary-light);color:var(--primary)">{{ $profileManagement['profile_completion']['percentage'] }}%</span>
+                        </div>
+                        <div class="ksa-bar"><div class="ksa-fill" style="width:{{ $profileManagement['profile_completion']['percentage'] }}%;background:var(--primary)"></div></div>
+                        <div style="font-size:.7rem;color:var(--muted);margin-top:.25rem">
+                            {{ $profileManagement['profile_completion']['completed_fields'] }}/{{ $profileManagement['profile_completion']['total_fields'] }} fields completed
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    <!-- Security Policies & Profile Management Section -->
-    @if($isApproved)
-        <div class="row mb-4 g-3">
-            <!-- Security Policies -->
-            <div class="col-lg-6">
-                <div class="card h-100">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0 fw-bold text-dark">
-                            <i class="fas fa-shield-alt me-2"></i>Security & Policies
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        @if(isset($securityPolicies) && is_array($securityPolicies) && count($securityPolicies) > 0)
-                            <div class="list-group list-group-flush">
-                                @foreach($securityPolicies as $policy)
-                                    <div class="list-group-item border-0 px-0 py-2">
-                                        <div class="d-flex align-items-start">
-                                            <div class="me-3">
-                                                <div class="rounded-circle bg-{{ $policy['type'] }} bg-opacity-10 p-2">
-                                                    <i class="{{ $policy['icon'] }} text-{{ $policy['type'] }}"></i>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="mb-1 fw-bold">{{ $policy['title'] }}</h6>
-                                                <p class="mb-1 small text-muted">{{ $policy['description'] }}</p>
-                                                @if($policy['enforced'])
-                                                    <span class="badge bg-success bg-opacity-25 text-success">
-                                                        <i class="fas fa-check me-1"></i>Enforced
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                    @if(!empty($profileManagement['campus_connections']))
+                        @foreach($profileManagement['campus_connections'] as $conn)
+                            <div class="d-flex align-items-center justify-content-between p-2 rounded mb-2" style="background:#f8fafc;border:1px solid var(--border)">
+                                <div>
+                                    <div style="font-size:.82rem;font-weight:600">{{ $conn['short_name'] }}</div>
+                                    <div style="font-size:.7rem;color:var(--muted)">{{ $conn['role'] }} · {{ $conn['since']->format('M Y') }}</div>
+                                </div>
+                                <span class="badge bg-{{ $conn['status'] === 'approved' ? 'success' : 'warning' }}">{{ ucfirst($conn['status']) }}</span>
                             </div>
+                        @endforeach
+                    @endif
+                    <div class="d-grid gap-2 mt-2">
+                        <a href="{{ route('teacher.profile.change-password') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:8px;font-size:.78rem">
+                            <i class="fas fa-key me-1"></i>Change Password
+                        </a>
+                        @if(empty(auth()->user()->campus))
+                            <button class="btn btn-sm btn-outline-info" style="border-radius:8px;font-size:.78rem" data-bs-toggle="modal" data-bs-target="#campusRequestModal">
+                                <i class="fas fa-university me-1"></i>Request Campus Affiliation
+                            </button>
                         @else
-                            <div class="text-center py-3">
-                                <i class="fas fa-shield-alt fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-0">No security policies configured</p>
-                            </div>
+                            <button class="btn btn-sm btn-outline-warning" style="border-radius:8px;font-size:.78rem" data-bs-toggle="modal" data-bs-target="#campusChangeModal">
+                                <i class="fas fa-exchange-alt me-1"></i>Request Campus Change
+                            </button>
                         @endif
                     </div>
-                </div>
+                @endif
             </div>
+        </div>
 
-            <!-- Profile Management -->
-            <div class="col-lg-6">
-                <div class="card h-100">
-                    <div class="card-header bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 fw-bold text-dark">
-                                <i class="fas fa-user-cog me-2"></i>Profile Management
-                            </h6>
-                            <a href="{{ route('teacher.profile.edit') }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-edit me-1"></i>Edit Profile
-                            </a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        @if(isset($profileManagement))
-                            <!-- Profile Completion -->
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span class="fw-bold">Profile Completion</span>
-                                    <span class="badge bg-primary">{{ $profileManagement['profile_completion']['percentage'] }}%</span>
-                                </div>
-                                <div class="progress mb-2" style="height: 8px;">
-                                    <div class="progress-bar bg-primary" style="width: {{ $profileManagement['profile_completion']['percentage'] }}%"></div>
-                                </div>
-                                <small class="text-muted">
-                                    {{ $profileManagement['profile_completion']['completed_fields'] }}/{{ $profileManagement['profile_completion']['total_fields'] }} fields completed
-                                </small>
+        {{-- Security Policies --}}
+        <div class="dash-card" style="margin-bottom:0">
+            <div class="dash-card-header">
+                <h6><i class="fas fa-shield-alt me-2 text-success"></i>Security & Policies</h6>
+            </div>
+            <div class="dash-card-body" style="padding-top:.5rem;padding-bottom:.5rem">
+                @if(isset($securityPolicies) && count($securityPolicies) > 0)
+                    @foreach($securityPolicies as $policy)
+                        <div class="activity-item">
+                            <div class="activity-dot bg-{{ $policy['type'] }} bg-opacity-15">
+                                <i class="{{ $policy['icon'] }} text-{{ $policy['type'] }}"></i>
                             </div>
-
-                            <!-- Campus Connections -->
-                            @if(isset($profileManagement['campus_connections']) && is_array($profileManagement['campus_connections']) && count($profileManagement['campus_connections']) > 0)
-                                <div class="mb-3">
-                                    <h6 class="fw-bold mb-2">Campus Connections</h6>
-                                    @foreach($profileManagement['campus_connections'] as $connection)
-                                        <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded mb-2">
-                                            <div>
-                                                <div class="fw-bold">{{ $connection['short_name'] }}</div>
-                                                <small class="text-muted">{{ $connection['role'] }} since {{ $connection['since']->format('M Y') }}</small>
-                                            </div>
-                                            <span class="badge bg-{{ $connection['status'] === 'approved' ? 'success' : 'warning' }}">
-                                                {{ ucfirst($connection['status']) }}
-                                            </span>
-                                        </div>
-                                    @endforeach
-                                </div>
+                            <div class="activity-body">
+                                <div class="activity-title">{{ $policy['title'] }}</div>
+                                <div class="activity-desc">{{ $policy['description'] }}</div>
+                            </div>
+                            @if($policy['enforced'])
+                                <span class="badge bg-success bg-opacity-15 text-success" style="font-size:.65rem;flex-shrink:0">✓</span>
                             @endif
-
-                            <!-- Quick Actions -->
-                            <div class="d-grid gap-2">
-                                <a href="{{ route('teacher.profile.change-password') }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-key me-1"></i>Change Password
-                                </a>
-                                <a href="{{ route('teacher.settings.index') }}" class="btn btn-sm btn-outline-secondary">
-                                    <i class="fas fa-cog me-1"></i>Account Settings
-                                </a>
-                                @if(empty(auth()->user()->campus))
-                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#campusRequestModal">
-                                        <i class="fas fa-university me-1"></i>Request Campus Affiliation
-                                    </button>
-                                @else
-                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#campusChangeModal">
-                                        <i class="fas fa-exchange-alt me-1"></i>Request Campus Change
-                                    </button>
-                                @endif
-                            </div>
-                        @endif
+                        </div>
+                    @endforeach
+                @else
+                    <div class="empty-state" style="padding:1.5rem">
+                        <i class="fas fa-shield-alt"></i>
+                        <p class="mt-2">No policies configured</p>
                     </div>
-                </div>
+                @endif
             </div>
         </div>
-    @endif
 
-    <!-- Enhanced Teacher CRUD Modals -->
-    
-    <!-- Subject Creation Modal -->
-    <div class="modal fade" id="createSubjectModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-book me-2"></i>Create New Subject
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="{{ route('teacher.subjects.create') }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="subject_name" class="form-label">Subject Name *</label>
-                                <input type="text" class="form-control" id="subject_name" name="subject_name" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="subject_code" class="form-label">Subject Code *</label>
-                                <input type="text" class="form-control" id="subject_code" name="subject_code" required>
-                                @if(isset($campusInfo) && $campusInfo['type'] === 'campus')
-                                    <small class="text-muted">Campus code will be automatically added</small>
-                                @endif
-                            </div>
-                            <div class="col-md-6">
-                                <label for="credit_hours" class="form-label">Credit Hours *</label>
-                                <select class="form-select" id="credit_hours" name="credit_hours" required>
-                                    <option value="">Select Credit Hours</option>
-                                    <option value="1">1 Credit Hour</option>
-                                    <option value="2">2 Credit Hours</option>
-                                    <option value="3" selected>3 Credit Hours</option>
-                                    <option value="4">4 Credit Hours</option>
-                                    <option value="5">5 Credit Hours</option>
-                                    <option value="6">6 Credit Hours</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="semester" class="form-label">Semester *</label>
-                                <select class="form-select" id="semester" name="semester" required>
-                                    <option value="">Select Semester</option>
-                                    <option value="1">First Semester</option>
-                                    <option value="2">Second Semester</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="year_level" class="form-label">Year Level</label>
-                                <select class="form-select" id="year_level" name="year_level">
-                                    <option value="">Select Year Level</option>
-                                    <option value="1" selected>1st Year</option>
-                                    <option value="2">2nd Year</option>
-                                    <option value="3">3rd Year</option>
-                                    <option value="4">4th Year</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="category" class="form-label">Category</label>
-                                <select class="form-select" id="category" name="category">
-                                    <option value="">Select Category</option>
-                                    <option value="Core">Core Subject</option>
-                                    <option value="Major">Major Subject</option>
-                                    <option value="Minor">Minor Subject</option>
-                                    <option value="Elective">Elective</option>
-                                    <option value="General">General Education</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label for="description" class="form-label">Description</label>
-                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Brief description of the subject..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Create Subject
-                        </button>
-                    </div>
-                </form>
+    </div>
+@endif
+
+{{-- ── MODALS ───────────────────────────────────────────── --}}
+<div class="modal fade" id="campusRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius)">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-university me-2"></i>Request Campus Affiliation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <form action="{{ route('teacher.request.campus-change') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Campus *</label>
+                        <select class="form-select" name="requested_campus" required>
+                            <option value="">Select Campus</option>
+                            <option>CPSU Main Campus - Kabankalan City</option>
+                            <option>CPSU Victorias Campus</option>
+                            <option>CPSU Sipalay Campus - Brgy. Gil Montilla</option>
+                            <option>CPSU Cauayan Campus</option>
+                            <option>CPSU Candoni Campus</option>
+                            <option>CPSU Hinoba-an Campus</option>
+                            <option>CPSU Ilog Campus</option>
+                            <option>CPSU Hinigaran Campus</option>
+                            <option>CPSU Moises Padilla Campus</option>
+                            <option>CPSU San Carlos Campus</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Reason *</label>
+                        <textarea class="form-control" name="reason" rows="3" required placeholder="Why do you want to affiliate with this campus?"></textarea>
+                    </div>
+                    <div class="alert alert-info py-2 mb-0" style="font-size:.8rem">
+                        <i class="fas fa-info-circle me-1"></i>Your request will be reviewed by the campus administrator.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane me-1"></i>Submit</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <!-- Campus Request Modal -->
-    <div class="modal fade" id="campusRequestModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-university me-2"></i>Request Campus Affiliation
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="{{ route('teacher.request.campus-change') }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="requested_campus" class="form-label">Requested Campus *</label>
-                            <select class="form-select" id="requested_campus" name="requested_campus" required>
-                                <option value="">Select Campus</option>
-                                <option value="Kabankalan">CPSU Main Campus - Kabankalan City</option>
-                                <option value="Victorias">CPSU Victorias Campus</option>
-                                <option value="Sipalay">CPSU Sipalay Campus - Brgy. Gil Montilla</option>
-                                <option value="Cauayan">CPSU Cauayan Campus</option>
-                                <option value="Candoni">CPSU Candoni Campus</option>
-                                <option value="Hinoba-an">CPSU Hinoba-an Campus</option>
-                                <option value="Ilog">CPSU Ilog Campus</option>
-                                <option value="Hinigaran">CPSU Hinigaran Campus</option>
-                                <option value="Moises Padilla">CPSU Moises Padilla Campus</option>
-                                <option value="San Carlos">CPSU San Carlos Campus</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="reason" class="form-label">Reason for Request *</label>
-                            <textarea class="form-control" id="reason" name="reason" rows="4" required placeholder="Please explain why you want to be affiliated with this campus..."></textarea>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Your request will be reviewed by the campus administrator. You will receive a notification once your request is processed.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-paper-plane me-1"></i>Submit Request
-                        </button>
-                    </div>
-                </form>
+<div class="modal fade" id="campusChangeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius)">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"><i class="fas fa-exchange-alt me-2"></i>Request Campus Change</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <form action="{{ route('teacher.request.campus-change') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="alert alert-warning py-2 mb-3" style="font-size:.8rem">
+                        <strong>Current:</strong> {{ auth()->user()->campus ?? 'None' }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">New Campus *</label>
+                        <select class="form-select" name="requested_campus" required>
+                            <option value="">Select Campus</option>
+                            <option>CPSU Main Campus - Kabankalan City</option>
+                            <option>CPSU Victorias Campus</option>
+                            <option>CPSU Sipalay Campus - Brgy. Gil Montilla</option>
+                            <option>CPSU Cauayan Campus</option>
+                            <option>CPSU Candoni Campus</option>
+                            <option>CPSU Hinoba-an Campus</option>
+                            <option>CPSU Ilog Campus</option>
+                            <option>CPSU Hinigaran Campus</option>
+                            <option>CPSU Moises Padilla Campus</option>
+                            <option>CPSU San Carlos Campus</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Reason *</label>
+                        <textarea class="form-control" name="reason" rows="3" required placeholder="Why do you want to change campus?"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-paper-plane me-1"></i>Submit</button>
+                </div>
+            </form>
         </div>
     </div>
-
-    <!-- Campus Change Modal -->
-    <div class="modal fade" id="campusChangeModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-exchange-alt me-2"></i>Request Campus Change
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form action="{{ route('teacher.request.campus-change') }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Current Campus:</strong> {{ auth()->user()->campus ?? 'None' }}
-                        </div>
-                        <div class="mb-3">
-                            <label for="requested_campus_change" class="form-label">New Campus *</label>
-                            <select class="form-select" id="requested_campus_change" name="requested_campus" required>
-                                <option value="">Select New Campus</option>
-                                <option value="Kabankalan">CPSU Main Campus - Kabankalan City</option>
-                                <option value="Victorias">CPSU Victorias Campus</option>
-                                <option value="Sipalay">CPSU Sipalay Campus - Brgy. Gil Montilla</option>
-                                <option value="Cauayan">CPSU Cauayan Campus</option>
-                                <option value="Candoni">CPSU Candoni Campus</option>
-                                <option value="Hinoba-an">CPSU Hinoba-an Campus</option>
-                                <option value="Ilog">CPSU Ilog Campus</option>
-                                <option value="Hinigaran">CPSU Hinigaran Campus</option>
-                                <option value="Moises Padilla">CPSU Moises Padilla Campus</option>
-                                <option value="San Carlos">CPSU San Carlos Campus</option>
-                                <option value="">Independent Teacher (No Campus)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="change_reason" class="form-label">Reason for Change *</label>
-                            <textarea class="form-control" id="change_reason" name="reason" rows="4" required placeholder="Please explain why you want to change your campus affiliation..."></textarea>
-                        </div>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            Changing campus will affect your access to current classes and data. Your request will be reviewed by administrators.
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="fas fa-exchange-alt me-1"></i>Request Change
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Floating Button -->
-    @if($isApproved)
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
-            <div class="btn-group-vertical">
-                <button type="button" class="btn btn-primary btn-lg rounded-circle mb-2" data-bs-toggle="modal" data-bs-target="#createSubjectModal" title="Create Subject">
-                    <i class="fas fa-book"></i>
-                </button>
-                <a href="{{ route('teacher.classes.create') }}" class="btn btn-success btn-lg rounded-circle mb-2" title="Create Class">
-                    <i class="fas fa-plus"></i>
-                </a>
-                <a href="{{ route('teacher.grades') }}" class="btn btn-warning btn-lg rounded-circle" title="Grade Entry">
-                    <i class="fas fa-star"></i>
-                </a>
-            </div>
-        </div>
-    @endif
+</div>
 
 @endsection

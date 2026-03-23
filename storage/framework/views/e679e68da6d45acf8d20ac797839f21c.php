@@ -1,5 +1,3 @@
-
-
 <?php $__env->startSection('content'); ?>
     <div class="container-fluid">
         <!-- Success/Error Messages -->
@@ -33,12 +31,12 @@
         <?php endif; ?>
 
         <!-- Page Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-start align-items-md-center flex-wrap gap-2 mb-4">
             <div>
                 <h2 class="mb-1">My Subjects</h2>
                 <p class="text-muted mb-0">Manage your assigned courses and teaching materials</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap justify-content-end mt-2 mt-md-0">
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#requestSubjectModal">
                     <i class="fas fa-paper-plane me-2"></i>Request Subject
                 </button>
@@ -301,6 +299,17 @@
                             <div class="col-md-4">
                                 <label for="create_subject_code" class="form-label">Subject Code <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="create_subject_code" name="subject_code" required placeholder="e.g., IT102">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="create_program_id" class="form-label">Program / Course</label>
+                                <select class="form-select" id="create_program_id" name="program_id">
+                                    <option value="">— Independent (no program) —</option>
+                                    <?php $__currentLoopData = \App\Models\Course::orderBy('program_name')->get(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $prog): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($prog->id); ?>"><?php echo e($prog->program_name); ?> (<?php echo e($prog->program_code); ?>)</option>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </select>
+                                <small class="text-muted">Assign this subject to a program, or leave blank for independent subjects.</small>
                             </div>
 
                             <div class="col-md-6">

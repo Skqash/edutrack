@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('students', function (Blueprint $table) {
-            $table->string('suffix', 10)->nullable()->after('last_name')->comment('Name suffix like Jr., Sr., III, etc.');
+            $table->string('suffix', 10)->nullable()->comment('Name suffix like Jr., Sr., III, etc.');
         });
     }
 

@@ -379,12 +379,12 @@
                                 onkeyup="filterClassStudents(this)">
                         </div>
 
-                        @if ($class->students->count() > 0)
+                        @if ($classData['students']->count() > 0)
                             @php
                                 // Group attendance by student
                                 $studentAttendance = [];
-                                foreach ($class->students as $student) {
-                                    $studentRecords = $attendance->where('student_id', $student->id);
+                                foreach ($classData['students'] as $student) {
+                                    $studentRecords = $classData['attendance']->where('student_id', $student->id);
                                     $studentAttendance[$student->id] = [
                                         'student' => $student,
                                         'records' => $studentRecords,
@@ -415,12 +415,11 @@
                                             style="font-size: 0.85rem; letter-spacing: 0.5px;">
                                             {{ $student->student_id ?? 'N/A' }}
                                         </span>
-                                        {{ $student->user->name ?? 'N/A' }}
+                                        {{ $student->first_name }} {{ $student->last_name }}
                                         @if ($records->count() == 0)
                                             <span style="color: #999; font-size: 11px;">(No attendance records)</span>
                                         @else
-                                            <span style="color: #666; font-size: 11px;">- {{ $records->count() }}
-                                                records</span>
+                                            <span style="color: #666; font-size: 11px;">- {{ $records->count() }} records</span>
                                         @endif
                                     </div>
 
@@ -477,10 +476,10 @@
     <div id="students" class="tab-content">
         <div class="attendance-container">
             @php
-                // Build student list with all classes
+                // Build student list from all classData entries (uses course-based students)
                 $allStudents = [];
                 foreach ($attendanceByClass as $classData) {
-                    foreach ($classData['class']->students as $student) {
+                    foreach ($classData['students'] as $student) {
                         $allStudents[$student->id] = $student;
                     }
                 }
@@ -508,7 +507,7 @@
                     // Calculate stats
                     $totalRecords = $studentRecords->count();
                     $presentCount = $studentRecords->where('status', 'Present')->count();
-                    $absentCount = $studentRecords->where('status', 'Absent')->count();
+                    $absentCount  = $studentRecords->where('status', 'Absent')->count();
                 @endphp
 
                 <div class="attendance-card student-filter-item">
@@ -519,7 +518,7 @@
                                     style="font-size: 0.85rem; letter-spacing: 0.5px;">
                                     {{ $student->student_id ?? 'N/A' }}
                                 </span>
-                                {{ $student->user->name ?? 'N/A' }}
+                                {{ $student->first_name }} {{ $student->last_name }}
                             </div>
                             <div class="card-subtitle">
                                 <span>{{ $totalRecords }} Records</span>
@@ -643,23 +642,18 @@
                                         <tbody>
                                             @php
                                                 $classAttendance = $classStats['attendance'] ?? collect();
-                                                $students = $class->students;
+                                                $students = $classStats['students'] ?? collect();
                                             @endphp
                                             @foreach ($students as $student)
                                                 @php
-                                                    $studentRecords = $classAttendance->where(
-                                                        'student_id',
-                                                        $student->id,
-                                                    );
-                                                    $presentCount = $studentRecords
-                                                        ->where('status', 'Present')
-                                                        ->count();
-                                                    $absentCount = $studentRecords->where('status', 'Absent')->count();
-                                                    $lateCount = $studentRecords->where('status', 'Late')->count();
-                                                    $leaveCount = $studentRecords->where('status', 'Leave')->count();
+                                                    $studentRecords = $classAttendance->where('student_id', $student->id);
+                                                    $presentCount = $studentRecords->where('status', 'Present')->count();
+                                                    $absentCount  = $studentRecords->where('status', 'Absent')->count();
+                                                    $lateCount    = $studentRecords->where('status', 'Late')->count();
+                                                    $leaveCount   = $studentRecords->where('status', 'Leave')->count();
                                                 @endphp
                                                 <tr>
-                                                    <td>{{ $student->user->name ?? 'N/A' }}</td>
+                                                    <td>{{ $student->first_name }} {{ $student->last_name }}</td>
                                                     <td>
                                                         <span class="status-badge status-present">✅
                                                             {{ $presentCount }}</span>

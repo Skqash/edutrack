@@ -77,7 +77,7 @@
                             <h6 class="text-white-50 mb-1">Status</h6>
                             <h5 class="mb-0">
                                 <span class="badge bg-light text-dark">
-                                    {{ $class->status === 'active' ? 'Active' : 'Inactive' }}
+                                    {{ strtolower($class->status) === 'active' ? 'Active' : ($class->status ?? 'Active') }}
                                 </span>
                             </h5>
                         </div>
@@ -131,7 +131,7 @@
                                                     style="font-size: 0.85rem; letter-spacing: 0.5px;">{{ $student->student_id ?? 'N/A' }}</span>
                                             </td>
                                             <td>
-                                                <strong>{{ $student->name }}</strong>
+                                                <strong>{{ $student->first_name }} {{ $student->last_name }}</strong>
                                                 <br>
                                                 <small class="text-muted">{{ $student->status ?? 'Active' }}</small>
                                             </td>
@@ -180,7 +180,7 @@
                 <a href="{{ route('teacher.students.index', $class->id) }}" class="btn btn-outline-info">
                     <i class="fas fa-graduation-cap me-2"></i> Manage Students
                 </a>
-                <a href="{{ route('teacher.grades.entry', $class->id) }}?term=midterm" class="btn btn-primary">
+                <a href="{{ route('teacher.grades.content', $class->id) }}?term=midterm" class="btn btn-primary">
                     <i class="fas fa-star me-2"></i> Enter Grades for This Class
                 </a>
                 <a href="{{ route('teacher.attendance') }}" class="btn btn-outline-primary">
@@ -415,7 +415,7 @@
                     </div>
                     <p>Are you sure you want to delete the class <strong>{{ $class->class_name }}</strong>?</p>
                     <p class="text-muted small mb-0">
-                        This will remove all associated grade entries for {{ $class->students->count() }} student(s).
+                        This will remove all associated grade entries for enrolled students.
                         Please ensure you have backed up any important data.
                     </p>
                 </div>

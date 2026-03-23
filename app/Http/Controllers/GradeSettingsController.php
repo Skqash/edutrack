@@ -16,18 +16,22 @@ class GradeSettingsController extends Controller
      */
     public function index(Request $request, $classId)
     {
-        $class = ClassModel::with('students')->findOrFail($classId);
+        $class = ClassModel::findOrFail($classId);
         $term = $request->get('term', 'midterm');
 
         // Get or create KSA settings
         $ksaSettings = KsaSetting::getOrCreateDefault($classId, $term, auth()->id());
 
-        // Get components grouped by category (no term filter since components are reusable)
-        $components = GradeComponent::where('class_id', $classId)
+        // Get components grouped by lowercase category key for view compatibility
+        $rawComponents = GradeComponent::where('class_id', $classId)
             ->where('is_active', true)
             ->ordered()
-            ->get()
-            ->groupBy('category');
+            ->get();
+        $components = [
+            'knowledge' => $rawComponents->where('category', 'Knowledge')->values(),
+            'skills'    => $rawComponents->where('category', 'Skills')->values(),
+            'attitude'  => $rawComponents->where('category', 'Attitude')->values(),
+        ];
 
         return view('teacher.grades.settings', compact('class', 'term', 'ksaSettings', 'components'));
     }
@@ -37,17 +41,21 @@ class GradeSettingsController extends Controller
      */
     public function show($classId, $term = 'midterm')
     {
-        $class = ClassModel::with('students')->findOrFail($classId);
+        $class = ClassModel::findOrFail($classId);
 
         // Get or create KSA settings
         $ksaSettings = KsaSetting::getOrCreateDefault($classId, $term, auth()->id());
 
-        // Get components grouped by category (no term filter since components are reusable)
-        $components = GradeComponent::where('class_id', $classId)
+        // Get components grouped by lowercase category key for view compatibility
+        $rawComponents = GradeComponent::where('class_id', $classId)
             ->where('is_active', true)
             ->ordered()
-            ->get()
-            ->groupBy('category');
+            ->get();
+        $components = [
+            'knowledge' => $rawComponents->where('category', 'Knowledge')->values(),
+            'skills'    => $rawComponents->where('category', 'Skills')->values(),
+            'attitude'  => $rawComponents->where('category', 'Attitude')->values(),
+        ];
 
         return view('teacher.grades.settings', compact('class', 'term', 'ksaSettings', 'components'));
     }
@@ -59,11 +67,15 @@ class GradeSettingsController extends Controller
     {
         $ksaSettings = KsaSetting::getOrCreateDefault($classId, $term, auth()->id());
 
-        $components = GradeComponent::where('class_id', $classId)
+        $rawComponents = GradeComponent::where('class_id', $classId)
             ->where('is_active', true)
             ->ordered()
-            ->get()
-            ->groupBy('category');
+            ->get();
+        $components = [
+            'knowledge' => $rawComponents->where('category', 'Knowledge')->values(),
+            'skills'    => $rawComponents->where('category', 'Skills')->values(),
+            'attitude'  => $rawComponents->where('category', 'Attitude')->values(),
+        ];
 
         return response()->json([
             'ksaSettings' => $ksaSettings,
@@ -85,7 +97,7 @@ class GradeSettingsController extends Controller
         // Validate sum equals 100
         $sum = $validated['knowledge_weight'] + $validated['skills_weight'] + $validated['attitude_weight'];
         if (abs($sum - 100) > 0.01) {
-            return back()->withErrors(['error' => 'Percentages must sum to 100%. Current sum: '.number_format($sum, 2).'%']);
+            return $this->redirectToSettings($classId, $term, 'Percentages must sum to 100%. Current sum: '.number_format($sum, 2).'%', true);
         }
 
         $ksaSettings = KsaSetting::updateOrCreate(
@@ -98,7 +110,7 @@ class GradeSettingsController extends Controller
             ]
         );
 
-        return back()->with('success', 'KSA percentages updated successfully!');
+        return $this->redirectToSettings($classId, $term, 'KSA percentages updated successfully!');
     }
 
     /**
@@ -116,7 +128,7 @@ class GradeSettingsController extends Controller
         // Validate sum equals 100
         $sum = $validated['knowledge_weight'] + $validated['skills_weight'] + $validated['attitude_weight'];
         if (abs($sum - 100) > 0.01) {
-            return back()->withErrors(['error' => 'Percentages must sum to 100%. Current sum: '.number_format($sum, 2).'%']);
+            return $this->redirectToSettings($classId, $validated['term'], 'Percentages must sum to 100%. Current sum: '.number_format($sum, 2).'%', true);
         }
 
         $ksaSettings = KsaSetting::updateOrCreate(
@@ -129,7 +141,29 @@ class GradeSettingsController extends Controller
             ]
         );
 
-        return back()->with('success', 'KSA percentages updated successfully!');
+        return $this->redirectToSettings($classId, $validated['term'], 'KSA percentages updated successfully!');
+    }
+
+    /**
+     * Resolve the correct redirect after a settings action.
+     * If the request came from the grade_content page, go back there with ?tab=settings.
+     * Otherwise fall back to the dedicated settings page.
+     */
+    private function redirectToSettings($classId, $term, $message, $isError = false)
+    {
+        $referer = request()->headers->get('referer', '');
+        $contentUrl = route('teacher.grades.content', $classId).'?term='.$term.'&tab=settings';
+
+        // If the referer contains the grade content URL, redirect there
+        if (str_contains($referer, "/teacher/grades/content/{$classId}")) {
+            $redirect = redirect($contentUrl);
+        } else {
+            $redirect = redirect()->route('teacher.grades.settings.index', ['classId' => $classId, 'term' => $term]);
+        }
+
+        return $isError
+            ? $redirect->withErrors(['error' => $message])
+            : $redirect->with('success', $message);
     }
 
     /**
@@ -163,7 +197,7 @@ class GradeSettingsController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', 'Component "'.$component->name.'" added successfully!');
+        return $this->redirectToSettings($classId, $validated['term'], 'Component "'.$component->name.'" added successfully!');
     }
 
     /**
@@ -193,20 +227,24 @@ class GradeSettingsController extends Controller
             }
         }
 
-        return back()->with('success', 'Component "'.$component->name.'" updated successfully!');
+        // Determine term from request or component
+        $term = $request->input('term', 'midterm');
+
+        return $this->redirectToSettings($classId, $term, 'Component "'.$component->name.'" updated successfully!');
     }
 
     /**
      * Delete a component
      */
-    public function deleteComponent($classId, $componentId)
+    public function deleteComponent(Request $request, $classId, $componentId)
     {
         $component = GradeComponent::where('class_id', $classId)->findOrFail($componentId);
         $name = $component->name;
+        $term = $request->input('term', 'midterm');
 
         $component->delete();
 
-        return back()->with('success', 'Component "'.$name.'" deleted successfully!');
+        return $this->redirectToSettings($classId, $term, 'Component "'.$name.'" deleted successfully!');
     }
 
     /**
@@ -245,7 +283,7 @@ class GradeSettingsController extends Controller
 
         $status = $ksaSettings->is_locked ? 'locked' : 'unlocked';
 
-        return back()->with('success', 'Settings '.$status.' successfully!');
+        return $this->redirectToSettings($classId, $term, 'Settings '.$status.' successfully!');
     }
 
     /**
@@ -264,7 +302,7 @@ class GradeSettingsController extends Controller
             ->count();
 
         if ($existingCount > 0) {
-            return back()->withErrors(['error' => 'Components already exist for this class. Delete them first if you want to reinitialize.']);
+            return $this->redirectToSettings($classId, $term, 'Components already exist for this class. Delete them first if you want to reinitialize.', true);
         }
 
         DB::transaction(function () use ($classId, $term) {
@@ -349,7 +387,7 @@ class GradeSettingsController extends Controller
             }
         });
 
-        return back()->with('success', 'Default components initialized successfully!');
+        return $this->redirectToSettings($classId, $term, 'Default components initialized successfully!');
     }
 
     /**
@@ -421,7 +459,11 @@ class GradeSettingsController extends Controller
             ]
         );
 
-        return back()->with('success', 'Attendance settings updated successfully! Attendance will now affect '
-            .ucfirst($validated['attendance_category']).' category with '.$validated['attendance_weight'].'% weight.');
+        return $this->redirectToSettings(
+            $classId,
+            $validated['term'],
+            'Attendance settings updated successfully! Attendance will now affect '
+                .ucfirst($validated['attendance_category']).' category with '.$validated['attendance_weight'].'% weight.'
+        );
     }
 }

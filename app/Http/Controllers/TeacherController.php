@@ -248,7 +248,7 @@ class TeacherController extends Controller
         if ($campus) {
             $query->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $query->where('school_id', $schoolId);
         }
 
@@ -259,7 +259,7 @@ class TeacherController extends Controller
         if ($campus) {
             $coursesQuery->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $coursesQuery->where('school_id', $schoolId);
         }
         $programs = $coursesQuery->get();
@@ -277,20 +277,23 @@ class TeacherController extends Controller
         $campus = $teacher->campus;
         $schoolId = $teacher->school_id;
 
-        // Get subjects assigned to this teacher with campus isolation
+        // Get subjects assigned to this teacher — include campus-specific AND null-campus (GE) subjects
         $assignedSubjectsQuery = Subject::whereHas('teachers', function ($query) use ($teacherId) {
             $query->where('teacher_id', $teacherId)
                   ->where('teacher_subject.status', 'active');
         })->with(['program', 'teachers', 'campusSchool']);
 
         if ($campus) {
-            $assignedSubjectsQuery->where('campus', $campus);
-        }
-        if ($schoolId) {
-            $assignedSubjectsQuery->where('school_id', $schoolId);
+            $assignedSubjectsQuery->where(function ($q) use ($campus, $schoolId) {
+                $q->where('campus', $campus)
+                  ->orWhereNull('campus'); // include GE / campus-neutral subjects
+                if (!empty($schoolId)) {
+                    $q->orWhere('school_id', $schoolId);
+                }
+            });
         }
 
-        $assignedSubjects = $assignedSubjectsQuery->get();
+        $assignedSubjects = $assignedSubjectsQuery->orderBy('subject_name')->get();
 
         $pendingSubjectsQuery = Subject::whereHas('teachers', function ($query) use ($teacherId) {
             $query->where('teacher_id', $teacherId)
@@ -298,20 +301,24 @@ class TeacherController extends Controller
         })->with(['program', 'teachers', 'campusSchool']);
 
         if ($campus) {
-            $pendingSubjectsQuery->where('campus', $campus);
-        }
-        if ($schoolId) {
-            $pendingSubjectsQuery->where('school_id', $schoolId);
+            $pendingSubjectsQuery->where(function ($q) use ($campus, $schoolId) {
+                $q->where('campus', $campus)
+                  ->orWhereNull('campus');
+                if (!empty($schoolId)) {
+                    $q->orWhere('school_id', $schoolId);
+                }
+            });
         }
 
-        $pendingSubjects = $pendingSubjectsQuery->get();
+        $pendingSubjects = $pendingSubjectsQuery->orderBy('subject_name')->get();
 
         // Get all unique courses from this teacher's classes with campus isolation
         $classesQuery = ClassModel::where('teacher_id', $teacherId);
-        if ($campus) {
+        if (!empty($campus)) {
             $classesQuery->where('campus', $campus);
         }
-        if ($schoolId) {
+        // Only filter by school_id when it's actually set (not null/empty)
+        if (!empty($schoolId)) {
             $classesQuery->where('school_id', $schoolId);
         }
 
@@ -327,10 +334,10 @@ class TeacherController extends Controller
                 ->where('teacher_id', $teacherId)
                 ->with('students');
 
-            if ($campus) {
+            if (!empty($campus)) {
                 $classesQuery->where('campus', $campus);
             }
-            if ($schoolId) {
+            if (!empty($schoolId)) {
                 $classesQuery->where('school_id', $schoolId);
             }
 
@@ -344,8 +351,8 @@ class TeacherController extends Controller
                 'class_count' => $classes->count(),
                 'student_count' => $classes->sum(function ($c) {
                     return $c->students()
-                        ->when($c->campus, fn($q) => $q->where('campus', $c->campus))
-                        ->when($c->school_id, fn($q) => $q->where('school_id', $c->school_id))
+                        ->when(!empty($c->campus), fn($q) => $q->where('campus', $c->campus))
+                        ->when(!empty($c->school_id), fn($q) => $q->where('school_id', $c->school_id))
                         ->count();
                 }),
                 'classes' => $classes->map(fn ($c) => ['id' => $c->id, 'class_name' => $c->class_name])->toArray(),
@@ -386,10 +393,10 @@ class TeacherController extends Controller
         }
 
         $totalClassesQuery = ClassModel::where('teacher_id', $teacherId);
-        if ($campus) {
+        if (!empty($campus)) {
             $totalClassesQuery->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $totalClassesQuery->where('school_id', $schoolId);
         }
         $totalClasses = $totalClassesQuery->count();
@@ -397,8 +404,8 @@ class TeacherController extends Controller
         $totalStudents = $totalClassesQuery->get()
             ->sum(function ($c) {
                 return $c->students()
-                    ->when($c->campus, fn($q) => $q->where('campus', $c->campus))
-                    ->when($c->school_id, fn($q) => $q->where('school_id', $c->school_id))
+                    ->when(!empty($c->campus), fn($q) => $q->where('campus', $c->campus))
+                    ->when(!empty($c->school_id), fn($q) => $q->where('school_id', $c->school_id))
                     ->count();
             });
 
@@ -629,9 +636,9 @@ class TeacherController extends Controller
             'credit_hours' => $validated['credit_hours'],
             'category' => $category,
             'description' => $validated['description'],
-            'year_level' => $validated['year_level'] ?? 1, // Default to year 1
-            'semester' => $validated['semester'], // Now required, no need for fallback
-            'program_id' => null, // Independent subjects don't belong to a specific program
+            'year_level' => $validated['year_level'] ?? 1,
+            'semester' => $validated['semester'],
+            'program_id' => $request->filled('program_id') ? (int) $request->input('program_id') : null,
         ];
 
         // Apply campus isolation
@@ -707,12 +714,25 @@ class TeacherController extends Controller
     public function grades()
     {
         $teacherId = Auth::id();
+        $teacher = Auth::user();
 
         $classes = ClassModel::where('teacher_id', $teacherId)
-            ->with('students', 'course')
+            ->with('course')
             ->paginate(10);
 
-        // Provide course list for filtering (all courses in the system)
+        // Attach student_count per class using course_id (same pattern as dashboard)
+        foreach ($classes as $class) {
+            $query = Student::query();
+            if ($class->course_id) {
+                $query->where('course_id', $class->course_id);
+                if ($class->campus) $query->where('campus', $class->campus);
+                if ($class->school_id) $query->where('school_id', $class->school_id);
+            } else {
+                $query->where('class_id', $class->id);
+            }
+            $class->student_count = $query->count();
+        }
+
         $courses = Course::orderBy('program_name')->get();
 
         return view('teacher.grades.index', compact('classes', 'courses'));
@@ -726,8 +746,23 @@ class TeacherController extends Controller
         $teacherId = Auth::id();
         $class = ClassModel::where('id', $classId)
             ->where('teacher_id', $teacherId)
-            ->with('students', 'course')
+            ->with('course')
             ->firstOrFail();
+
+        // Load students by course_id so non-primary classes show all course students
+        $studentsQuery = Student::query()
+            ->when($class->course_id, fn($q) => $q->where('course_id', $class->course_id))
+            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
+            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
+            ->orderBy('last_name')->orderBy('first_name');
+
+        if (!$class->course_id) {
+            $studentsQuery = Student::where('class_id', $classId);
+        }
+
+        $students = $studentsQuery->get();
+        // Attach students to class object for view compatibility
+        $class->setRelation('students', $students);
 
         // Get existing grades for this class
         $existingGrades = Grade::where('class_id', $classId)
@@ -857,11 +892,22 @@ class TeacherController extends Controller
 
         $today = $request->query('date', now()->format('Y-m-d'));
 
-        $students = $class->students()
+        // Load students by course_id (not just class_id) so non-primary classes show all course students
+        $studentsQuery = Student::query()
+            ->when($class->course_id, fn($q) => $q->where('course_id', $class->course_id))
             ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
             ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->orderBy('student_id')
-            ->get();
+            ->orderBy('last_name')->orderBy('first_name');
+
+        // Fallback: if no course_id, use class_id (primary class)
+        if (!$class->course_id) {
+            $studentsQuery = $class->students()
+                ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
+                ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
+                ->orderBy('last_name')->orderBy('first_name');
+        }
+
+        $students = $studentsQuery->get();
 
         // Get attendance for selected date and term
         $attendances = Attendance::where('class_id', $classId)
@@ -945,10 +991,18 @@ class TeacherController extends Controller
             abort(403);
         }
 
-        $students = $class->students()
+        // Load students by course_id so non-primary classes show all course students
+        $studentsQuery = Student::query()
+            ->when($class->course_id, fn($q) => $q->where('course_id', $class->course_id))
             ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
             ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->get();
+            ->orderBy('last_name')->orderBy('first_name');
+
+        if (!$class->course_id) {
+            $studentsQuery = Student::where('class_id', $classId);
+        }
+
+        $students = $studentsQuery->get();
 
         $term = $request->input('term');
 
@@ -1251,13 +1305,11 @@ class TeacherController extends Controller
 
         $class = ClassModel::where('id', $classId)
             ->where('teacher_id', $teacherId)
-            ->with('students.user', 'course')
+            ->with('course')
             ->firstOrFail();
 
-        $students = $class->students()
-            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
-            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->get();
+        $students = $this->getStudentsForClass($class);
+        $class->setRelation('students', $students);
 
         // Get assessment ranges
         $range = AssessmentRange::where('class_id', $classId)
@@ -1326,9 +1378,10 @@ class TeacherController extends Controller
 
         foreach ($request->input('grades', []) as $studentId => $gradeData) {
             try {
-                // Validate student belongs to this class and teacher's campus
+                // Validate student belongs to this class's course and teacher's campus
                 $student = Student::where('id', $studentId)
-                    ->where('class_id', $classId)
+                    ->when($class->course_id, fn($q) => $q->where('course_id', $class->course_id),
+                           fn($q) => $q->where('class_id', $classId))
                     ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
                     ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
                     ->first();
@@ -1349,17 +1402,28 @@ class TeacherController extends Controller
                 $behavior = floatval($gradeData['behavior'] ?? 0);
                 $awareness = floatval($gradeData['awareness'] ?? 0);
 
-                $finalGrade = floatval($gradeData['final_grade'] ?? 0);
+                // Normalize scores: (score/100) * 50 + 50 → range 50-100
+                $normalize = fn($s) => min(100, ($s / 100) * 50 + 50);
 
-                // Calculate component averages using weights
+                // Calculate component averages using weights (on normalized scores)
                 // Knowledge: Exam (60%), Quiz 1 (20%), Quiz 2 (20%)
-                $knowledgeAvg = ($exam * 0.6) + ($quiz1 * 0.2) + ($quiz2 * 0.2);
+                $knowledgeAvg = ($normalize($exam) * 0.6) + ($normalize($quiz1) * 0.2) + ($normalize($quiz2) * 0.2);
 
                 // Skills: Output (40%), Class Participation (30%), Activities (30%)
-                $skillsAvg = ($output * 0.4) + ($classParticipation * 0.3) + ($activities * 0.3);
+                $skillsAvg = ($normalize($output) * 0.4) + ($normalize($classParticipation) * 0.3) + ($normalize($activities) * 0.3);
 
                 // Attitude: Behavior (50%), Awareness (50%)
-                $attitudeAvg = ($behavior * 0.5) + ($awareness * 0.5);
+                $attitudeAvg = ($normalize($behavior) * 0.5) + ($normalize($awareness) * 0.5);
+
+                // Get KSA weights from settings
+                $ksaSetting = \App\Models\KsaSetting::where('class_id', $classId)->where('term', $term)->first();
+                $kW = ($ksaSetting->knowledge_weight ?? 40) / 100;
+                $sW = ($ksaSetting->skills_weight    ?? 50) / 100;
+                $aW = ($ksaSetting->attitude_weight  ?? 10) / 100;
+
+                // Final grade = weighted KSA average
+                $computedFinalGrade = round(($knowledgeAvg * $kW) + ($skillsAvg * $sW) + ($attitudeAvg * $aW), 2);
+                $finalGrade = $computedFinalGrade; // Use computed, not submitted value
 
                 // Create or update grade entry
                 $entry = GradeEntry::updateOrCreate(
@@ -1381,9 +1445,9 @@ class TeacherController extends Controller
                         'awareness' => $awareness,
 
                         // Store calculated averages
-                        'knowledge_average' => $knowledgeAvg,
-                        'skills_average' => $skillsAvg,
-                        'attitude_average' => $attitudeAvg,
+                        'knowledge_average' => round($knowledgeAvg, 2),
+                        'skills_average'    => round($skillsAvg, 2),
+                        'attitude_average'  => round($attitudeAvg, 2),
 
                         // Store final grade
                         'final_grade' => $finalGrade,
@@ -1416,13 +1480,11 @@ class TeacherController extends Controller
         $term = $request->query('term', 'midterm'); // Get from query parameter, default to midterm
 
         $class = ClassModel::where('teacher_id', $teacherId)
-            ->with('students.user', 'course')
+            ->with('course')
             ->findOrFail($classId);
 
-        $students = $class->students()
-            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
-            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->get();
+        $students = $this->getStudentsForClass($class);
+        $class->setRelation('students', $students);
 
         // Get assessment ranges
         $range = AssessmentRange::where('class_id', $classId)
@@ -2392,10 +2454,7 @@ class TeacherController extends Controller
             ->whereNotNull('final_grade')
             ->get();
 
-        $totalStudents = $class->students()
-            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
-            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->count();
+        $totalStudents = $this->getStudentsForClass($class)->count();
         $gradesWithFinal = $grades->where('final_grade', '!=', null);
 
         // Calculate comprehensive analytics
@@ -2484,6 +2543,25 @@ class TeacherController extends Controller
     }
 
     /**
+     * Get students for a class — uses course_id so non-primary classes show all course students.
+     */
+    private function getStudentsForClass(ClassModel $class)
+    {
+        if ($class->course_id) {
+            return Student::where('course_id', $class->course_id)
+                ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
+                ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
+                ->orderBy('last_name')->orderBy('first_name')
+                ->get();
+        }
+        return $class->students()
+            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
+            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
+            ->orderBy('last_name')->orderBy('first_name')
+            ->get();
+    }
+
+    /**
      * Show create class form
      */
     public function createClass()
@@ -2496,12 +2574,11 @@ class TeacherController extends Controller
         // Get all subjects assigned to this teacher (active assignments)
         // and independent subjects created by this teacher.
         $assignedSubjects = Subject::with('course')
-            ->where(function ($query) use ($teacherId, $teacherCampus, $teacherSchoolId) {
+            ->where(function ($query) use ($teacherId) {
                 $query->whereHas('teachers', function ($q) use ($teacherId) {
                     $q->where('teacher_id', $teacherId)
                       ->where('teacher_subject.status', 'active');
                 })
-                // Include independent subjects this teacher created (program_id null)
                 ->orWhere(function ($q) use ($teacherId) {
                     $q->whereNull('program_id')
                       ->whereHas('teachers', function ($subQ) use ($teacherId) {
@@ -2509,8 +2586,13 @@ class TeacherController extends Controller
                       });
                 });
             })
-            ->when($teacherCampus, fn($q) => $q->where('campus', $teacherCampus))
-            ->when($teacherSchoolId, fn($q) => $q->where('school_id', $teacherSchoolId))
+            ->when($teacherCampus, fn($q) => $q->where(function ($q2) use ($teacherCampus, $teacherSchoolId) {
+                $q2->where('campus', $teacherCampus)
+                   ->orWhereNull('campus');
+                if ($teacherSchoolId) {
+                    $q2->orWhere('school_id', $teacherSchoolId);
+                }
+            }))
             ->orderBy('subject_name')
             ->get();
 
@@ -2674,15 +2756,20 @@ class TeacherController extends Controller
         
         // Create the class
         $class = ClassModel::create([
-            'class_name' => $validated['class_name'],
-            'course_id' => $courseId,
-            'teacher_id' => Auth::id(),
-            'section' => $validated['section'],
-            'year_level' => (int) $validated['year_level'], // Use year_level integer column
+            'class_name'    => $validated['class_name'],
+            'course_id'     => $courseId,
+            'subject_id'    => $subjectId,
+            'teacher_id'    => Auth::id(),
+            'section'       => $validated['section'],
+            'year'          => (int) $validated['year_level'],
+            'class_level'   => (int) $validated['year_level'], // mirrors year
             'academic_year' => $validated['academic_year'] ?? null,
-            'total_students' => 1, // Use total_students instead of capacity
-            'description' => $validated['description'] ?? null,
-            'units' => $units,
+            'total_students'=> 1,
+            'status'        => 'Active',
+            'description'   => $validated['description'] ?? null,
+            'units'         => $units,
+            'campus'        => Auth::user()->campus,
+            'school_id'     => Auth::user()->school_id,
         ]);
 
         // Create teacher assignments if requested
@@ -2796,14 +2883,34 @@ class TeacherController extends Controller
      */
     public function editClass($classId)
     {
+        $user = Auth::user();
+        $teacherId = $user->id;
+        $teacherCampus = $user->campus;
+        $teacherSchoolId = $user->school_id;
+
         $class = ClassModel::where('id', $classId)
-            ->where('teacher_id', Auth::id())
-            ->with('course')
+            ->where('teacher_id', $teacherId)
+            ->with(['course', 'subject', 'students'])
             ->firstOrFail();
 
-        $courses = Course::orderBy('program_name')->get();
+        $courses = Course::query()
+            ->when($teacherCampus, fn($q) => $q->where('campus', $teacherCampus))
+            ->when($teacherSchoolId, fn($q) => $q->where('school_id', $teacherSchoolId))
+            ->orderBy('program_name')
+            ->get();
 
-        return view('teacher.classes.edit', compact('class', 'courses'));
+        $assignedSubjects = Subject::whereHas('teachers', function ($q) use ($teacherId) {
+                $q->where('teacher_id', $teacherId)
+                  ->where('teacher_subject.status', 'active');
+            })
+            ->when($teacherCampus, fn($q) => $q->where(function ($q2) use ($teacherCampus, $teacherSchoolId) {
+                $q2->where('campus', $teacherCampus)->orWhereNull('campus');
+                if ($teacherSchoolId) $q2->orWhere('school_id', $teacherSchoolId);
+            }))
+            ->orderBy('subject_name')
+            ->get();
+
+        return view('teacher.classes.edit', compact('class', 'courses', 'assignedSubjects'));
     }
 
     /**
@@ -2828,7 +2935,7 @@ class TeacherController extends Controller
             'class_name' => $validated['class_name'],
             'course_id' => $validated['course_id'],
             'section' => $validated['section'],
-            'year_level' => $validated['year_level'],
+            'year' => (int) $validated['year_level'], // actual DB column is 'year'
             'academic_year' => $validated['academic_year'],
             'description' => $validated['description'] ?? null,
         ]);
@@ -3022,12 +3129,8 @@ class TeacherController extends Controller
             ->where('teacher_id', Auth::id())
             ->firstOrFail();
 
-        $students = $class->students()
-            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
-            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->get()->sortBy(function ($student) {
-            return $student->name ?? '';
-        })->values();
+        $students = $this->getStudentsForClass($class)
+            ->sortBy(fn($s) => $s->last_name . ' ' . $s->first_name)->values();
 
         return view('teacher.students.index', compact('class', 'students'));
     }
@@ -3665,9 +3768,9 @@ class TeacherController extends Controller
         $teacherId = Auth::id();
         $selectedClassId = request()->query('class_id');
 
-        // Get teacher's classes with students and grades
+        // Get teacher's classes with grades
         $classesQuery = ClassModel::where('teacher_id', $teacherId)
-            ->with(['students.user', 'course']);
+            ->with(['course']);
 
         if ($selectedClassId) {
             $classesQuery->where('id', $selectedClassId);
@@ -3682,13 +3785,16 @@ class TeacherController extends Controller
             // Get all grades for this class
             $grades = Grade::where('class_id', $class->id)
                 ->where('teacher_id', $teacherId)
-                ->with('student.user')
+                ->with('student')
                 ->get();
 
             // Calculate results for each student
             $studentResults = [];
             $classStats = [
-                'total_students' => $class->students()->count(),
+                'total_students' => \App\Models\Student::when($class->course_id, fn($q) => $q->where('course_id', $class->course_id), fn($q) => $q->where('class_id', $class->id))
+                    ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
+                    ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
+                    ->count(),
                 'graded_students' => 0,
                 'passed_count' => 0,
                 'failed_count' => 0,
@@ -3725,7 +3831,7 @@ class TeacherController extends Controller
                     $studentResults[] = [
                         'student' => $grade->student,
                         'student_id' => $grade->student->student_id,
-                        'student_name' => $grade->student->name ?? 'N/A',
+                        'student_name' => trim(($grade->student->first_name ?? '') . ' ' . ($grade->student->last_name ?? '')) ?: 'N/A',
                         'midterm_grade' => $summary['midterm']['term_grade'],
                         'midterm_decimal' => $summary['midterm']['decimal_grade'],
                         'midterm_status' => $summary['midterm']['status'],
@@ -3930,14 +4036,12 @@ class TeacherController extends Controller
         // Verify teacher owns this class
         $class = ClassModel::where('id', $classId)
             ->where('teacher_id', $teacherId)
-            ->with(['students', 'program'])
+            ->with(['program'])
             ->firstOrFail();
 
         // Get students for the class
-        $students = $class->students()
-            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
-            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->get();
+        $students = $this->getStudentsForClass($class);
+        $class->setRelation('students', $students);
 
         // Get existing grades for this class and term
         $entries = Grade::where('class_id', $classId)
@@ -4004,17 +4108,18 @@ class TeacherController extends Controller
             );
         }
 
-        // Create KSA settings object to match expected structure
+        // Build KSA settings from DB (use actual teacher-configured weights)
         $ksaSettings = (object) [
-            'knowledge_percentage' => 40,
-            'skills_percentage' => 50,
-            'attitude_percentage' => 10,
-            'knowledge_weight' => 0.4,
-            'skills_weight' => 0.5,
-            'attitude_weight' => 0.1,
-            'total_meetings' => $ksaSettingsModel->total_meetings ?? 0,
-            'attendance_weight' => $ksaSettingsModel->attendance_weight ?? 0,
-            'attendance_category' => $ksaSettingsModel->attendance_category ?? null,
+            'knowledge_percentage' => (float) ($ksaSettingsModel->knowledge_weight ?? 40),
+            'skills_percentage'    => (float) ($ksaSettingsModel->skills_weight    ?? 50),
+            'attitude_percentage'  => (float) ($ksaSettingsModel->attitude_weight  ?? 10),
+            'knowledge_weight'     => (float) ($ksaSettingsModel->knowledge_weight ?? 40) / 100,
+            'skills_weight'        => (float) ($ksaSettingsModel->skills_weight    ?? 50) / 100,
+            'attitude_weight'      => (float) ($ksaSettingsModel->attitude_weight  ?? 10) / 100,
+            'total_meetings'       => (int)   ($ksaSettingsModel->total_meetings   ?? 0),
+            'attendance_weight'    => (float) ($ksaSettingsModel->attendance_weight ?? 0),
+            'attendance_category'  => $ksaSettingsModel->attendance_category ?? 'attitude',
+            'passing_grade'        => (float) ($ksaSettingsModel->passing_grade    ?? 74),
         ];
 
         return view('teacher.grades.grade_content', compact(
@@ -4293,10 +4398,7 @@ class TeacherController extends Controller
             ->where('term', strtolower($term))
             ->get();
 
-        $totalStudents = $class->students()
-            ->when($class->campus, fn($q) => $q->where('campus', $class->campus))
-            ->when($class->school_id, fn($q) => $q->where('school_id', $class->school_id))
-            ->count();
+        $totalStudents = $this->getStudentsForClass($class)->count();
         $gradedStudents = $grades->count();
         $averageGrade = $grades->avg('grade') ?? 0;
         $passingStudents = $grades->where('grade', '>=', 75)->count();
@@ -4534,7 +4636,7 @@ class TeacherController extends Controller
                     $componentId = $componentScore['component_id'];
                     $score = $componentScore['score'] ?? null;
 
-                    if ($score !== null && $score > 0) {
+                    if ($score !== null && $score >= 0) {
                         ComponentEntry::updateOrCreate(
                             [
                                 'student_id' => $studentId,
@@ -4544,10 +4646,14 @@ class TeacherController extends Controller
                             ],
                             [
                                 'raw_score' => $score,
+                                // normalized_score is auto-calculated in ComponentEntry::boot()
                             ]
                         );
                     }
                 }
+
+                // Recalculate ComponentAverage for this student/class/term
+                \App\Models\ComponentAverage::calculateAndUpdate($studentId, $classId, $term);
             }
 
             DB::commit();
@@ -4581,26 +4687,40 @@ class TeacherController extends Controller
         // Get approved course access requests with campus isolation
         $approvedRequests = CourseAccessRequest::where('teacher_id', $teacherId)
             ->where('status', 'approved')
-            ->when($campus, fn($q) => $q->where('campus', $campus))
-            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->when(!empty($campus), fn($q) => $q->where('campus', $campus))
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
             ->with('course')
             ->get();
 
-        $approvedCourses = $approvedRequests->map(function ($request) use ($teacherId, $campus, $schoolId) {
-            $course = $request->course;
-            $course->classes_count = ClassModel::where('teacher_id', $teacherId)
-                ->where('course_id', $course->id)
-                ->when($campus, fn($q) => $q->where('campus', $campus))
-                ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
-                ->count();
-            return $course;
-        });
+        $approvedCourseIds = $approvedRequests->pluck('course.id')->filter()->unique();
+
+        // Also include courses the teacher already has classes in (direct assignment)
+        $directCourseIds = ClassModel::where('teacher_id', $teacherId)
+            ->when(!empty($campus), fn($q) => $q->where('campus', $campus))
+            ->distinct()
+            ->pluck('course_id')
+            ->filter();
+
+        // Merge both sources — courses from requests + courses from direct class assignments
+        $allCourseIds = $approvedCourseIds->merge($directCourseIds)->unique()->values();
+
+        $approvedCourses = Course::whereIn('id', $allCourseIds)
+            ->orderBy('program_name')
+            ->get()
+            ->map(function ($course) use ($teacherId, $campus, $schoolId) {
+                $course->classes_count = ClassModel::where('teacher_id', $teacherId)
+                    ->where('course_id', $course->id)
+                    ->when(!empty($campus), fn($q) => $q->where('campus', $campus))
+                    ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
+                    ->count();
+                return $course;
+            });
 
         // Get pending requests with campus isolation
         $pendingRequests = CourseAccessRequest::where('teacher_id', $teacherId)
             ->where('status', 'pending')
-            ->when($campus, fn($q) => $q->where('campus', $campus))
-            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->when(!empty($campus), fn($q) => $q->where('campus', $campus))
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
             ->with('course')
             ->get();
 
@@ -4611,16 +4731,19 @@ class TeacherController extends Controller
                 ->whereIn('status', ['pending', 'approved'])
                 ->pluck('course_id');
 
-            $availableCourses = Course::whereNotIn('id', $requestedCourseIds)
-                ->when($campus, fn($q) => $q->where('campus', $campus))
-                ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            // Exclude courses already shown (approved requests + direct assignments)
+            $excludeIds = $requestedCourseIds->merge($allCourseIds)->unique();
+
+            $availableCourses = Course::whereNotIn('id', $excludeIds)
+                ->when(!empty($campus), fn($q) => $q->where('campus', $campus))
+                ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
                 ->orderBy('program_name')
                 ->get();
         }
 
         return view('teacher.courses.index', compact(
             'approvedCourses',
-            'pendingRequests', 
+            'pendingRequests',
             'availableCourses',
             'isApproved'
         ));

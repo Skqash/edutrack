@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\ComponentEntry;
 use App\Models\AssessmentComponent;
-use App\Models\GradingScaleSetting;
+use App\Models\KsaSetting;
 
 class DynamicGradeCalculationService
 {
@@ -43,11 +43,11 @@ class DynamicGradeCalculationService
         $skillsAvg = self::calculateWeightedCategoryAverage($byCategory['Skills'] ?? []);
         $attitudeAvg = self::calculateWeightedCategoryAverage($byCategory['Attitude'] ?? []);
 
-        // Get flexible KSA percentages from settings
-        $settings = GradingScaleSetting::getOrCreateDefault($classId, null, $term);
-        $kPercent = $settings->knowledge_percentage / 100;
-        $sPercent = $settings->skills_percentage / 100;
-        $aPercent = $settings->attitude_percentage / 100;
+        // Get flexible KSA percentages from KsaSetting (teacher-configurable)
+        $ksaSetting = KsaSetting::where('class_id', $classId)->where('term', $term)->first();
+        $kPercent = ($ksaSetting->knowledge_weight ?? 40) / 100;
+        $sPercent = ($ksaSetting->skills_weight    ?? 50) / 100;
+        $aPercent = ($ksaSetting->attitude_weight  ?? 10) / 100;
 
         // Calculate final grade using flexible percentages
         $finalGrade = ($knowledgeAvg * $kPercent) + ($skillsAvg * $sPercent) + ($attitudeAvg * $aPercent);

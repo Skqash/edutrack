@@ -361,7 +361,7 @@
                             <div>
                                 <h3 class="class-title">{{ $classResult['class']->class_name }}</h3>
                                 <div class="class-subtitle">
-                                    <i class="fas fa-book"></i> {{ $classResult['course']->name ?? 'Course' }}
+                                    <i class="fas fa-book"></i> {{ $classResult['course']->program_name ?? 'Course' }}
                                 </div>
                             </div>
                             <span

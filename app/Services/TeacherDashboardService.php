@@ -85,17 +85,34 @@ class TeacherDashboardService
     private function getTeacherClasses(int $teacherId, ?string $campus, ?int $schoolId)
     {
         $query = ClassModel::where('teacher_id', $teacherId)
-            ->with(['course', 'subject', 'students', 'school']);
+            ->with(['course', 'subject', 'school']);
 
-        // Apply campus isolation
         if ($campus) {
             $query->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $query->where('school_id', $schoolId);
         }
 
-        return $query->orderBy('class_name')->get();
+        $classes = $query->orderBy('class_name')->get();
+
+        // Batch student counts — one query per unique course_id instead of N queries
+        $courseIds = $classes->whereNotNull('course_id')->pluck('course_id')->unique();
+        $studentCountsByCourse = Student::whereIn('course_id', $courseIds)
+            ->when($campus, fn($q) => $q->where('campus', $campus))
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
+            ->selectRaw('course_id, COUNT(*) as cnt')
+            ->groupBy('course_id')
+            ->pluck('cnt', 'course_id');
+
+        foreach ($classes as $class) {
+            $count = $class->course_id
+                ? ($studentCountsByCourse[$class->course_id] ?? 0)
+                : Student::where('class_id', $class->id)->count();
+            $class->setAttribute('student_count', $count);
+        }
+
+        return $classes;
     }
 
     /**
@@ -273,19 +290,26 @@ class TeacherDashboardService
             $classesQuery->where('campus', $campus);
             $teacherClassIds->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $classesQuery->where('school_id', $schoolId);
             $teacherClassIds->where('school_id', $schoolId);
         }
         
         $classIds = $teacherClassIds->pluck('id');
         
-        // Students query with campus isolation
-        $studentsQuery = Student::whereIn('class_id', $classIds);
+        // Get course IDs from teacher's classes for accurate student count
+        $teacherCourseIds = ClassModel::where('teacher_id', $teacherId)
+            ->when($campus, fn($q) => $q->where('campus', $campus))
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->whereNotNull('course_id')
+            ->distinct()->pluck('course_id');
+
+        // Students query — count by course_id to include students in non-primary classes
+        $studentsQuery = Student::whereIn('course_id', $teacherCourseIds);
         if ($campus) {
             $studentsQuery->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $studentsQuery->where('school_id', $schoolId);
         }
         
@@ -294,7 +318,7 @@ class TeacherDashboardService
         if ($campus) {
             $gradesQuery->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $gradesQuery->where('school_id', $schoolId);
         }
 
@@ -306,21 +330,37 @@ class TeacherDashboardService
         // Get attendance records through class relationship with campus isolation
         $attendanceRecords = Attendance::whereIn('class_id', $classIds)->count();
 
-        // Get pending grades count with campus isolation
+        // Get pending grades count — use aggregated queries instead of per-class loop
         $pendingGrades = 0;
-        foreach ($classIds as $classId) {
-            $studentCount = Student::where('class_id', $classId)
-                ->when($campus, fn($q) => $q->where('campus', $campus))
-                ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
-                ->count();
-            
-            $gradeCount = Grade::where('class_id', $classId)
-                ->where('teacher_id', $teacherId)
-                ->when($campus, fn($q) => $q->where('campus', $campus))
-                ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
-                ->whereNotNull('final_grade')
-                ->count();
-            
+        $classesWithCourses = ClassModel::where('teacher_id', $teacherId)
+            ->when($campus, fn($q) => $q->where('campus', $campus))
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
+            ->get(['id', 'course_id']);
+
+        // Batch student counts by course_id
+        $courseIds = $classesWithCourses->whereNotNull('course_id')->pluck('course_id')->unique();
+        $studentCountsByCourse = Student::whereIn('course_id', $courseIds)
+            ->when($campus, fn($q) => $q->where('campus', $campus))
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
+            ->selectRaw('course_id, COUNT(*) as cnt')
+            ->groupBy('course_id')
+            ->pluck('cnt', 'course_id');
+
+        // Batch grade counts by class_id
+        $gradeCountsByClass = Grade::where('teacher_id', $teacherId)
+            ->whereIn('class_id', $classesWithCourses->pluck('id'))
+            ->when($campus, fn($q) => $q->where('campus', $campus))
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
+            ->whereNotNull('final_grade')
+            ->selectRaw('class_id, COUNT(*) as cnt')
+            ->groupBy('class_id')
+            ->pluck('cnt', 'class_id');
+
+        foreach ($classesWithCourses as $cls) {
+            $studentCount = $cls->course_id
+                ? ($studentCountsByCourse[$cls->course_id] ?? 0)
+                : 0;
+            $gradeCount = $gradeCountsByClass[$cls->id] ?? 0;
             if ($gradeCount < $studentCount) {
                 $pendingGrades++;
             }
@@ -416,19 +456,32 @@ class TeacherDashboardService
     {
         $tasks = [];
 
-        // Classes without complete grades
+        // Classes without complete grades — batch queries to avoid N+1
         $classes = ClassModel::where('teacher_id', $teacherId)
             ->when($campus, fn($q) => $q->where('campus', $campus))
-            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
-            ->with(['students'])
-            ->get();
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
+            ->get(['id', 'class_name', 'course_id']);
+
+        $courseIds = $classes->whereNotNull('course_id')->pluck('course_id')->unique();
+        $studentCountsByCourse = Student::whereIn('course_id', $courseIds)
+            ->when($campus, fn($q) => $q->where('campus', $campus))
+            ->when(!empty($schoolId), fn($q) => $q->where('school_id', $schoolId))
+            ->selectRaw('course_id, COUNT(*) as cnt')
+            ->groupBy('course_id')
+            ->pluck('cnt', 'course_id');
+
+        $gradeCountsByClass = Grade::where('teacher_id', $teacherId)
+            ->whereIn('class_id', $classes->pluck('id'))
+            ->whereNotNull('final_grade')
+            ->selectRaw('class_id, COUNT(*) as cnt')
+            ->groupBy('class_id')
+            ->pluck('cnt', 'class_id');
 
         foreach ($classes as $class) {
-            $studentCount = $class->students->count();
-            $gradeCount = Grade::where('class_id', $class->id)
-                ->where('teacher_id', $teacherId)
-                ->whereNotNull('final_grade')
-                ->count();
+            $studentCount = $class->course_id
+                ? ($studentCountsByCourse[$class->course_id] ?? 0)
+                : 0;
+            $gradeCount = $gradeCountsByClass[$class->id] ?? 0;
 
             if ($gradeCount < $studentCount) {
                 $tasks[] = [
@@ -436,7 +489,7 @@ class TeacherDashboardService
                     'priority' => 'high',
                     'title' => 'Complete Grades',
                     'description' => "Complete grades for {$class->class_name} ({$gradeCount}/{$studentCount} done)",
-                    'link' => route('teacher.grades.entry', $class->id),
+                    'link' => route('teacher.grades.content', $class->id),
                     'class_id' => $class->id,
                 ];
             }
@@ -490,7 +543,7 @@ class TeacherDashboardService
         if ($campus) {
             $query->where('campus', $campus);
         }
-        if ($schoolId) {
+        if (!empty($schoolId)) {
             $query->where('school_id', $schoolId);
         }
 
@@ -597,8 +650,14 @@ class TeacherDashboardService
             ->whereBetween('created_at', [$month, $endOfMonth])
             ->count();
 
-        // Count students with proper campus isolation
-        $studentsCount = Student::whereIn('class_id', $teacherClassIds)
+        // Count students with proper campus isolation — use course_id for non-primary class support
+        $teacherCourseIds = ClassModel::where('teacher_id', $teacherId)
+            ->when($campus, fn($q) => $q->where('campus', $campus))
+            ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
+            ->whereNotNull('course_id')
+            ->distinct()->pluck('course_id');
+
+        $studentsCount = Student::whereIn('course_id', $teacherCourseIds)
             ->when($campus, fn($q) => $q->where('campus', $campus))
             ->when($schoolId, fn($q) => $q->where('school_id', $schoolId))
             ->count();

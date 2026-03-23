@@ -63,47 +63,62 @@
                             <!-- Course Selection -->
                             <div class="mb-4">
                                 <label for="course_id" class="form-label fw-semibold text-dark">
-                                    <i class="fas fa-book text-primary me-2"></i>Course
+                                    <i class="fas fa-graduation-cap text-primary me-2"></i>Course
                                 </label>
-                                <x-searchable-dropdown
-                                    name="course_id"
-                                    id="course_id"
-                                    placeholder="Search and select course..."
-                                    api-url="{{ route('api.courses') }}"
-                                    :selected="old('course_id', $class->course_id)"
-                                    required="true"
-                                    class="form-select form-select-lg @error('course_id') is-invalid @enderror"
-                                />
+                                <select name="course_id" id="course_id" class="form-select form-select-lg @error('course_id') is-invalid @enderror">
+                                    <option value="">— Select a course —</option>
+                                    @foreach($courses as $course)
+                                        <option value="{{ $course->id }}"
+                                            {{ old('course_id', $class->course_id) == $course->id ? 'selected' : '' }}>
+                                            {{ $course->program_name }}
+                                            @if($course->program_code) ({{ $course->program_code }}) @endif
+                                        </option>
+                                    @endforeach
+                                </select>
                                 @error('course_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted d-block mt-2">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Contact your administrator to create new courses
-                                </small>
+                            </div>
+
+                            <!-- Subject Selection -->
+                            <div class="mb-4">
+                                <label for="subject_id" class="form-label fw-semibold text-dark">
+                                    <i class="fas fa-book text-primary me-2"></i>Subject
+                                </label>
+                                <select name="subject_id" id="subject_id" class="form-select form-select-lg @error('subject_id') is-invalid @enderror">
+                                    <option value="">— Select a subject (optional) —</option>
+                                    @foreach($assignedSubjects as $subject)
+                                        <option value="{{ $subject->id }}"
+                                            {{ old('subject_id', $class->subject_id) == $subject->id ? 'selected' : '' }}>
+                                            {{ $subject->subject_name }}
+                                            @if($subject->subject_code) ({{ $subject->subject_code }}) @endif
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @if($assignedSubjects->isEmpty())
+                                    <small class="text-warning d-block mt-1">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        No subjects assigned to you yet. Ask your admin to assign subjects.
+                                    </small>
+                                @endif
+                                @error('subject_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <!-- Year and Section Row -->
                             <div class="row">
                                 <div class="col-md-6 mb-4">
                                     <label for="year" class="form-label fw-semibold text-dark">
-                                        <i class="fas fa-graduation-cap text-primary me-2"></i>Grade Year
+                                        <i class="fas fa-graduation-cap text-primary me-2"></i>Year Level
                                     </label>
-                                    <x-searchable-dropdown
-                                        name="year"
-                                        id="year"
-                                        placeholder="Select year level..."
-                                        :options="[
-                                            ['id' => '1', 'name' => 'Year 1', 'description' => 'First year students'],
-                                            ['id' => '2', 'name' => 'Year 2', 'description' => 'Second year students'],
-                                            ['id' => '3', 'name' => 'Year 3', 'description' => 'Third year students'],
-                                            ['id' => '4', 'name' => 'Year 4', 'description' => 'Fourth year students']
-                                        ]"
-                                        :selected="old('year', $class->year)"
-                                        required="true"
-                                        class="form-select form-select-lg @error('year') is-invalid @enderror"
-                                    />
-                                    @error('year')
+                                    <select name="year_level" id="year" class="form-select form-select-lg @error('year_level') is-invalid @enderror" required>
+                                        <option value="">Select year level</option>
+                                        @foreach([1=>'1st Year',2=>'2nd Year',3=>'3rd Year',4=>'4th Year'] as $val => $label)
+                                            <option value="{{ $val }}" {{ old('year_level', $class->year_level) == $val ? 'selected' : '' }}>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('year_level')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -112,21 +127,12 @@
                                     <label for="section" class="form-label fw-semibold text-dark">
                                         <i class="fas fa-layer-group text-primary me-2"></i>Section
                                     </label>
-                                    <x-searchable-dropdown
-                                        name="section"
-                                        id="section"
-                                        placeholder="Select section..."
-                                        :options="[
-                                            ['id' => 'A', 'name' => 'Section A', 'description' => 'Section A'],
-                                            ['id' => 'B', 'name' => 'Section B', 'description' => 'Section B'],
-                                            ['id' => 'C', 'name' => 'Section C', 'description' => 'Section C'],
-                                            ['id' => 'D', 'name' => 'Section D', 'description' => 'Section D'],
-                                            ['id' => 'E', 'name' => 'Section E', 'description' => 'Section E']
-                                        ]"
-                                        :selected="old('section', $class->section)"
-                                        required="true"
-                                        class="form-select form-select-lg @error('section') is-invalid @enderror"
-                                    />
+                                    <select name="section" id="section" class="form-select form-select-lg @error('section') is-invalid @enderror" required>
+                                        <option value="">Select section</option>
+                                        @foreach(['A','B','C','D','E'] as $sec)
+                                            <option value="{{ $sec }}" {{ old('section', $class->section) === $sec ? 'selected' : '' }}>Section {{ $sec }}</option>
+                                        @endforeach
+                                    </select>
                                     @error('section')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror

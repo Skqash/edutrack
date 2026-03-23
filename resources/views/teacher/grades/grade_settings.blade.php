@@ -7,7 +7,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h2 class="mb-1">⚙️ Grade Settings & Configuration</h2>
-                        <p class="text-muted mb-0">{{ $class->name }} - {{ ucfirst($term) }} Term</p>
+                        <p class="text-muted mb-0">{{ $class->class_name }} - {{ ucfirst($term) }} Term</p>
                     </div>
                     <a href="{{ route('teacher.grades.entry', $class->id) }}?term={{ $term }}" class="btn btn-primary">
                         <i class="fas fa-arrow-right me-2"></i>Go to Grade Entry

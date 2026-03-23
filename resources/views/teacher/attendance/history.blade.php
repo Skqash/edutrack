@@ -4,7 +4,7 @@
     <div class="row mb-4">
         <div class="col-12 d-flex justify-content-between align-items-center">
             <div>
-                <h1 class="h3 fw-bold mb-0">Attendance History - {{ $class->name }}</h1>
+                <h1 class="h3 fw-bold mb-0">Attendance History - {{ $class->class_name }}</h1>
                 <small class="text-muted">Search and revisit previous attendance records</small>
             </div>
             <div>
@@ -69,7 +69,7 @@
                                         {{ $att->status }}
                                     </span>
                                 </td>
-                                <td>{{ $class->name }}</td>
+                                <td>{{ $class->class_name }}</td>
                             </tr>
                         @empty
                             <tr>

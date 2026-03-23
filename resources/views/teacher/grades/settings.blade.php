@@ -456,7 +456,7 @@
                                 <div class="component-info">
                                     <strong>{{ $component->name }}</strong>
                                     <div class="small text-muted">
-                                        Max: {{ $component->max_score }} pts | Weight: {{ $component->weight_percentage }}%
+                                        Max: {{ $component->max_score }} pts | Weight: {{ $component->weight }}%
                                     </div>
                                 </div>
                                 <div class="component-actions">
@@ -466,6 +466,7 @@
                                     <form method="POST" action="{{ route('teacher.grades.settings.delete-component', [$class->id, $component->id]) }}" class="d-inline">
                                         @csrf
                                         @method('DELETE')
+                                        <input type="hidden" name="term" value="{{ $term }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this component?')" {{ $ksaSettings->is_locked ? 'disabled' : '' }}>
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -498,7 +499,7 @@
                                 <div class="component-info">
                                     <strong>{{ $component->name }}</strong>
                                     <div class="small text-muted">
-                                        Max: {{ $component->max_score }} pts | Weight: {{ $component->weight_percentage }}%
+                                        Max: {{ $component->max_score }} pts | Weight: {{ $component->weight }}%
                                     </div>
                                 </div>
                                 <div class="component-actions">
@@ -508,6 +509,7 @@
                                     <form method="POST" action="{{ route('teacher.grades.settings.delete-component', [$class->id, $component->id]) }}" class="d-inline">
                                         @csrf
                                         @method('DELETE')
+                                        <input type="hidden" name="term" value="{{ $term }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this component?')" {{ $ksaSettings->is_locked ? 'disabled' : '' }}>
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -540,7 +542,7 @@
                                 <div class="component-info">
                                     <strong>{{ $component->name }}</strong>
                                     <div class="small text-muted">
-                                        Max: {{ $component->max_score }} pts | Weight: {{ $component->weight_percentage }}%
+                                        Max: {{ $component->max_score }} pts | Weight: {{ $component->weight }}%
                                     </div>
                                 </div>
                                 <div class="component-actions">
@@ -550,6 +552,7 @@
                                     <form method="POST" action="{{ route('teacher.grades.settings.delete-component', [$class->id, $component->id]) }}" class="d-inline">
                                         @csrf
                                         @method('DELETE')
+                                        <input type="hidden" name="term" value="{{ $term }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this component?')" {{ $ksaSettings->is_locked ? 'disabled' : '' }}>
                                             <i class="fas fa-trash"></i>
                                         </button>

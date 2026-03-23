@@ -12,10 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('subjects', function (Blueprint $table) {
-            // Add campus_code field that references school_code in schools table
-            $table->string('campus_code')->nullable()->after('subject_code');
-            
-            // Add index for better performance
+            $table->string('campus_code')->nullable();
             $table->index('campus_code');
         });
 

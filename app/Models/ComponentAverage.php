@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+// KsaSetting is referenced via full namespace in calculateAndUpdate to avoid circular imports
+
 class ComponentAverage extends Model
 {
     use HasFactory;
@@ -46,7 +48,7 @@ class ComponentAverage extends Model
 
     /**
      * Calculate and update averages for a student for a given term using flexible KSA percentages
-     * Now includes attendance in the final grade calculation
+     * Attendance is factored in via KsaSetting configuration (attendance_weight + attendance_category)
      */
     public static function calculateAndUpdate($studentId, $classId, $term)
     {
@@ -65,43 +67,52 @@ class ComponentAverage extends Model
         $categories = $entries->groupBy('component.category');
 
         $knowledgeAvg = self::calculateCategoryAverage($categories->get('Knowledge', collect()));
-        $skillsAvg = self::calculateCategoryAverage($categories->get('Skills', collect()));
-        $attitudeAvg = self::calculateCategoryAverage($categories->get('Attitude', collect()));
+        $skillsAvg    = self::calculateCategoryAverage($categories->get('Skills', collect()));
+        $attitudeAvg  = self::calculateCategoryAverage($categories->get('Attitude', collect()));
 
-        // Get flexible KSA percentages from settings
-        $settings = GradingScaleSetting::getOrCreateDefault($classId, null, $term);
-        $kPercent = $settings->knowledge_percentage / 100;
-        $sPercent = $settings->skills_percentage / 100;
-        $aPercent = $settings->attitude_percentage / 100;
+        // Get KSA weights from KsaSetting (teacher-configurable)
+        $ksaSetting = \App\Models\KsaSetting::where('class_id', $classId)->where('term', $term)->first();
+        $kPercent = ($ksaSetting->knowledge_weight ?? 40) / 100;
+        $sPercent = ($ksaSetting->skills_weight    ?? 50) / 100;
+        $aPercent = ($ksaSetting->attitude_weight  ?? 10) / 100;
 
-        // Calculate component grade (Knowledge + Skills + Attitude)
-        $componentGrade = ($knowledgeAvg * $kPercent) + ($skillsAvg * $sPercent) + ($attitudeAvg * $aPercent);
+        // Apply attendance score to the configured category
+        if ($ksaSetting && $ksaSetting->total_meetings > 0 && $ksaSetting->attendance_weight > 0) {
+            // Calculate attendance score directly: (present+late / total_meetings) × 50 + 50
+            $termLabel = ucfirst($term);
+            $attendedCount = \App\Models\Attendance::where('student_id', $studentId)
+                ->where('class_id', $classId)
+                ->where('term', $termLabel)
+                ->whereIn('status', ['Present', 'Late'])
+                ->count();
+            $totalMeetings  = $ksaSetting->total_meetings;
+            $attendanceScore = $totalMeetings > 0
+                ? min(100, ($attendedCount / $totalMeetings) * 50 + 50)
+                : 50;
 
-        // Get attendance score and calculate final grade with attendance
-        $class = ClassModel::find($classId);
-        $attendanceWeight = $class->attendance_percentage ?? 0;
-        $componentWeight = 100 - $attendanceWeight;
-        
-        // Get attendance score
-        $attendanceService = new \App\Services\AttendanceCalculationService();
-        $attendanceData = $attendanceService->calculateAttendanceScore($studentId, $classId, ucfirst($term));
-        $attendanceScore = $attendanceData['attendance_score'];
-        
-        // Calculate final grade: (component_grade × component_weight%) + (attendance_score × attendance_weight%)
-        $finalGrade = ($componentGrade * ($componentWeight / 100)) + ($attendanceScore * ($attendanceWeight / 100));
+            // Attendance weight within the chosen category
+            $attWeight = $ksaSetting->attendance_weight / 100;
+            $category  = strtolower($ksaSetting->attendance_category ?? 'attitude');
 
-        // Update or create the average record
+            if ($category === 'knowledge') {
+                $knowledgeAvg = ($knowledgeAvg * (1 - $attWeight)) + ($attendanceScore * $attWeight);
+            } elseif ($category === 'skills') {
+                $skillsAvg = ($skillsAvg * (1 - $attWeight)) + ($attendanceScore * $attWeight);
+            } else {
+                $attitudeAvg = ($attitudeAvg * (1 - $attWeight)) + ($attendanceScore * $attWeight);
+            }
+        }
+
+        // Final grade = K×kPercent + S×sPercent + A×aPercent
+        $finalGrade = ($knowledgeAvg * $kPercent) + ($skillsAvg * $sPercent) + ($attitudeAvg * $aPercent);
+
         return self::updateOrCreate(
+            ['student_id' => $studentId, 'class_id' => $classId, 'term' => $term],
             [
-                'student_id' => $studentId,
-                'class_id' => $classId,
-                'term' => $term,
-            ],
-            [
-                'knowledge_average' => $knowledgeAvg,
-                'skills_average' => $skillsAvg,
-                'attitude_average' => $attitudeAvg,
-                'final_grade' => $finalGrade,
+                'knowledge_average' => round($knowledgeAvg, 2),
+                'skills_average'    => round($skillsAvg, 2),
+                'attitude_average'  => round($attitudeAvg, 2),
+                'final_grade'       => round($finalGrade, 2),
             ]
         );
     }

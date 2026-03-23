@@ -15,10 +15,10 @@ return new class extends Migration
         if (Schema::hasTable('grades')) {
             Schema::table('grades', function (Blueprint $table) {
                 if (!Schema::hasColumn('grades', 'campus')) {
-                    $table->string('campus')->nullable()->after('status');
+                    $table->string('campus')->nullable();
                 }
                 if (!Schema::hasColumn('grades', 'school_id')) {
-                    $table->foreignId('school_id')->nullable()->after('campus')->constrained('schools')->onDelete('set null');
+                    $table->unsignedBigInteger('school_id')->nullable();
                 }
             });
         }
@@ -27,10 +27,10 @@ return new class extends Migration
         if (Schema::hasTable('grade_entries')) {
             Schema::table('grade_entries', function (Blueprint $table) {
                 if (!Schema::hasColumn('grade_entries', 'campus')) {
-                    $table->string('campus')->nullable()->after('status');
+                    $table->string('campus')->nullable();
                 }
                 if (!Schema::hasColumn('grade_entries', 'school_id')) {
-                    $table->foreignId('school_id')->nullable()->after('campus')->constrained('schools')->onDelete('set null');
+                    $table->unsignedBigInteger('school_id')->nullable();
                 }
             });
         }
@@ -39,10 +39,10 @@ return new class extends Migration
         if (Schema::hasTable('attendance')) {
             Schema::table('attendance', function (Blueprint $table) {
                 if (!Schema::hasColumn('attendance', 'campus')) {
-                    $table->string('campus')->nullable()->after('status');
+                    $table->string('campus')->nullable();
                 }
                 if (!Schema::hasColumn('attendance', 'school_id')) {
-                    $table->foreignId('school_id')->nullable()->after('campus')->constrained('schools')->onDelete('set null');
+                    $table->unsignedBigInteger('school_id')->nullable();
                 }
             });
         }
@@ -51,16 +51,15 @@ return new class extends Migration
         if (Schema::hasTable('student_attendance')) {
             Schema::table('student_attendance', function (Blueprint $table) {
                 if (!Schema::hasColumn('student_attendance', 'campus')) {
-                    $table->string('campus')->nullable()->after('status');
+                    $table->string('campus')->nullable();
                 }
                 if (!Schema::hasColumn('student_attendance', 'school_id')) {
-                    $table->foreignId('school_id')->nullable()->after('campus')->constrained('schools')->onDelete('set null');
+                    $table->unsignedBigInteger('school_id')->nullable();
                 }
             });
         }
 
-        // Update existing records with campus and school_id from related models
-        $this->updateExistingRecords();
+        // Skip updating existing records on fresh install
     }
 
     /**

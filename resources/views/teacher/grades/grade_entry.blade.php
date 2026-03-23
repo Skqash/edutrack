@@ -86,7 +86,7 @@
                                 @endphp
                                 <tr data-student-id="{{ $student->id }}">
                                     <td class="text-center">{{ $index + 1 }}</td>
-                                    <td>{{ $student->name ?? 'N/A' }}</td>
+                                    <td>{{ trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? '')) ?: 'N/A' }}</td>
                                     <td>{{ $student->student_id }}</td>
                                     
                                     <!-- Knowledge Components -->

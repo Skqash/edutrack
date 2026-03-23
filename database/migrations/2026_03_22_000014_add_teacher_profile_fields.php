@@ -12,21 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Add missing profile fields for teachers (check if they don't exist first)
             if (!Schema::hasColumn('users', 'language')) {
-                $table->string('language', 10)->default('en')->after('theme');
+                $table->string('language', 10)->default('en');
             }
             if (!Schema::hasColumn('users', 'timezone')) {
-                $table->string('timezone', 50)->default('UTC')->after('language');
+                $table->string('timezone', 50)->default('UTC');
             }
             if (!Schema::hasColumn('users', 'settings')) {
-                $table->json('settings')->nullable()->after('timezone');
+                $table->json('settings')->nullable();
             }
             if (!Schema::hasColumn('users', 'password_changed_at')) {
-                $table->timestamp('password_changed_at')->nullable()->after('settings');
+                $table->timestamp('password_changed_at')->nullable();
             }
             if (!Schema::hasColumn('users', 'last_login_at')) {
-                $table->timestamp('last_login_at')->nullable()->after('password_changed_at');
+                $table->timestamp('last_login_at')->nullable();
             }
         });
     }

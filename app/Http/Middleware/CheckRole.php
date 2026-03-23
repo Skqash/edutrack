@@ -26,9 +26,13 @@ class CheckRole
         $user = Auth::user();
 
         // Support both `super` and `superadmin` role naming for backward compatibility
-        $normalizedRoles = array_map(function ($role) {
-            return $role === 'super' ? 'superadmin' : $role;
-        }, $roles);
+        // Expand roles to include both variants
+        $normalizedRoles = [];
+        foreach ($roles as $role) {
+            $normalizedRoles[] = $role;
+            if ($role === 'super') $normalizedRoles[] = 'superadmin';
+            if ($role === 'superadmin') $normalizedRoles[] = 'super';
+        }
 
         if (in_array($user->role, $normalizedRoles)) {
             return $next($request);

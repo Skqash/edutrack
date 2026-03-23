@@ -522,7 +522,7 @@
         <div class="system-header">
             <div>
                 <h2 class="h4 mb-1">📊 Advanced Grade Entry System</h2>
-                <p class="mb-0 opacity-75">{{ $class->name }} - {{ ucfirst($term) }} Term</p>
+                <p class="mb-0 opacity-75">{{ $class->class_name }} - {{ ucfirst($term) }} Term</p>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('teacher.grades.content', $class->id) }}" class="btn btn-light btn-sm">
@@ -783,7 +783,7 @@ function loadStudents() {
     const students = @json($students->map(function($student) {
         return [
             'id' => $student->id,
-            'name' => $student->name ?? 'Unknown'
+            'name' => trim(($student->first_name ?? '') . ' ' . ($student->last_name ?? '')) ?: 'Unknown'
         ];
     }));
 

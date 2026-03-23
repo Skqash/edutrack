@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $class_level
  * @property int|null $level
  * @property string|null $section
- * @property string|null $year_level (enum: 1st, 2nd, 3rd, 4th)
+ * @property string|null $year (1, 2, 3, 4)
  * @property string|null $academic_year
  * @property string|null $semester
  * @property string|null $school_year
@@ -39,7 +39,7 @@ class ClassModel extends Model
         'level',
         'class_level', // Add class_level
         'section',
-        'year_level', // Integer: 1, 2, 3, 4 (primary field)
+        'year', // Integer: 1, 2, 3, 4 (actual DB column)
         'academic_year', // Primary year field used in business logic
         'semester',
         'total_students', // Correct column name instead of capacity

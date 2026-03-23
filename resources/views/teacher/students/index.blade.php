@@ -14,7 +14,7 @@
                         </h1>
                         <p class="text-muted mb-0">
                             <span class="badge bg-primary">{{ $students->count() }} Students</span>
-                            <span class="badge bg-secondary">{{ $class->subject->name ?? 'N/A' }}</span>
+                            <span class="badge bg-secondary">{{ $class->subject->subject_name ?? 'N/A' }}</span>
                         </p>
                     </div>
                     <a href="{{ route('teacher.classes.show', $class->id) }}" class="btn btn-outline-secondary">
@@ -51,9 +51,9 @@
                                     <tr>
                                         <th class="ps-4">Student Name</th>
                                         <th>Student ID</th>
-                                        <th>Email</th>
-                                        <th>Grade Year</th>
-                                        <th>Section</th>
+                                        <th class="d-none d-md-table-cell">Email</th>
+                                        <th class="d-none d-md-table-cell">Grade Year</th>
+                                        <th class="d-none d-md-table-cell">Section</th>
                                         <th style="width: 150px;">Actions</th>
                                     </tr>
                                 </thead>
@@ -62,18 +62,18 @@
 
                     <tr class="studentRow">
                         <td class="ps-4 fw-semibold text-dark">
-                            <i class="fas fa-user-circle text-primary me-2"></i>{{ $student->name ?? 'N/A' }}
+                            <i class="fas fa-user-circle text-primary me-2"></i>{{ ($student->first_name ?? '') . ' ' . ($student->last_name ?? '') }}
                         </td>
                         <td>
                             <code class="text-secondary">{{ $student->student_id ?? 'N/A' }}</code>
                         </td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <small class="text-muted">{{ $student->email ?? 'N/A' }}</small>
                         </td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <span class="badge bg-info text-dark">Year {{ $student->year ?? 'N/A' }}</span>
                         </td>
-                        <td>
+                        <td class="d-none d-md-table-cell">
                             <span class="badge bg-secondary">{{ $student->section ?? 'N/A' }}</span>
                         </td>
                         <td>
@@ -120,7 +120,7 @@
                         <div class="alert alert-danger mb-3">
                             <strong>⚠️ Warning!</strong> This action cannot be undone.
                         </div>
-                        <p>Are you sure you want to remove <strong>{{ $student->name }}</strong> from this class?</p>
+                        <p>Are you sure you want to remove <strong>{{ $student->first_name }} {{ $student->last_name }}</strong> from this class?</p>
                         <p class="text-muted small mb-0">
                             All grade entries for this student in this class will be permanently deleted.
                         </p>

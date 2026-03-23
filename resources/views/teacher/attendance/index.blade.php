@@ -154,9 +154,9 @@
                                                             <div class="d-flex align-items-center gap-2">
                                                                 <div class="badge rounded-circle"
                                                                     style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; background-color: #e9ecef; color: #495057;">
-                                                                    {{ strtoupper(substr($student->name ?? 'U', 0, 1)) }}
+                                                                    {{ strtoupper(substr($student->first_name ?? 'U', 0, 1)) }}
                                                                 </div>
-                                                                <span>{{ $student->name ?? 'N/A' }}</span>
+                                                                <span>{{ $student->first_name }} {{ $student->last_name }}</span>
                                                             </div>
                                                         </td>
                                                         <td style="text-align: center;">

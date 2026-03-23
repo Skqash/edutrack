@@ -278,11 +278,10 @@ class AdminDashboardService
     {
         $query = DB::table('attendance')
             ->join('students', 'attendance.student_id', '=', 'students.id')
-            ->join('users', 'students.user_id', '=', 'users.id')
             ->join('classes', 'attendance.class_id', '=', 'classes.id')
             ->select([
                 'attendance.*',
-                'users.name as student_name',
+                DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"),
                 'classes.class_name',
                 'students.student_id'
             ]);
@@ -424,12 +423,6 @@ class AdminDashboardService
     private function checkDataIntegrity(?string $adminCampus): array
     {
         $issues = [];
-
-        // Check for orphaned students
-        $orphanedStudents = Student::whereDoesntHave('user')->count();
-        if ($orphanedStudents > 0) {
-            $issues[] = "{$orphanedStudents} students without user accounts";
-        }
 
         // Check for classes without teachers
         $classesWithoutTeachers = ClassModel::whereNull('teacher_id')
