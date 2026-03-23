@@ -1,1 +1,0 @@
-                                                    <a href="{{ route('teacher.assessment.configure', $class->id) }}" class="btn fw-bold text-white" style="background-color: #f59e0b; border: none;" title="Configure Assessment"><i class="fas fa-sliders-h"></i></a>
