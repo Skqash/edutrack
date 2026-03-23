@@ -212,10 +212,10 @@
                                         <div class="card-body">
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm bg-gradient-success rounded-circle d-flex align-items-center justify-content-center text-white me-3">
-                                                    {{ strtoupper(substr($student->user->name, 0, 1)) }}
+                                                    {{ strtoupper(substr($student->name, 0, 1)) }}
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <div class="fw-medium">{{ $student->user->name }}</div>
+                                                    <div class="fw-medium">{{ $student->name }}</div>
                                                     <small class="text-muted">
                                                         {{ $student->student_id }} • Year {{ $student->year }} • {{ $student->section }}
                                                     </small>

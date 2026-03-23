@@ -95,7 +95,7 @@ class DegreeProgramSeeder extends Seeder
         foreach ($programs as $program) {
             Course::create(array_merge($program, [
                 'course_code' => $program['program_code'], // For backward compatibility
-                'course_name' => $program['program_name'], // For backward compatibility
+                'program_name' => $program['program_name'], // For backward compatibility
                 'department_code' => substr($program['program_code'], 0, 3), // Generate dept code
                 'credit_hours' => 3, // Default credit hours
                 'instructor_id' => 1, // Use first user as instructor

@@ -162,25 +162,23 @@
                         </div>
                     </div>
 
-                    @if ($admin)
-                        <div class="info-group">
-                            <div class="info-label">Department</div>
-                            <div class="info-value">
-                                {{ $admin->department ?? 'Not specified' }}
-                            </div>
+                    <div class="info-group">
+                        <div class="info-label">Department</div>
+                        <div class="info-value">
+                            {{ $user->department ?? ($admin->department ?? 'Not specified') }}
                         </div>
+                    </div>
 
-                        <div class="info-group">
-                            <div class="info-label">Biography</div>
-                            <div class="info-value">
-                                @if ($admin->bio)
-                                    <p>{{ $admin->bio }}</p>
-                                @else
-                                    <span class="text-muted">No biography provided</span>
-                                @endif
-                            </div>
+                    <div class="info-group">
+                        <div class="info-label">Biography</div>
+                        <div class="info-value">
+                            @if ($user->bio || ($admin && $admin->bio))
+                                <p>{{ $user->bio ?? $admin->bio }}</p>
+                            @else
+                                <span class="text-muted">No biography provided</span>
+                            @endif
                         </div>
-                    @endif
+                    </div>
 
                     <div class="info-group">
                         <div class="info-label">Member Since</div>

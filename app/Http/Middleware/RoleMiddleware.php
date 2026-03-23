@@ -8,22 +8,22 @@ use Illuminate\Support\Facades\Auth;
 class RoleMiddleware
 {
     public function handle($request, Closure $next, ...$roles)
-{
-    // If Super Admin is logged in → allow EVERYTHING
-    if (Auth::guard('super')->check()) {
-        return $next($request);
-    }
+    {
+        if (! Auth::check()) {
+            return redirect('/login')->with('error', 'Please login to access this page.');
+        }
 
-    // Normal user must be logged in
-    if (!Auth::check()) {
-        return redirect('/login')->with('error', 'Please login to access this page.');
-    }
+        $user = Auth::user();
 
-    // Check role from users table
-    if (in_array(Auth::user()->role, $roles)) {
-        return $next($request);
-    }
+        // Normalize super role naming for backwards compatibility
+        $normalizedRoles = array_map(function ($role) {
+            return $role === 'super' ? 'superadmin' : $role;
+        }, $roles);
 
-    return redirect('/login')->with('error', 'Access Denied.');
+        if (in_array($user->role, $normalizedRoles)) {
+            return $next($request);
+        }
+
+        return redirect('/login')->with('error', 'Access Denied.');
     }
 }

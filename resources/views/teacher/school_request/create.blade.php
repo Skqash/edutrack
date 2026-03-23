@@ -14,6 +14,18 @@
                         <small class="text-white-75">Send a request to admin to connect your institution.</small>
                     </div>
                     <div class="card-body">
+                        <div class="mb-3">
+                            <a href="{{ route('teacher.requests') }}" class="btn btn-sm btn-outline-primary me-2">
+                                <i class="fas fa-inbox me-1"></i> Request Center
+                            </a>
+                            <a href="{{ route('teacher.subjects') }}" class="btn btn-sm btn-outline-secondary me-2">
+                                <i class="fas fa-book-reader me-1"></i> My Subjects
+                            </a>
+                            <a href="{{ route('teacher.classes') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-door-open me-1"></i> My Classes
+                            </a>
+                        </div>
+
                         @if (session('success'))
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
                                 {{ session('success') }}

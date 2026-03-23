@@ -4,12 +4,12 @@
     <div class="container-fluid">
         <div class="row mb-4">
             <div class="col">
-                <h3 class="mb-0">Your School Connection Requests</h3>
-                <p class="text-muted">Review all connection requests you've submitted and their current status.</p>
+                <h3 class="mb-0">Your Requests</h3>
+                <p class="text-muted">Review all school connection, subject, course, and class requests you've submitted.</p>
             </div>
             <div class="col-auto">
-                <a href="{{ route('teacher.school-request.create') }}" class="btn btn-secondary">
-                    <i class="fas fa-plus me-2"></i> New Request
+                <a href="{{ route('teacher.requests') }}" class="btn btn-secondary">
+                    <i class="fas fa-inbox me-2"></i> Request Center
                 </a>
             </div>
         </div>
@@ -23,7 +23,8 @@
                         <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
-                                    <th>School</th>
+                                    <th>Type</th>
+                                    <th>Target</th>
                                     <th>Status</th>
                                     <th>Submitted</th>
                                     <th>Admin Note</th>
@@ -32,7 +33,8 @@
                             <tbody>
                                 @foreach ($requests as $request)
                                     <tr>
-                                        <td>{{ $request->school_name }}</td>
+                                        <td>{{ ucfirst($request->request_type ?? 'school') }}</td>
+                                        <td>{{ $request->related_name ?? $request->school_name }}</td>
                                         <td>
                                             <span
                                                 class="badge bg-{{ $request->status === 'approved' ? 'success' : ($request->status === 'rejected' ? 'danger' : 'secondary') }}">

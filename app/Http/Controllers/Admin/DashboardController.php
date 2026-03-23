@@ -12,6 +12,7 @@ use App\Models\Student;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -20,11 +21,26 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // Cache dashboard stats for 1 hour
-        $stats = Cache::remember('dashboard_stats', 3600, function () {
+        $admin = Auth::user();
+        $adminCampus = $admin->campus ?? null;
+        $adminSchoolId = $admin->school_id ?? null;
+        
+        $cacheKey = 'dashboard_stats_' . ($adminCampus ?? 'all') . '_' . ($adminSchoolId ?? 'all');
+        
+        $stats = Cache::remember($cacheKey, 3600, function () use ($adminCampus, $adminSchoolId) {
             return [
-                'totalStudents' => Student::with('user')->count(),
-                'totalTeachers' => User::where('role', 'teacher')->count(),
-                'totalAdmins' => User::where('role', 'admin')->count(),
+                'totalStudents' => Student::query()
+                    ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+                    ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
+                    ->count(),
+                'totalTeachers' => User::where('role', 'teacher')
+                    ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+                    ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
+                    ->count(),
+                'totalAdmins' => User::where('role', 'admin')
+                    ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+                    ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
+                    ->count(),
                 'totalCourses' => Course::count(),
                 'totalSubjects' => Subject::count(),
                 'totalClasses' => ClassModel::count(),
@@ -40,7 +56,7 @@ class DashboardController extends Controller
 
         // Get average grade by class
         $gradeAverages = DB::table('grades as g')
-            ->select('g.class_id', DB::raw('AVG(g.final_grade) as avg_grade, COUNT(*) as student_count'), 'c.class_name')
+            ->select('g.class_id', 'c.class_name', DB::raw('AVG(g.final_grade) as avg_grade, COUNT(*) as student_count'))
             ->leftJoin('classes as c', 'g.class_id', '=', 'c.id')
             ->whereNotNull('g.final_grade')
             ->groupBy('g.class_id', 'c.class_name')

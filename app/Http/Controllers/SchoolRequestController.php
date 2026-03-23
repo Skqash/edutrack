@@ -31,7 +31,7 @@ class SchoolRequestController extends Controller
     }
 
     /**
-     * Teacher: view the full history of their school requests.
+     * Teacher: view the full history of their requests (school connection + subject/course/class).
      */
     public function history()
     {
@@ -66,6 +66,9 @@ class SchoolRequestController extends Controller
             'school_address' => $validated['school_address'] ?? null,
             'note' => $validated['note'] ?? null,
             'status' => 'pending',
+            'request_type' => 'school',
+            'related_id' => null,
+            'related_name' => null,
         ]);
 
         // Notify all admins about the new school connection request
@@ -82,15 +85,20 @@ class SchoolRequestController extends Controller
     }
 
     /**
-     * Admin: list all school requests.
+     * Admin: list all requests (school connection + subject/course/class).
      */
-    public function index()
+    public function index(Request $request)
     {
+        $type = $request->query('type');
+
         $requests = SchoolRequest::with('user')
+            ->when($type, function ($query, $type) {
+                return $query->where('request_type', $type);
+            })
             ->orderBy('created_at', 'desc')
             ->paginate(20);
 
-        return view('admin.school_requests.index', compact('requests'));
+        return view('admin.school_requests.index', compact('requests', 'type'));
     }
 
     /**

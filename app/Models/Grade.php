@@ -83,6 +83,10 @@ class Grade extends Model
         'final_knowledge_average', 'final_skills_average', 'final_attitude_average', 'final_final_grade',
         // OVERALL AND SCALE
         'grade_5pt_scale', 'grade_remarks',
+        
+        // Campus isolation fields
+        'campus',
+        'school_id',
     ];
 
     protected $casts = [
@@ -222,6 +226,14 @@ class Grade extends Model
     public function teacher()
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    /**
+     * School relationship
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 
     /**
@@ -862,7 +874,7 @@ class Grade extends Model
     public function getGradeSummary()
     {
         return [
-            'student_name' => $this->student->user->name ?? $this->student->name ?? 'Unknown',
+            'student_name' => $this->student->full_name ?? $this->student->name ?? 'Unknown',
             'midterm_grade' => $this->mid_final_grade ?? 0,
             'midterm_decimal' => $this->mid_decimal_grade ?? 0,
             'final_grade' => $this->final_final_grade ?? 0,

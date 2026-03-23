@@ -18,7 +18,7 @@ class AdminUserController extends Controller
             ->paginate(15);
 
         // Get total counts
-        $totalStudents = Student::with('user')->count();
+        $totalStudents = Student::count();
         $totalTeachers = User::where('role', 'teacher')->count();
         $totalClasses = ClassModel::count();
         $totalSubjects = Subject::count();
@@ -42,7 +42,12 @@ class AdminUserController extends Controller
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        User::create($validated);
+        $user = User::create($validated);
+
+        // Ensure teachers have an employee identifier
+        if ($user->role === 'teacher' && empty($user->employee_id)) {
+            $user->update(['employee_id' => 'EMP' . str_pad($user->id, 6, '0', STR_PAD_LEFT)]);
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully');
     }
@@ -76,6 +81,11 @@ class AdminUserController extends Controller
         }
 
         $user->update($validated);
+
+        // Ensure teachers keep an employee identifier
+        if ($user->role === 'teacher' && empty($user->employee_id)) {
+            $user->update(['employee_id' => 'EMP' . str_pad($user->id, 6, '0', STR_PAD_LEFT)]);
+        }
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully');
     }

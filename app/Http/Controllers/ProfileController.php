@@ -18,16 +18,25 @@ class ProfileController extends Controller
     public function showTeacherProfile()
     {
         $user = Auth::user();
-        $teacher = Teacher::where('user_id', $user->id)->first();
 
-        if (!$teacher) {
-            $teacher = Teacher::create([
-                'user_id' => $user->id,
+        // Ensure a legacy teacher profile exists for any existing code paths
+        $teacher = Teacher::firstOrCreate(
+            ['user_id' => $user->id],
+            [
                 'employee_id' => 'EMP' . $user->id,
-                'status' => 'Active',
-                'campus' => 'Victorias Campus',
-            ]);
-        }
+                'status' => $user->status ?? 'Active',
+                'campus' => $user->campus ?? 'Victorias Campus',
+            ]
+        );
+
+        // Keep teacher profile fields in sync for backward compatibility
+        $teacher->fill([
+            'qualification' => $user->qualification,
+            'bio' => $user->bio,
+            'specialization' => $user->specialization,
+            'department' => $user->department,
+            'connected_school' => $user->connected_school,
+        ])->save();
 
         $schoolRequest = \App\Models\SchoolRequest::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
@@ -42,13 +51,24 @@ class ProfileController extends Controller
     public function editTeacherProfile()
     {
         $user = Auth::user();
-        $teacher = Teacher::where('user_id', $user->id)->firstOrCreate([
-            'user_id' => $user->id,
-        ], [
-            'employee_id' => 'EMP' . $user->id,
-            'status' => 'Active',
-        ]);
-        
+
+        $teacher = Teacher::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'employee_id' => 'EMP' . $user->id,
+                'status' => 'Active',
+            ]
+        );
+
+        // Sync backward compatibility fields
+        $teacher->fill([
+            'qualification' => $user->qualification,
+            'bio' => $user->bio,
+            'specialization' => $user->specialization,
+            'department' => $user->department,
+            'connected_school' => $user->connected_school,
+        ])->save();
+
         return view('teacher.profile.edit', compact('user', 'teacher'));
     }
 
@@ -59,7 +79,7 @@ class ProfileController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        
+
         // Validate user data
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -68,50 +88,45 @@ class ProfileController extends Controller
             'bio' => ['nullable', 'string', 'max:500'],
             'specialization' => ['nullable', 'string', 'max:255'],
             'department' => ['nullable', 'string', 'max:255'],
+            'campus' => ['nullable', 'string', 'max:255'],
+            'connected_school' => ['nullable', 'string', 'max:255'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
-        // Update user
+        // Update user fields (primary storage for profile details)
         $userUpdateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'bio' => $validated['bio'] ?? null,
+            'specialization' => $validated['specialization'] ?? null,
+            'department' => $validated['department'] ?? null,
+            'campus' => $validated['campus'] ?? null,
+            'connected_school' => $validated['connected_school'] ?? null,
         ];
-        
-        if (!empty($validated['phone'])) {
-            $userUpdateData['phone'] = $validated['phone'];
-        }
-        
+
         if (!empty($validated['password'])) {
             $userUpdateData['password'] = Hash::make($validated['password']);
         }
-        
+
         $user->update($userUpdateData);
 
-        // Get or create teacher profile
-        $teacher = Teacher::where('user_id', $user->id)->first();
-        if (!$teacher) {
-            $teacher = Teacher::create([
-                'user_id' => $user->id,
+        // Keep legacy teacher profile in sync (for any remaining code paths)
+        $teacher = Teacher::firstOrCreate(
+            ['user_id' => $user->id],
+            [
                 'employee_id' => 'EMP' . $user->id,
-                'status' => 'Active',
-            ]);
-        }
+                'status' => $user->status ?? 'Active',
+            ]
+        );
 
-        // Update teacher profile
-        $teacherUpdateData = [];
-        if (isset($validated['bio'])) {
-            $teacherUpdateData['bio'] = $validated['bio'];
-        }
-        if (isset($validated['specialization'])) {
-            $teacherUpdateData['specialization'] = $validated['specialization'];
-        }
-        if (isset($validated['department'])) {
-            $teacherUpdateData['department'] = $validated['department'];
-        }
-
-        if (!empty($teacherUpdateData)) {
-            $teacher->update($teacherUpdateData);
-        }
+        $teacher->update([
+            'bio' => $user->bio,
+            'specialization' => $user->specialization,
+            'department' => $user->department,
+            'campus' => $user->campus,
+            'connected_school' => $user->connected_school,
+        ]);
 
         return redirect()->route('teacher.profile.show')
             ->with('success', 'Profile updated successfully!');
@@ -123,16 +138,22 @@ class ProfileController extends Controller
     public function showAdminProfile()
     {
         $user = Auth::user();
-        $admin = Admin::where('user_id', $user->id)->first();
 
-        if (!$admin) {
-            $admin = Admin::create([
-                'user_id' => $user->id,
+        // Ensure a legacy admin profile exists for backward compatibility
+        $admin = Admin::firstOrCreate(
+            ['user_id' => $user->id],
+            [
                 'employee_id' => 'ADM' . $user->id,
-                'status' => 'Active',
-            ]);
-        }
-        
+                'status' => $user->status ?? 'Active',
+            ]
+        );
+
+        // Keep admin profile fields in sync with the user record
+        $admin->fill([
+            'department' => $user->department,
+            'bio' => $user->bio,
+        ])->save();
+
         return view('admin.profile.show', compact('user', 'admin'));
     }
 
@@ -142,13 +163,20 @@ class ProfileController extends Controller
     public function editAdminProfile()
     {
         $user = Auth::user();
-        $admin = Admin::where('user_id', $user->id)->firstOrCreate([
-            'user_id' => $user->id,
-        ], [
-            'employee_id' => 'ADM' . $user->id,
-            'status' => 'Active',
-        ]);
-        
+
+        $admin = Admin::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'employee_id' => 'ADM' . $user->id,
+                'status' => $user->status ?? 'Active',
+            ]
+        );
+
+        $admin->fill([
+            'department' => $user->department,
+            'bio' => $user->bio,
+        ])->save();
+
         return view('admin.profile.edit', compact('user', 'admin'));
     }
 
@@ -159,7 +187,7 @@ class ProfileController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        
+
         // Validate user data
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -170,44 +198,34 @@ class ProfileController extends Controller
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
-        // Update user
+        // Update user record with profile fields
         $userUpdateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'bio' => $validated['bio'] ?? null,
+            'department' => $validated['department'] ?? null,
         ];
-        
-        if (!empty($validated['phone'])) {
-            $userUpdateData['phone'] = $validated['phone'];
-        }
-        
+
         if (!empty($validated['password'])) {
             $userUpdateData['password'] = Hash::make($validated['password']);
         }
-        
+
         $user->update($userUpdateData);
 
-        // Get or create admin profile
-        $admin = Admin::where('user_id', $user->id)->first();
-        if (!$admin) {
-            $admin = Admin::create([
-                'user_id' => $user->id,
+        // Keep legacy admin profile in sync
+        $admin = Admin::firstOrCreate(
+            ['user_id' => $user->id],
+            [
                 'employee_id' => 'ADM' . $user->id,
-                'status' => 'Active',
-            ]);
-        }
+                'status' => $user->status ?? 'Active',
+            ]
+        );
 
-        // Update admin profile
-        $adminUpdateData = [];
-        if (isset($validated['bio'])) {
-            $adminUpdateData['bio'] = $validated['bio'];
-        }
-        if (isset($validated['department'])) {
-            $adminUpdateData['department'] = $validated['department'];
-        }
-
-        if (!empty($adminUpdateData)) {
-            $admin->update($adminUpdateData);
-        }
+        $admin->update([
+            'department' => $user->department,
+            'bio' => $user->bio,
+        ]);
 
         return redirect()->route('admin.profile.show')
             ->with('success', 'Profile updated successfully!');

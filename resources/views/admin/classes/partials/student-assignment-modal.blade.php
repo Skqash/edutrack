@@ -43,7 +43,9 @@
                         <select id="modal_department_filter" class="form-select form-select-sm">
                             <option value="">All Departments</option>
                             @foreach ($departments as $department)
-                                <option value="{{ $department }}">{{ $department }}</option>
+                                <option value="{{ is_object($department) ? $department->department_name : $department }}">
+                                    {{ is_object($department) ? $department->department_name : $department }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -191,7 +193,7 @@
                     </div>
                     <div class="flex-grow-1">
                         <div class="fw-bold">${student.name}</div>
-                        <small class="text-muted">${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}</small>
+                        <small class="text-muted">${student.student_id} • ${student.program_name} • Year ${student.year} • ${student.section}</small>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-primary ms-3" onclick="selectStudent(${student.id})">Add</button>
                 </div>
@@ -212,7 +214,7 @@
                 <div class="student-item d-flex align-items-center p-2 border-bottom">
                     <div class="flex-grow-1">
                         <div class="fw-bold">${student.name}</div>
-                        <small class="text-muted">${student.student_id} • ${student.course_name} • Year ${student.year} • ${student.section}</small>
+                        <small class="text-muted">${student.student_id} • ${student.program_name} • Year ${student.year} • ${student.section}</small>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeStudent(${student.id})">Remove</button>
                 </div>

@@ -35,9 +35,9 @@
                                     <label for="subject_code" class="form-label fw-bold">
                                         <i class="fas fa-barcode me-1" style="color: #6c757d;"></i> Subject Code
                                     </label>
-                                    <input type="text" class="form-control @error('subject_code') is-invalid @enderror" 
-                                           id="subject_code" name="subject_code" 
-                                           placeholder="e.g., MATH101" value="{{ old('subject_code') }}" required>
+                                    <input type="text" class="form-control @error('subject_code') is-invalid @enderror"
+                                        id="subject_code" name="subject_code" placeholder="e.g., MATH101"
+                                        value="{{ old('subject_code') }}" required>
                                     @error('subject_code')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -48,9 +48,9 @@
                                     <label for="credit_hours" class="form-label fw-bold">
                                         <i class="fas fa-clock me-1" style="color: #6c757d;"></i> Credit Hours
                                     </label>
-                                    <input type="number" class="form-control @error('credit_hours') is-invalid @enderror" 
-                                           id="credit_hours" name="credit_hours" 
-                                           placeholder="e.g., 3" value="{{ old('credit_hours', 3) }}" min="1" max="6" required>
+                                    <input type="number" class="form-control @error('credit_hours') is-invalid @enderror"
+                                        id="credit_hours" name="credit_hours" placeholder="e.g., 3"
+                                        value="{{ old('credit_hours', 3) }}" min="1" max="6" required>
                                     @error('credit_hours')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -62,9 +62,9 @@
                             <label for="subject_name" class="form-label fw-bold">
                                 <i class="fas fa-book me-1" style="color: #6c757d;"></i> Subject Name
                             </label>
-                            <input type="text" class="form-control @error('subject_name') is-invalid @enderror" 
-                                   id="subject_name" name="subject_name" 
-                                   placeholder="e.g., Advanced Mathematics" value="{{ old('subject_name') }}" required>
+                            <input type="text" class="form-control @error('subject_name') is-invalid @enderror"
+                                id="subject_name" name="subject_name" placeholder="e.g., Advanced Mathematics"
+                                value="{{ old('subject_name') }}" required>
                             @error('subject_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -76,18 +76,12 @@
                                     <label for="course_id" class="form-label fw-bold">
                                         <i class="fas fa-graduation-cap me-1" style="color: #6c757d;"></i> Degree Program
                                     </label>
-                                    <select class="form-select @error('course_id') is-invalid @enderror" 
-                                            id="course_id" name="course_id" onchange="updateProgramField()">
+                                    <select class="form-select @error('course_id') is-invalid @enderror" id="course_id"
+                                        name="course_id">
                                         <option value="">Select a program (Optional)...</option>
-                                        @foreach($courses as $course)
-                                            <option value="{{ $course->id }}" 
-                                                    data-program="{{ $course->program_name }}"
-                                                    {{ old('course_id') == $course->id ? 'selected' : '' }}>
-                                                {{ $course->program_name }} ({{ $course->program_code }})
-                                            </option>
-                                        @endforeach
                                     </select>
-                                    <small class="text-muted">Assign to a degree program or leave as General Education</small>
+                                    <small class="text-muted">Assign to a degree program or leave as General
+                                        Education</small>
                                     @error('course_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -98,9 +92,9 @@
                                     <label for="program" class="form-label fw-bold">
                                         <i class="fas fa-tag me-1" style="color: #6c757d;"></i> Program Name
                                     </label>
-                                    <input type="text" class="form-control @error('program') is-invalid @enderror" 
-                                           id="program" name="program" 
-                                           placeholder="e.g., Information Technology" value="{{ old('program') }}">
+                                    <input type="text" class="form-control @error('program') is-invalid @enderror"
+                                        id="program" name="program" placeholder="e.g., Information Technology"
+                                        value="{{ old('program') }}">
                                     <small class="text-muted">Auto-filled when program is selected</small>
                                     @error('program')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -115,11 +109,12 @@
                                     <label for="category" class="form-label fw-bold">
                                         <i class="fas fa-folder me-1" style="color: #6c757d;"></i> Category
                                     </label>
-                                    <select class="form-select @error('category') is-invalid @enderror" 
-                                            id="category" name="category" required>
+                                    <select class="form-select @error('category') is-invalid @enderror" id="category"
+                                        name="category" required>
                                         <option value="">Select category...</option>
-                                        @foreach($categories as $key => $value)
-                                            <option value="{{ $key }}" {{ old('category') == $key ? 'selected' : '' }}>
+                                        @foreach ($categories as $key => $value)
+                                            <option value="{{ $key }}"
+                                                {{ old('category') == $key ? 'selected' : '' }}>
                                                 {{ $value }}
                                             </option>
                                         @endforeach
@@ -134,11 +129,12 @@
                                     <label for="type" class="form-label fw-bold">
                                         <i class="fas fa-layer-group me-1" style="color: #6c757d;"></i> Subject Type
                                     </label>
-                                    <select class="form-select @error('type') is-invalid @enderror" 
-                                            id="type" name="type" required>
+                                    <select class="form-select @error('type') is-invalid @enderror" id="type"
+                                        name="type" required>
                                         <option value="">Select type...</option>
-                                        @foreach($types as $key => $value)
-                                            <option value="{{ $key }}" {{ old('type') == $key ? 'selected' : '' }}>
+                                        @foreach ($types as $key => $value)
+                                            <option value="{{ $key }}"
+                                                {{ old('type') == $key ? 'selected' : '' }}>
                                                 {{ $value }}
                                             </option>
                                         @endforeach
@@ -154,12 +150,12 @@
                             <label for="instructor_id" class="form-label fw-bold">
                                 <i class="fas fa-user-tie me-1" style="color: #6c757d;"></i> Assigned Instructor
                             </label>
-                            <select class="form-select @error('instructor_id') is-invalid @enderror" 
-                                    id="instructor_id" name="instructor_id">
+                            <select class="form-select @error('instructor_id') is-invalid @enderror" id="instructor_id"
+                                name="instructor_id">
                                 <option value="">Select instructor (Optional)...</option>
-                                @foreach($instructors as $instructor)
-                                    <option value="{{ $instructor->id }}" 
-                                            {{ old('instructor_id') == $instructor->id ? 'selected' : '' }}>
+                                @foreach ($instructors as $instructor)
+                                    <option value="{{ $instructor->id }}"
+                                        {{ old('instructor_id') == $instructor->id ? 'selected' : '' }}>
                                         {{ $instructor->name }} ({{ $instructor->role }})
                                     </option>
                                 @endforeach
@@ -174,9 +170,8 @@
                             <label for="description" class="form-label fw-bold">
                                 <i class="fas fa-align-left me-1" style="color: #6c757d;"></i> Description
                             </label>
-                            <textarea class="form-control @error('description') is-invalid @enderror" 
-                                      id="description" name="description" rows="4" 
-                                      placeholder="Enter subject description and learning objectives">{{ old('description') }}</textarea>
+                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
+                                rows="4" placeholder="Enter subject description and learning objectives">{{ old('description') }}</textarea>
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -234,7 +229,8 @@
 
                     <div class="alert alert-info small">
                         <i class="fas fa-lightbulb me-1"></i>
-                        <strong>Tip:</strong> Subjects automatically sync with their assigned degree programs for better organization.
+                        <strong>Tip:</strong> Subjects automatically sync with their assigned degree programs for better
+                        organization.
                     </div>
                 </div>
             </div>
@@ -243,26 +239,67 @@
 @endsection
 
 @push('scripts')
-<script>
-function updateProgramField() {
-    const courseSelect = document.getElementById('course_id');
-    const programInput = document.getElementById('program');
-    const selectedOption = courseSelect.options[courseSelect.selectedIndex];
-    
-    if (selectedOption.value && selectedOption.dataset.program) {
-        programInput.value = selectedOption.dataset.program;
-        programInput.readOnly = true;
-        programInput.classList.add('bg-light');
-    } else {
-        programInput.value = '';
-        programInput.readOnly = false;
-        programInput.classList.remove('bg-light');
-    }
-}
+    <script>
+        function updateProgramField() {
+            const courseSelect = document.getElementById('course_id');
+            const programInput = document.getElementById('program');
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updateProgramField();
-});
-</script>
+            if (courseSelect.tomselect) {
+                const selectedOption = courseSelect.tomselect.getValue();
+                const item = courseSelect.tomselect.getItem(selectedOption);
+                if (item && item.dataset && item.dataset.program) {
+                    programInput.value = item.dataset.program;
+                    programInput.readOnly = true;
+                    programInput.classList.add('bg-light');
+                } else {
+                    programInput.value = '';
+                    programInput.readOnly = false;
+                    programInput.classList.remove('bg-light');
+                }
+            }
+        }
+
+        // Initialize TomSelect for course selection
+        document.addEventListener('DOMContentLoaded', function() {
+            new TomSelect('#course_id', {
+                valueField: 'value',
+                labelField: 'text',
+                searchField: 'text',
+                load: function(query, callback) {
+                    if (!query.length) return callback();
+                    fetch('/api/courses/search?q=' + encodeURIComponent(query), {
+                            headers: {
+                                'Authorization': 'Bearer ' + document.querySelector(
+                                    'meta[name="api-token"]')?.getAttribute('content') || '',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    .getAttribute('content'),
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            callback(data);
+                        })
+                        .catch(() => {
+                            callback();
+                        });
+                },
+                render: {
+                    option: function(item, escape) {
+                        return '<div data-program="' + escape(item.department || '') + '">' + escape(
+                            item.text) + '</div>';
+                    },
+                    item: function(item, escape) {
+                        return '<div data-program="' + escape(item.department || '') + '">' + escape(
+                            item.text) + '</div>';
+                    }
+                },
+                onChange: function(value) {
+                    updateProgramField();
+                }
+            });
+
+            updateProgramField();
+        });
+    </script>
 @endpush

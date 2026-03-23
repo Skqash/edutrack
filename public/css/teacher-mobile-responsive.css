@@ -1,0 +1,648 @@
+/* Teacher Mobile Responsive Fixes */
+
+/* ===================================
+   MOBILE DASHBOARD FIXES
+   =================================== */
+
+@media (max-width: 768px) {
+    /* Dashboard Stats Cards */
+    .stats-grid,
+    .row.g-4 {
+        gap: 1rem !important;
+    }
+
+    .stats-card,
+    .card {
+        margin-bottom: 1rem;
+    }
+
+    /* Make cards full width on mobile */
+    .col-md-3,
+    .col-md-4,
+    .col-md-6,
+    .col-lg-3,
+    .col-lg-4,
+    .col-lg-6 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Dashboard Header */
+    .dashboard-header {
+        padding: 1rem !important;
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .dashboard-header h1,
+    .dashboard-header .h1 {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Stats Cards */
+    .stat-card {
+        padding: 1rem !important;
+    }
+
+    .stat-value {
+        font-size: 1.75rem !important;
+    }
+
+    .stat-label {
+        font-size: 0.875rem !important;
+    }
+
+    /* Recent Activity */
+    .activity-item {
+        padding: 0.75rem !important;
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .activity-time {
+        margin-top: 0.5rem;
+        font-size: 0.75rem !important;
+    }
+
+    /* Charts */
+    .chart-container {
+        height: 250px !important;
+        padding: 1rem !important;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+    }
+
+    .quick-action-btn {
+        width: 100% !important;
+        justify-content: center;
+    }
+}
+
+/* ===================================
+   MOBILE GRADES SECTION FIXES
+   =================================== */
+
+@media (max-width: 768px) {
+    /* Grade Entry Container */
+    .grade-entry-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Tabs */
+    .nav-tabs {
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .nav-tabs::-webkit-scrollbar {
+        height: 3px;
+    }
+
+    .nav-tabs::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .nav-tabs .nav-link {
+        white-space: nowrap;
+        font-size: 0.875rem !important;
+        padding: 0.75rem 1rem !important;
+        min-width: auto;
+    }
+
+    /* Grade Table Container */
+    .table-responsive {
+        margin: 0 -1rem !important;
+        padding: 0 1rem !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Grade Table */
+    #gradeTable {
+        min-width: 100% !important;
+        font-size: 0.75rem !important;
+    }
+
+    #gradeTable th,
+    #gradeTable td {
+        padding: 0.5rem 0.25rem !important;
+        white-space: nowrap;
+    }
+
+    #gradeTable th:first-child,
+    #gradeTable td:first-child {
+        position: sticky !important;
+        left: 0 !important;
+        background: white !important;
+        z-index: 10 !important;
+        min-width: 150px !important;
+        max-width: 150px !important;
+        width: 150px !important;
+        font-size: 0.8125rem !important;
+        padding: 0.625rem 0.75rem !important;
+        word-wrap: break-word !important;
+        white-space: normal !important;
+        line-height: 1.3 !important;
+        overflow-wrap: break-word !important;
+        hyphens: auto !important;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.08);
+        will-change: transform;
+    }
+    
+    /* Student name header styling */
+    #gradeTable thead th:first-child {
+        background: #4f46e5 !important;
+        color: white !important;
+        font-weight: 700 !important;
+        border-right: 3px solid #4338ca !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.15) !important;
+        z-index: 50 !important;
+    }
+    
+    /* Student name cell styling */
+    #gradeTable tbody td:first-child {
+        background: #ffffff !important;
+        font-weight: 600 !important;
+        border-right: 3px solid #cbd5e1 !important;
+        color: #1e293b !important;
+        text-align: left !important;
+        z-index: 10 !important;
+    }
+    
+    /* Student name and ID styling */
+    .student-name-cell {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0.25rem !important;
+    }
+    
+    .student-name {
+        font-size: 0.8125rem !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        line-height: 1.3 !important;
+    }
+    
+    .student-id-number {
+        font-size: 0.6875rem !important;
+        color: #64748b !important;
+        font-weight: 400 !important;
+        font-family: 'Courier New', monospace !important;
+    }
+    
+    /* Fix table scrolling */
+    .table-responsive {
+        position: relative !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Ensure thead is sticky during vertical scroll */
+    #gradeTable thead {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 40 !important;
+        background: white !important;
+    }
+    
+    /* Fix for horizontal scrolling */
+    #gradeTable {
+        position: relative !important;
+    }
+
+    /* Grade Input Fields */
+    .grade-input {
+        width: 60px !important;
+        padding: 0.375rem 0.25rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Grade Badges */
+    .badge {
+        font-size: 0.625rem !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    /* Action Buttons */
+    .btn-group {
+        flex-direction: column !important;
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        width: 100% !important;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Grade Entry Header */
+    .grade-entry-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+
+    .grade-entry-header .btn {
+        width: 100% !important;
+    }
+
+    /* Alert Banners */
+    .alert {
+        font-size: 0.875rem !important;
+        padding: 0.75rem !important;
+    }
+
+    .alert .row {
+        flex-direction: column !important;
+    }
+
+    .alert .col-md-10,
+    .alert .col-md-2 {
+        width: 100% !important;
+        text-align: left !important;
+    }
+
+    .alert .btn {
+        width: 100% !important;
+        margin-top: 0.5rem;
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+        padding: 1rem !important;
+    }
+
+    .settings-form .row {
+        margin: 0 !important;
+    }
+
+    .settings-form .col-md-6,
+    .settings-form .col-md-4 {
+        width: 100% !important;
+        padding: 0 !important;
+        margin-bottom: 1rem;
+    }
+
+    /* Component Manager */
+    .component-list {
+        padding: 0.5rem !important;
+    }
+
+    .component-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 0.75rem !important;
+    }
+
+    .component-actions {
+        width: 100%;
+        margin-top: 0.5rem;
+        justify-content: flex-start !important;
+    }
+
+    /* Modal Adjustments */
+    .modal-dialog {
+        margin: 0.5rem !important;
+        max-width: calc(100% - 1rem) !important;
+    }
+
+    .modal-body {
+        padding: 1rem !important;
+    }
+
+    .modal-footer {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+    }
+
+    .modal-footer .btn {
+        width: 100% !important;
+    }
+}
+
+/* ===================================
+   SMALL MOBILE (< 480px)
+   =================================== */
+
+@media (max-width: 480px) {
+    /* Even smaller adjustments */
+    .page-content {
+        padding: 0.5rem !important;
+    }
+
+    .card {
+        border-radius: 8px !important;
+    }
+
+    .card-body {
+        padding: 0.75rem !important;
+    }
+
+    /* Grade Table */
+    #gradeTable {
+        font-size: 0.625rem !important;
+    }
+
+    #gradeTable th,
+    #gradeTable td {
+        padding: 0.375rem 0.125rem !important;
+    }
+
+    .grade-input {
+        width: 50px !important;
+        font-size: 0.625rem !important;
+    }
+
+    /* Buttons */
+    .btn {
+        font-size: 0.875rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    .btn-sm {
+        font-size: 0.75rem !important;
+        padding: 0.375rem 0.5rem !important;
+    }
+
+    /* Typography */
+    h1, .h1 {
+        font-size: 1.25rem !important;
+    }
+
+    h2, .h2 {
+        font-size: 1.125rem !important;
+    }
+
+    h3, .h3 {
+        font-size: 1rem !important;
+    }
+
+    h4, .h4 {
+        font-size: 0.875rem !important;
+    }
+
+    /* Stats */
+    .stat-value {
+        font-size: 1.5rem !important;
+    }
+
+    .stat-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1.25rem !important;
+    }
+}
+
+/* ===================================
+   LANDSCAPE MOBILE
+   =================================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .page-content {
+        padding-top: calc(var(--topbar-height) + 0.5rem) !important;
+    }
+
+    .grade-entry-header {
+        flex-direction: row !important;
+        flex-wrap: wrap;
+    }
+
+    .table-responsive {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+}
+
+/* ===================================
+   TABLET (768px - 1024px)
+   =================================== */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .col-md-3 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+    }
+
+    .col-md-6 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    #gradeTable {
+        font-size: 0.875rem !important;
+    }
+
+    .grade-input {
+        width: 70px !important;
+    }
+}
+
+/* ===================================
+   UTILITY CLASSES FOR MOBILE
+   =================================== */
+
+/* Hide on mobile */
+.mobile-hide {
+    display: none !important;
+}
+
+@media (min-width: 769px) {
+    .mobile-hide {
+        display: block !important;
+    }
+}
+
+/* Show only on mobile */
+.mobile-only {
+    display: block !important;
+}
+
+@media (min-width: 769px) {
+    .mobile-only {
+        display: none !important;
+    }
+}
+
+/* Mobile text sizes */
+@media (max-width: 768px) {
+    .mobile-text-sm {
+        font-size: 0.875rem !important;
+    }
+
+    .mobile-text-xs {
+        font-size: 0.75rem !important;
+    }
+
+    .mobile-p-1 {
+        padding: 0.5rem !important;
+    }
+
+    .mobile-p-2 {
+        padding: 1rem !important;
+    }
+
+    .mobile-m-0 {
+        margin: 0 !important;
+    }
+
+    .mobile-mb-1 {
+        margin-bottom: 0.5rem !important;
+    }
+
+    .mobile-full-width {
+        width: 100% !important;
+    }
+}
+
+/* ===================================
+   GRADE ENTRY SPECIFIC MOBILE FIXES
+   =================================== */
+
+@media (max-width: 768px) {
+    /* Sticky header for grade table */
+    #gradeTable thead {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: white;
+    }
+
+    /* Compact grade entry form */
+    .grade-entry-form {
+        padding: 0.5rem !important;
+    }
+
+    /* Term selector */
+    .term-selector {
+        width: 100% !important;
+        margin-bottom: 1rem;
+    }
+
+    /* Class selector */
+    .class-selector {
+        width: 100% !important;
+        margin-bottom: 1rem;
+    }
+
+    /* Save button fixed at bottom on mobile */
+    .grade-save-btn-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        z-index: 100;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .grade-save-btn {
+        width: 100% !important;
+    }
+
+    /* Add padding to page content to account for fixed button */
+    .page-content.has-fixed-button {
+        padding-bottom: 80px !important;
+    }
+
+    /* Attendance column adjustments */
+    .attendance-score {
+        font-size: 0.625rem !important;
+        padding: 0.25rem 0.375rem !important;
+    }
+
+    /* Category averages */
+    .knowledge-ave,
+    .skills-ave,
+    .attitude-ave {
+        font-size: 0.625rem !important;
+        padding: 0.25rem 0.375rem !important;
+    }
+
+    /* Calculated grade */
+    .calculated-grade {
+        font-size: 0.75rem !important;
+        padding: 0.375rem 0.5rem !important;
+    }
+
+    /* Status badge */
+    .status-badge {
+        font-size: 0.625rem !important;
+        padding: 0.25rem 0.375rem !important;
+    }
+}
+
+/* ===================================
+   TOUCH-FRIENDLY IMPROVEMENTS
+   =================================== */
+
+@media (max-width: 768px) {
+    /* Larger touch targets */
+    .btn,
+    .nav-link,
+    .dropdown-item {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Better spacing for touch */
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+
+    /* Checkbox and radio larger */
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Better tap targets for table actions */
+    .table .btn {
+        padding: 0.5rem 0.75rem;
+        margin: 0.125rem;
+    }
+}
+
+/* ===================================
+   PERFORMANCE OPTIMIZATIONS
+   =================================== */
+
+@media (max-width: 768px) {
+    /* Reduce animations on mobile */
+    * {
+        animation-duration: 0.2s !important;
+        transition-duration: 0.2s !important;
+    }
+
+    /* Simplify shadows */
+    .card,
+    .modal-content {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Disable hover effects on touch devices */
+    @media (hover: none) {
+        .btn:hover,
+        .nav-link:hover,
+        .card:hover {
+            transform: none !important;
+        }
+    }
+}

@@ -15,20 +15,23 @@ class GradeEntry extends Model
         'student_id', 'class_id', 'teacher_id', 'term',
         // Knowledge
         'exam_pr', 'exam_md', 'exam_fn', 'quiz_1', 'quiz_2', 'quiz_3', 'quiz_4', 'quiz_5',
+        'exam', // Simplified exam field
         // Skills
         'output_1', 'output_2', 'output_3',
         'classpart_1', 'classpart_2', 'classpart_3',
         'activity_1', 'activity_2', 'activity_3',
         'assignment_1', 'assignment_2', 'assignment_3',
+        'output', 'class_participation', 'activities', // Simplified fields
         // Attitude
         'behavior_1', 'behavior_2', 'behavior_3',
         'attendance_1', 'attendance_2', 'attendance_3',
         'awareness_1', 'awareness_2', 'awareness_3',
+        'behavior', 'awareness', // Simplified fields
         // Computed
         'exam_average', 'quiz_average', 'knowledge_average',
         'output_average', 'classpart_average', 'activity_average', 'assignment_average', 'skills_average',
         'behavior_average', 'attendance_average', 'awareness_average', 'attitude_average',
-        'term_grade', 'remarks'
+        'term_grade', 'final_grade', 'graded_at', 'remarks'
     ];
 
     protected $casts = [

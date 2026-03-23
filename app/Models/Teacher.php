@@ -18,6 +18,7 @@ class Teacher extends Model
         'qualification',
         'connected_school',
         'campus',
+        'school_id',
         'bio',
         'specialization',
         'department',
@@ -35,5 +36,29 @@ class Teacher extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Relationship with School
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class, 'school_id');
+    }
+
+    /**
+     * Scope: Filter by campus
+     */
+    public function scopeByCampus($query, $campus)
+    {
+        return $query->where('campus', $campus);
+    }
+
+    /**
+     * Scope: Filter by school
+     */
+    public function scopeBySchool($query, $schoolId)
+    {
+        return $query->where('school_id', $schoolId);
     }
 }

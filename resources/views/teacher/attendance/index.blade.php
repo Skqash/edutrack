@@ -2,6 +2,20 @@
 
 @section('content')
 
+    @php
+        /** @var \Illuminate\Database\Eloquent\Collection|\App\Models\ClassModel[] $classes */
+
+        // Defensive: Ensure $classes is always a Collection
+        if (!$classes instanceof \Illuminate\Support\Collection) {
+            \Illuminate\Support\Facades\Log::error('Attendance index view: $classes is not a Collection', [
+                'type' => gettype($classes),
+                'value' => $classes,
+                'teacher_id' => Auth::id() ?? 'unknown',
+            ]);
+            $classes = collect();
+        }
+    @endphp
+
     <div class="row mb-4">
         <div class="col-12">
             <h1 class="h3 fw-bold mb-0">Attendance Management</h1>
@@ -15,15 +29,40 @@
         </div>
     @else
         <?php
-        // Get today's attendance for all classes
-        $today = now()->format('Y-m-d');
+        // Determine which term and date to display
+        $today = $today ?? request()->query('date', now()->format('Y-m-d'));
+        $currentTerm = $currentTerm ?? request()->query('term', 'Midterm');
+        if (!in_array($currentTerm, ['Midterm', 'Final'])) {
+            $currentTerm = 'Midterm';
+        }
+        
+        // Get today's attendance for all classes and the selected term
+        $classIds = $classes->pluck('id')->toArray();
+        
         $todayAttendances = \App\Models\Attendance::where('date', $today)
-            ->whereIn('class_id', $classes->pluck('id'))
+            ->where('term', $currentTerm)
+            ->whereIn('class_id', $classIds)
             ->get()
-            ->keyBy(function($attendance) {
+            ->keyBy(function ($attendance) {
                 return $attendance->class_id . '_' . $attendance->student_id;
             });
         ?>
+
+        <div class="row mb-3">
+            <div class="col-auto">
+                <label class="form-label small mb-1">Term</label>
+                <select id="attendanceTermSelect" class="form-select form-select-sm">
+                    <option value="Midterm" {{ $currentTerm === 'Midterm' ? 'selected' : '' }}>Midterm</option>
+                    <option value="Final" {{ $currentTerm === 'Final' ? 'selected' : '' }}>Final</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label small mb-1">Date</label>
+                <input type="date" id="attendanceDateFilter" class="form-control form-control-sm"
+                    value="{{ $today }}" max="{{ now()->format('Y-m-d') }}">
+            </div>
+        </div>
+
         <div class="attendance-classes-container">
             @foreach ($classes as $class)
                 <div class="class-card mb-3 border rounded-lg overflow-hidden"
@@ -68,12 +107,12 @@
                                         @php
                                             $classAttendanceStats = [
                                                 'Present' => 0,
-                                                'Absent' => 0, 
+                                                'Absent' => 0,
                                                 'Late' => 0,
                                                 'Leave' => 0,
-                                                'Unmarked' => 0
+                                                'Unmarked' => 0,
                                             ];
-                                            foreach($class->students as $student) {
+                                            foreach ($class->students as $student) {
                                                 $attendanceKey = $class->id . '_' . $student->id;
                                                 $currentAttendance = $todayAttendances->get($attendanceKey);
                                                 $status = $currentAttendance ? $currentAttendance->status : 'Unmarked';
@@ -82,11 +121,15 @@
                                         @endphp
                                         <div class="d-flex gap-2 align-items-center">
                                             <small class="text-muted">Today's Status:</small>
-                                            <span class="badge bg-success">{{ $classAttendanceStats['Present'] }} Present</span>
-                                            <span class="badge bg-danger">{{ $classAttendanceStats['Absent'] }} Absent</span>
+                                            <span class="badge bg-success">{{ $classAttendanceStats['Present'] }}
+                                                Present</span>
+                                            <span class="badge bg-danger">{{ $classAttendanceStats['Absent'] }}
+                                                Absent</span>
                                             <span class="badge bg-warning">{{ $classAttendanceStats['Late'] }} Late</span>
-                                            <span class="badge bg-primary">{{ $classAttendanceStats['Leave'] }} Excused</span>
-                                            <span class="badge bg-secondary">{{ $classAttendanceStats['Unmarked'] }} Unmarked</span>
+                                            <span class="badge bg-primary">{{ $classAttendanceStats['Leave'] }}
+                                                Excused</span>
+                                            <span class="badge bg-secondary">{{ $classAttendanceStats['Unmarked'] }}
+                                                Unmarked</span>
                                         </div>
                                     </div>
                                     <div style="max-height: 400px; overflow-y: auto;">
@@ -111,22 +154,26 @@
                                                             <div class="d-flex align-items-center gap-2">
                                                                 <div class="badge rounded-circle"
                                                                     style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; background-color: #e9ecef; color: #495057;">
-                                                                    {{ strtoupper(substr($student->user->name ?? 'U', 0, 1)) }}
+                                                                    {{ strtoupper(substr($student->name ?? 'U', 0, 1)) }}
                                                                 </div>
-                                                                <span>{{ $student->user->name ?? 'N/A' }}</span>
+                                                                <span>{{ $student->name ?? 'N/A' }}</span>
                                                             </div>
                                                         </td>
                                                         <td style="text-align: center;">
                                                             @php
                                                                 $attendanceKey = $class->id . '_' . $student->id;
-                                                                $currentAttendance = $todayAttendances->get($attendanceKey);
-                                                                $status = $currentAttendance ? $currentAttendance->status : 'Unmarked';
+                                                                $currentAttendance = $todayAttendances->get(
+                                                                    $attendanceKey,
+                                                                );
+                                                                $status = $currentAttendance
+                                                                    ? $currentAttendance->status
+                                                                    : 'Unmarked';
                                                             @endphp
                                                             <a href="{{ route('teacher.attendance.manage', $class->id) }}"
-                                                                class="btn btn-sm @if($status === 'Present') btn-success @elseif($status === 'Absent') btn-danger @elseif($status === 'Late') btn-warning @elseif($status === 'Leave') btn-primary @else btn-secondary @endif"
+                                                                class="btn btn-sm @if ($status === 'Present') btn-success @elseif($status === 'Absent') btn-danger @elseif($status === 'Late') btn-warning @elseif($status === 'Leave') btn-primary @else btn-secondary @endif"
                                                                 title="Take Attendance - Current: {{ $status }}"
                                                                 style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
-                                                                @if($status === 'Present')
+                                                                @if ($status === 'Present')
                                                                     <i class="fas fa-check"></i> Present
                                                                 @elseif($status === 'Absent')
                                                                     <i class="fas fa-times"></i> Absent
@@ -213,7 +260,7 @@
 
         .btn-sm:hover {
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         /* Status badges */

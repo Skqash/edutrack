@@ -24,7 +24,28 @@ class User extends Authenticatable
      *
      * @var array<int, string>
      */
-    protected $fillable = ['name', 'email', 'phone', 'password', 'role', 'theme', 'grading_scheme', 'grading_weights'];
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'password',
+        'role',
+        'status',
+        'employee_id',
+        'qualification',
+        'specialization',
+        'department',
+        'campus',
+        'campus_status',
+        'campus_approved_at',
+        'campus_approved_by',
+        'connected_school',
+        'bio',
+        'theme',
+        'grading_scheme',
+        'grading_weights',
+        'school_id', // Add school_id
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -45,6 +66,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'grading_weights' => 'array',
+        'campus_approved_at' => 'datetime',
     ];
 
     /**
@@ -75,6 +97,22 @@ class User extends Authenticatable
         return $this->hasMany(SchoolRequest::class);
     }
 
+    /**
+     * Get the admin who approved the campus affiliation
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'campus_approved_by');
+    }
+
+    /**
+     * Get the school this user belongs to
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
+
     public function classes()
     {
         return $this->hasMany(ClassModel::class, 'teacher_id');
@@ -95,5 +133,13 @@ class User extends Authenticatable
     public function gradesPosted()
     {
         return $this->hasMany(Grade::class, 'teacher_id');
+    }
+
+    /**
+     * Get the course access requests made by this teacher
+     */
+    public function courseAccessRequests()
+    {
+        return $this->hasMany(CourseAccessRequest::class, 'teacher_id');
     }
 }

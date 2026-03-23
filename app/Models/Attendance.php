@@ -3,23 +3,25 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Student;
-use App\Models\ClassModel;
 
 class Attendance extends Model
 {
     protected $table = 'attendance';
-    
+
     protected $fillable = [
         'student_id',
         'class_id',
+        'teacher_id',
         'date',
         'status',
-        'notes'
+        'term',
+        'notes',
+        'campus',
+        'school_id',
     ];
 
     protected $casts = [
-        'date' => 'date'
+        'date' => 'date',
     ];
 
     public function student()
@@ -30,5 +32,15 @@ class Attendance extends Model
     public function class()
     {
         return $this->belongsTo(ClassModel::class);
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 }

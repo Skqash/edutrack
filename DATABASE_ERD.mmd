@@ -1,0 +1,181 @@
+erDiagram
+
+    users {
+        int id PK
+        string name
+        string email
+        string role
+        string employee_id FK
+        string qualification
+        string specialization
+        string department
+    }
+
+    schools {
+        int id PK
+        string school_code
+        string school_name
+        string short_name
+        enum campus_type
+        string location
+        string city
+        string province
+    }
+
+    courses {
+        int id PK
+        string program_code
+        string program_name
+        int total_years
+        int department_id FK
+        int program_head_id FK
+        string college
+        string department
+    }
+
+    subjects {
+        int id PK
+        string subject_code
+        string campus_code
+        string subject_name
+        string category
+        string semester
+        int year_level
+        int credit_hours
+    }
+
+    classes {
+        int id PK
+        string class_name
+        int class_level
+        string section
+        enum year
+        string academic_year
+        string semester
+        string school_year
+    }
+
+    students {
+        int id PK
+        int class_id FK
+        string student_id FK
+        string first_name
+        string middle_name
+        string last_name
+        string suffix
+        string email
+    }
+
+    assessment_components {
+        int id PK
+        int class_id FK
+        int teacher_id FK
+        string campus
+        int school_id FK
+        enum category
+        string subcategory
+        string name
+    }
+
+    component_entries {
+        int id PK
+        int student_id FK
+        int class_id FK
+        string campus
+        int school_id FK
+        int component_id FK
+        enum term
+        decimal raw_score
+    }
+
+    ksa_settings {
+        int id PK
+        int class_id FK
+        int teacher_id FK
+        string campus
+        int school_id FK
+        string term
+        decimal knowledge_weight
+        decimal skills_weight
+    }
+
+    attendance {
+        int id PK
+        int student_id FK
+        int class_id FK
+        int teacher_id FK
+        date date
+        enum status
+        enum term
+        text notes
+    }
+
+    grades {
+        int id PK
+        int student_id FK
+        int subject_id FK
+        int class_id FK
+        enum term
+        decimal q1
+        decimal q2
+        decimal q3
+    }
+
+    course_access_requests {
+        int id PK
+        int teacher_id FK
+        string campus
+        int school_id FK
+        int course_id FK
+        enum status
+        text reason
+        text admin_note
+    }
+
+    notifications {
+        int id PK
+        int user_id FK
+        string campus
+        int school_id FK
+        string title
+        text message
+        enum type
+        string icon
+    }
+
+    assessment_components ||--|| classes : "class_id"
+    assessment_components ||--|| users : "teacher_id"
+    assessment_components ||--o{ schools : "school_id"
+    attendance ||--|| students : "student_id"
+    attendance ||--|| classes : "class_id"
+    attendance ||--o{ users : "teacher_id"
+    attendance ||--o{ schools : "school_id"
+    classes ||--o{ users : "teacher_id"
+    classes ||--o{ subjects : "subject_id"
+    classes ||--o{ courses : "course_id"
+    classes ||--o{ schools : "school_id"
+    component_entries ||--|| students : "student_id"
+    component_entries ||--|| classes : "class_id"
+    component_entries ||--o{ schools : "school_id"
+    component_entries ||--|| assessment_components : "component_id"
+    course_access_requests ||--|| users : "teacher_id"
+    course_access_requests ||--o{ schools : "school_id"
+    course_access_requests ||--|| courses : "course_id"
+    courses ||--o{ schools : "school_id"
+    grades ||--|| students : "student_id"
+    grades ||--o{ subjects : "subject_id"
+    grades ||--o{ classes : "class_id"
+    grades ||--o{ users : "teacher_id"
+    grades ||--o{ schools : "school_id"
+    ksa_settings ||--|| classes : "class_id"
+    ksa_settings ||--|| users : "teacher_id"
+    ksa_settings ||--o{ schools : "school_id"
+    notifications ||--|| users : "user_id"
+    notifications ||--o{ schools : "school_id"
+    students ||--o{ classes : "class_id"
+    students ||--|| students : "student_id"
+    students ||--o{ courses : "course_id"
+    students ||--o{ schools : "school_id"
+    subjects ||--o{ courses : "program_id"
+    subjects ||--o{ schools : "school_id"
+    users ||--o{ schools : "school_id"

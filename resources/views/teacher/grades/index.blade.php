@@ -1,6 +1,10 @@
 @extends('layouts.teacher')
 
 @section('content')
+    @php
+        /** @var \Illuminate\Pagination\LengthAwarePaginator|\App\Models\ClassModel[] $classes */
+    @endphp
+
     <style>
         /* Reuse styling from My Classes page for a consistent look */
         :root {
@@ -338,10 +342,10 @@
                         placeholder="Search classes by name or course...">
                 </div>
                 <select class="form-select" id="filterCourse" style="min-width: 200px;">
-                    <option value="">All Courses</option>
+                    <option value="">All Programs</option>
                     @if (isset($courses))
                         @foreach ($courses as $course)
-                            <option value="{{ $course->id }}">{{ $course->course_name }}</option>
+                            <option value="{{ $course->id }}">{{ $course->program_name }}</option>
                         @endforeach
                     @endif
                 </select>
@@ -366,7 +370,7 @@
         <div class="classes-grid">
             @forelse($classes as $class)
                 <div class="class-card fade-in" data-class-name="{{ $class->class_name }}"
-                    data-course-id="{{ $class->course->id ?? '' }}" data-course="{{ $class->course->course_name ?? '' }}"
+                    data-course-id="{{ $class->program->id ?? '' }}" data-course="{{ $class->program->program_name ?? '' }}"
                     data-year="{{ $class->year ?? '' }}" data-section="{{ $class->section ?? '' }}">
                     <div class="class-header">
                         <div class="class-title">
@@ -383,7 +387,7 @@
                         <div class="stat-row">
                             <div class="stat-item">
                                 <div class="stat-value">{{ $class->students->count() }}</div>
-                                <div class="stat-label">Students</div>
+                                <div class="stat-label">Total Students</div>
                             </div>
                             <div class="stat-item">
                                 <div class="stat-value">{{ $class->capacity ?? 0 }}</div>
@@ -395,11 +399,11 @@
                             </div>
                         </div>
 
-                        @if ($class->course)
+                        @if ($class->program)
                             <div class="mb-3">
-                                <small class="text-muted d-block mb-1">Course</small>
-                                <div class="fw-semibold">{{ $class->course->course_name }}</div>
-                                <small class="text-muted">{{ $class->course->course_code ?? 'N/A' }}</small>
+                                <small class="text-muted d-block mb-1">Program</small>
+                                <div class="fw-semibold">{{ $class->program->program_name }}</div>
+                                <small class="text-muted">{{ $class->program->program_code ?? 'N/A' }}</small>
                             </div>
                         @endif
 
@@ -425,12 +429,12 @@
                     </div>
 
                     <div class="class-footer">
-                        <a href="{{ route('teacher.grades.entry', $class->id) }}?term=midterm"
+                        <a href="{{ route('teacher.grades.content', $class->id) }}?term=midterm"
                             class="btn-modern btn-primary-modern">
                             <i class="fas fa-edit"></i>
                             Midterm
                         </a>
-                        <a href="{{ route('teacher.grades.entry', $class->id) }}?term=final"
+                        <a href="{{ route('teacher.grades.content', $class->id) }}?term=final"
                             class="btn-modern btn-success-modern">
                             <i class="fas fa-flag-checkered"></i>
                             Final
@@ -440,8 +444,8 @@
                             <i class="fas fa-chart-bar"></i>
                             Summary
                         </a>
-                        <a href="{{ route('teacher.assessment.configure', $class->id) }}"
-                            class="btn-modern btn-outline-modern" style="width: 100%;">
+                        <a href="{{ route('teacher.grades.content', $class->id) }}" class="btn-modern btn-outline-modern"
+                            style="width: 100%;">
                             <i class="fas fa-sliders-h"></i>
                             Configure Assessment
                         </a>

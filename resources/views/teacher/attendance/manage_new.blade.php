@@ -99,11 +99,11 @@
                                             <div class="d-flex align-items-center gap-2">
                                                 <div class="badge rounded-circle"
                                                     style="width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-weight: bold; background-color: #e9ecef; color: #495057; flex-shrink: 0;">
-                                                    {{ strtoupper(substr($student->user->name ?? 'U', 0, 1)) }}
+                                                    {{ strtoupper(substr($student->name ?? 'U', 0, 1)) }}
                                                 </div>
                                                 <div>
                                                     <h6 class="mb-0" style="color: #212529; font-weight: 600;">
-                                                        {{ $student->user->name ?? 'N/A' }}</h6>
+                                                        {{ $student->name ?? 'N/A' }}</h6>
                                                 </div>
                                             </div>
                                         </div>

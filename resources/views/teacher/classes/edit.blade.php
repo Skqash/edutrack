@@ -65,17 +65,15 @@
                                 <label for="course_id" class="form-label fw-semibold text-dark">
                                     <i class="fas fa-book text-primary me-2"></i>Course
                                 </label>
-                                <select id="course_id" name="course_id"
-                                    class="form-select form-select-lg @error('course_id') is-invalid @enderror" required>
-                                    <option value="">-- Select Course --</option>
-                                    @forelse ($courses as $course)
-                                        <option value="{{ $course->id }}" @selected(old('course_id', $class->course_id) == $course->id)>
-                                            {{ $course->course_name }}
-                                        </option>
-                                    @empty
-                                        <option disabled>No courses available</option>
-                                    @endforelse
-                                </select>
+                                <x-searchable-dropdown
+                                    name="course_id"
+                                    id="course_id"
+                                    placeholder="Search and select course..."
+                                    api-url="{{ route('api.courses') }}"
+                                    :selected="old('course_id', $class->course_id)"
+                                    required="true"
+                                    class="form-select form-select-lg @error('course_id') is-invalid @enderror"
+                                />
                                 @error('course_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -91,15 +89,20 @@
                                     <label for="year" class="form-label fw-semibold text-dark">
                                         <i class="fas fa-graduation-cap text-primary me-2"></i>Grade Year
                                     </label>
-                                    <select id="year" name="year"
-                                        class="form-select form-select-lg @error('year') is-invalid @enderror" required>
-                                        <option value="">-- Select Year --</option>
-                                        @for ($i = 1; $i <= 4; $i++)
-                                            <option value="{{ $i }}" @selected(old('year', $class->year) == $i)>
-                                                Year {{ $i }}
-                                            </option>
-                                        @endfor
-                                    </select>
+                                    <x-searchable-dropdown
+                                        name="year"
+                                        id="year"
+                                        placeholder="Select year level..."
+                                        :options="[
+                                            ['id' => '1', 'name' => 'Year 1', 'description' => 'First year students'],
+                                            ['id' => '2', 'name' => 'Year 2', 'description' => 'Second year students'],
+                                            ['id' => '3', 'name' => 'Year 3', 'description' => 'Third year students'],
+                                            ['id' => '4', 'name' => 'Year 4', 'description' => 'Fourth year students']
+                                        ]"
+                                        :selected="old('year', $class->year)"
+                                        required="true"
+                                        class="form-select form-select-lg @error('year') is-invalid @enderror"
+                                    />
                                     @error('year')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
@@ -109,39 +112,39 @@
                                     <label for="section" class="form-label fw-semibold text-dark">
                                         <i class="fas fa-layer-group text-primary me-2"></i>Section
                                     </label>
-                                    <select id="section" name="section"
-                                        class="form-select form-select-lg @error('section') is-invalid @enderror" required>
-                                        <option value="">-- Select Section --</option>
-                                        @foreach (['A', 'B', 'C', 'D', 'E'] as $sec)
-                                            <option value="{{ $sec }}" @selected(old('section', $class->section) == $sec)>
-                                                Section {{ $sec }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-searchable-dropdown
+                                        name="section"
+                                        id="section"
+                                        placeholder="Select section..."
+                                        :options="[
+                                            ['id' => 'A', 'name' => 'Section A', 'description' => 'Section A'],
+                                            ['id' => 'B', 'name' => 'Section B', 'description' => 'Section B'],
+                                            ['id' => 'C', 'name' => 'Section C', 'description' => 'Section C'],
+                                            ['id' => 'D', 'name' => 'Section D', 'description' => 'Section D'],
+                                            ['id' => 'E', 'name' => 'Section E', 'description' => 'Section E']
+                                        ]"
+                                        :selected="old('section', $class->section)"
+                                        required="true"
+                                        class="form-select form-select-lg @error('section') is-invalid @enderror"
+                                    />
                                     @error('section')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
-                            <!-- Capacity -->
+                            <!-- Total Students (Derived) -->
                             <div class="mb-4">
-                                <label for="capacity" class="form-label fw-semibold text-dark">
-                                    <i class="fas fa-users text-primary me-2"></i>Class Capacity
+                                <label class="form-label fw-semibold text-dark">
+                                    <i class="fas fa-users text-primary me-2"></i>Total Students
                                 </label>
                                 <div class="input-group input-group-lg">
-                                    <input type="number" id="capacity" name="capacity"
-                                        class="form-control @error('capacity') is-invalid @enderror"
-                                        value="{{ old('capacity', $class->capacity) }}" min="1" max="100"
-                                        placeholder="50" required>
+                                    <input type="number" class="form-control" value="{{ $class->students->count() }}" readonly>
                                     <span class="input-group-text bg-light text-muted">students</span>
                                 </div>
-                                @error('capacity')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
                                 <small class="text-muted d-block mt-2">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Currently {{ $class->students->count() }} student(s) enrolled. Maximum capacity: 100.
+                                    Class total students is derived from the current enrolled student count.
                                 </small>
                             </div>
 
@@ -298,14 +301,18 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <h4 class="mb-1 text-dark fw-bold">{{ $class->students->count() }}</h4>
-                                <small class="text-muted">of {{ $class->capacity }} capacity</small>
+                                <small class="text-muted">of {{ $class->total_students }} total</small>
                             </div>
                             <div class="text-end">
                                 <div class="progress" style="width: 80px; height: 40px;">
+                                    @php
+                                        $totalStudents = $class->total_students > 0 ? $class->total_students : 1;
+                                        $progressPct = $class->total_students > 0 ? ($class->students->count() / $class->total_students) * 100 : 0;
+                                    @endphp
                                     <div class="progress-bar bg-warning" role="progressbar"
-                                        style="width: {{ ($class->students->count() / $class->capacity) * 100 }}%"
+                                        style="width: {{ $progressPct }}%"
                                         aria-valuenow="{{ $class->students->count() }}" aria-valuemin="0"
-                                        aria-valuemax="{{ $class->capacity }}"></div>
+                                        aria-valuemax="{{ $totalStudents }}"></div>
                                 </div>
                             </div>
                         </div>

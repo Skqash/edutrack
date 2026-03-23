@@ -458,10 +458,10 @@
                     placeholder="Search classes by name or course...">
             </div>
             <select class="form-select" id="filterCourse" style="min-width: 200px;">
-                <option value="">All Courses</option>
-                @if (isset($courses))
-                    @foreach ($courses as $course)
-                        <option value="{{ $course->id }}">{{ $course->course_name }}</option>
+                <option value="">All Programs</option>
+                @if (isset($programs))
+                    @foreach ($programs as $program)
+                        <option value="{{ $program->id }}">{{ $program->program_name }}</option>
                     @endforeach
                 @endif
             </select>
@@ -486,8 +486,8 @@
     <!-- Classes Grid -->
     <div class="classes-grid">
         @forelse($classes as $class)
-            <div class="class-card fade-in" data-class-name="{{ $class->class_name }}"
-                data-course-id="{{ $class->course->id ?? '' }}" data-course="{{ $class->course->course_name ?? '' }}"
+            <div class="class-card fade-in" data-class-name="{{ $class->class_name ?? '' }}"
+                data-course-id="{{ $class->program->id ?? '' }}" data-course="{{ $class->program->program_name ?? '' }}"
                 data-year="{{ $class->year ?? '' }}" data-section="{{ $class->section ?? '' }}">
                 <div class="class-header">
                     <div class="class-title">
@@ -505,45 +505,25 @@
                     <div class="stat-row">
                         <div class="stat-item">
                             <div class="stat-value">{{ $class->students->count() }}</div>
-                            <div class="stat-label">Students</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">{{ $class->capacity ?? 0 }}</div>
-                            <div class="stat-label">Capacity</div>
+                            <div class="stat-label">Enrolled Students</div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-value">{{ $class->year ?? 'N/A' }}</div>
-                            <div class="stat-label">Year</div>
+                            <div class="stat-label">Academic Year</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ $class->semester ?? 'N/A' }}</div>
+                            <div class="stat-label">Semester</div>
                         </div>
                     </div>
 
-                    @if ($class->course)
+                    @if ($class->program)
                         <div class="mb-3">
-                            <small class="text-muted d-block mb-1">Course</small>
-                            <div class="fw-semibold">{{ $class->course->course_name }}</div>
-                            <small class="text-muted">{{ $class->course->course_code ?? 'N/A' }}</small>
+                            <small class="text-muted d-block mb-1">Program</small>
+                            <div class="fw-semibold">{{ $class->program->program_name }}</div>
+                            <small class="text-muted">{{ $class->program->program_code ?? 'N/A' }}</small>
                         </div>
                     @endif
-
-                    <div class="progress-section">
-                        <div class="progress-label">
-                            <span>Enrollment</span>
-                            <span>{{ $class->students->count() }}/{{ $class->capacity ?? 0 }}</span>
-                        </div>
-                        <div class="progress-bar-custom">
-                            @php
-                                $percentage = ($class->students->count() / ($class->capacity ?? 1)) * 100;
-                                $progressColor =
-                                    $percentage >= 90
-                                        ? 'var(--danger-color)'
-                                        : ($percentage >= 75
-                                            ? 'var(--warning-color)'
-                                            : 'var(--success-color)');
-                            @endphp
-                            <div class="progress-fill"
-                                style="width: {{ $percentage }}%; background: {{ $progressColor }};"></div>
-                        </div>
-                    </div>
                 </div>
 
                 <div class="class-footer">
@@ -593,13 +573,6 @@
         @endforelse
     </div>
 
-    <!-- Pagination -->
-    @if ($classes->hasPages())
-        <div class="d-flex justify-content-center mt-4">
-            {{ $classes->links() }}
-        </div>
-    @endif
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Search functionality
@@ -617,7 +590,7 @@
 
                 classCards.forEach(card => {
                     const className = card.dataset.className.toLowerCase();
-                    const courseName = card.dataset.course.toLowerCase();
+                    const courseName = card.dataset.courseName.toLowerCase();
                     const courseId = String(card.dataset.courseId || '');
                     const year = card.dataset.year;
                     const section = card.dataset.section.toLowerCase();

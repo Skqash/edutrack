@@ -109,7 +109,7 @@
         <div class="col-lg-8">
             <div class="card form-card">
                 <div class="card-body p-4">
-                    <form action="{{ route('admin.profile.update') }}" method="PUT">
+                    <form action="{{ route('admin.profile.update') }}" method="POST">
                         @csrf
                         @method('PUT')
 
@@ -163,7 +163,7 @@
                                     <label for="department" class="form-label">Department</label>
                                     <input type="text" class="form-control @error('department') is-invalid @enderror"
                                         id="department" name="department"
-                                        value="{{ old('department', $admin->department ?? '') }}"
+                                        value="{{ old('department', $user->department ?? ($admin->department ?? '')) }}"
                                         placeholder="e.g., Academic Affairs, Administration">
                                     @error('department')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -174,7 +174,7 @@
                             <div class="mb-3">
                                 <label for="bio" class="form-label">Biography</label>
                                 <textarea class="form-control @error('bio') is-invalid @enderror" id="bio" name="bio" rows="4"
-                                    placeholder="Tell about your role and experience...">{{ old('bio', $admin->bio ?? '') }}</textarea>
+                                    placeholder="Tell about your role and experience...">{{ old('bio', $user->bio ?? ($admin->bio ?? '')) }}</textarea>
                                 <small class="text-muted d-block mt-1">Maximum 500 characters</small>
                                 @error('bio')
                                     <div class="invalid-feedback">{{ $message }}</div>

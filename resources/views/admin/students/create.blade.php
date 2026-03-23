@@ -18,13 +18,47 @@
                     <form action="{{ route('admin.students.store') }}" method="POST">
                         @csrf
 
-                        <div class="form-group mb-3">
-                            <label for="name" class="form-label"><i class="fas fa-user"></i> Full Name</label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" 
-                                   name="name" placeholder="Enter student full name" value="{{ old('name') }}" required>
-                            @error('name')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="first_name" class="form-label"><i class="fas fa-user"></i> First Name</label>
+                                    <input type="text" class="form-control @error('first_name') is-invalid @enderror" id="first_name" 
+                                           name="first_name" placeholder="Enter first name" value="{{ old('first_name') }}" required>
+                                    @error('first_name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group mb-3">
+                                    <label for="middle_name" class="form-label"><i class="fas fa-user"></i> Middle Name (Optional)</label>
+                                    <input type="text" class="form-control @error('middle_name') is-invalid @enderror" id="middle_name" 
+                                           name="middle_name" placeholder="Enter middle name" value="{{ old('middle_name') }}">
+                                    @error('middle_name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="last_name" class="form-label"><i class="fas fa-user"></i> Last Name</label>
+                                    <input type="text" class="form-control @error('last_name') is-invalid @enderror" id="last_name" 
+                                           name="last_name" placeholder="Enter last name" value="{{ old('last_name') }}" required>
+                                    @error('last_name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <div class="form-group mb-3">
+                                    <label for="suffix" class="form-label"><i class="fas fa-tag"></i> Suffix</label>
+                                    <input type="text" class="form-control @error('suffix') is-invalid @enderror" id="suffix" 
+                                           name="suffix" placeholder="Jr." value="{{ old('suffix') }}">
+                                    @error('suffix')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-group mb-3">
@@ -52,19 +86,68 @@
                         </div>
 
                         <div class="form-group mb-3">
-                            <label for="class_id" class="form-label"><i class="fas fa-chalkboard"></i> Assign to Class (Optional)</label>
-                            <select class="form-select @error('class_id') is-invalid @enderror" id="class_id" name="class_id">
-                                <option value="">Select a class...</option>
-                                @foreach(\App\Models\ClassModel::where('status', 'Active')->get() as $class)
-                                    <option value="{{ $class->id }}" {{ old('class_id') == $class->id ? 'selected' : '' }}>
-                                        {{ $class->class_name }} - Level {{ $class->class_level }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('class_id')
+                            <label for="student_id" class="form-label"><i class="fas fa-id-badge"></i> Student ID</label>
+                            <input type="text" class="form-control @error('student_id') is-invalid @enderror" id="student_id" 
+                                   name="student_id" placeholder="e.g., 2024-0001-V" value="{{ old('student_id') }}" required>
+                            @error('student_id')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        <div class="form-group mb-3">
+                            <label for="course_id" class="form-label"><i class="fas fa-graduation-cap"></i> Course/Program</label>
+                            <select class="form-select @error('course_id') is-invalid @enderror" id="course_id" name="course_id" required>
+                                <option value="">Select a course...</option>
+                                @foreach($courses as $course)
+                                    <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
+                                        {{ $course->program_name }} ({{ $course->program_code }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('course_id')
+                                <span class="invalid-feedback">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="year" class="form-label"><i class="fas fa-calendar"></i> Year Level</label>
+                                    <select class="form-select @error('year') is-invalid @enderror" id="year" name="year" required>
+                                        <option value="">Select year...</option>
+                                        <option value="1" {{ old('year') == '1' ? 'selected' : '' }}>1st Year</option>
+                                        <option value="2" {{ old('year') == '2' ? 'selected' : '' }}>2nd Year</option>
+                                        <option value="3" {{ old('year') == '3' ? 'selected' : '' }}>3rd Year</option>
+                                        <option value="4" {{ old('year') == '4' ? 'selected' : '' }}>4th Year</option>
+                                    </select>
+                                    @error('year')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="section" class="form-label"><i class="fas fa-users"></i> Section</label>
+                                    <select class="form-select @error('section') is-invalid @enderror" id="section" name="section" required>
+                                        <option value="">Select section...</option>
+                                        <option value="A" {{ old('section') == 'A' ? 'selected' : '' }}>Section A</option>
+                                        <option value="B" {{ old('section') == 'B' ? 'selected' : '' }}>Section B</option>
+                                        <option value="C" {{ old('section') == 'C' ? 'selected' : '' }}>Section C</option>
+                                        <option value="D" {{ old('section') == 'D' ? 'selected' : '' }}>Section D</option>
+                                        <option value="E" {{ old('section') == 'E' ? 'selected' : '' }}>Section E</option>
+                                    </select>
+                                    @error('section')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($adminCampus ?? null)
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> This student will be assigned to <strong>{{ $adminCampus }}</strong> campus.
+                        </div>
+                        @endif
 
                         <div class="form-group">
                             <button type="submit" class="btn btn-gradient-primary">
@@ -85,10 +168,13 @@
                     <h5 class="card-title"><i class="fas fa-info-circle"></i> Instructions</h5>
                     <ul class="small">
                         <li>Fill all required fields (*)</li>
+                        <li>Enter first name and last name (required)</li>
+                        <li>Middle name and suffix are optional</li>
+                        <li>Student ID format: YYYY-XXXX-C (Year-Number-Campus)</li>
                         <li>Email must be unique</li>
                         <li>Password must be at least 6 characters</li>
-                        <li>Class assignment is optional and can be done later</li>
-                        <li>Student will receive credentials via email</li>
+                        <li>Select appropriate course and year level</li>
+                        <li>Student will be assigned to your campus automatically</li>
                     </ul>
                 </div>
             </div>

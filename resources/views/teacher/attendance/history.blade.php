@@ -29,14 +29,15 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Student</label>
-                    <select name="student_id" class="form-select">
-                        <option value="">All Students</option>
-                        @foreach ($students as $s)
-                            <option value="{{ $s->id }}"
-                                {{ isset($studentId) && $studentId == $s->id ? 'selected' : '' }}>
-                                {{ $s->user->name ?? $s->name }}</option>
-                        @endforeach
-                    </select>
+                    <x-searchable-dropdown
+                        name="student_id"
+                        id="student_id"
+                        placeholder="All Students"
+                        api-url="{{ route('api.students') }}"
+                        :selected="$studentId ?? ''"
+                        :clearable="true"
+                        class="form-select"
+                    />
                 </div>
                 <div class="col-md-2 text-end">
                     <button class="btn btn-primary">Search</button>
@@ -61,7 +62,7 @@
                         @forelse($attendances as $att)
                             <tr>
                                 <td>{{ $att->date }}</td>
-                                <td>{{ optional($att->student->user)->name ?? ($att->student->name ?? 'N/A') }}</td>
+                                <td>{{ $att->student->name ?? 'N/A' }}</td>
                                 <td>
                                     <span
                                         class="badge bg-{{ $att->status === 'Present' ? 'success' : ($att->status === 'Absent' ? 'danger' : ($att->status === 'Late' ? 'warning' : 'secondary')) }}">

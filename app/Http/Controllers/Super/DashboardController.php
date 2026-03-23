@@ -30,7 +30,7 @@ class DashboardController extends Controller
         try {
             $totalAdmins = User::where('role', 'admin')->count();
             $totalTeachers = User::where('role', 'teacher')->count();
-            $totalStudents = Student::with('user')->count();
+            $totalStudents = Student::count();
             $totalUsers = User::count();
 
             $totalCourses = Course::count();
@@ -359,7 +359,7 @@ class DashboardController extends Controller
         try {
             $data = $request->validate([
                 'course_code' => 'required|unique:courses',
-                'course_name' => 'required|string',
+                'program_name' => 'required|string',
                 'description' => 'nullable|string',
                 'instructor_id' => 'nullable|exists:users,id',
                 'credit_hours' => 'nullable|integer',
@@ -399,7 +399,7 @@ class DashboardController extends Controller
             $course = Course::findOrFail($id);
             $data = $request->validate([
                 'course_code' => "required|unique:courses,course_code,{$id}",
-                'course_name' => 'required|string',
+                'program_name' => 'required|string',
                 'description' => 'nullable|string',
                 'instructor_id' => 'nullable|exists:users,id',
                 'credit_hours' => 'nullable|integer',

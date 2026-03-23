@@ -149,6 +149,19 @@
             </div>
         </div>
 
+        <div class="d-flex justify-content-start mb-3 gap-2">
+            <a href="{{ route('admin.school-requests.index') }}"
+                class="btn btn-sm btn-outline-light {{ empty($type) ? 'active' : '' }}">All Requests</a>
+            <a href="{{ route('admin.school-requests.index', ['type' => 'school']) }}"
+                class="btn btn-sm btn-outline-light {{ $type === 'school' ? 'active' : '' }}">School</a>
+            <a href="{{ route('admin.school-requests.index', ['type' => 'subject']) }}"
+                class="btn btn-sm btn-outline-light {{ $type === 'subject' ? 'active' : '' }}">Subject</a>
+            <a href="{{ route('admin.course-requests.index') }}"
+                class="btn btn-sm btn-outline-light {{ $type === 'course' ? 'active' : '' }}">Course</a>
+            <a href="{{ route('admin.school-requests.index', ['type' => 'class']) }}"
+                class="btn btn-sm btn-outline-light {{ $type === 'class' ? 'active' : '' }}">Class</a>
+        </div>
+
         <div class="card card-modern">
             <div class="card-body">
                 @if ($requests->isEmpty())
@@ -163,7 +176,8 @@
                             <thead>
                                 <tr>
                                     <th><i class="fas fa-user me-2"></i>Teacher</th>
-                                    <th><i class="fas fa-school me-2"></i>School</th>
+                                    <th><i class="fas fa-list me-2"></i>Request Type</th>
+                                    <th><i class="fas fa-school me-2"></i>Target</th>
                                     <th><i class="fas fa-info-circle me-2"></i>Status</th>
                                     <th><i class="fas fa-calendar me-2"></i>Submitted</th>
                                     <th class="text-end"><i class="fas fa-cog me-2"></i>Actions</th>
@@ -179,10 +193,16 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="fw-semibold">{{ $request->school_name }}</span>
+                                            <span
+                                                class="fw-semibold">{{ ucfirst($request->request_type ?? 'school') }}</span>
                                         </td>
                                         <td>
-                                            <span class="badge badge-modern bg-{{ $request->status === 'approved' ? 'success' : ($request->status === 'rejected' ? 'danger' : 'secondary') }}">
+                                            <span
+                                                class="fw-semibold">{{ $request->related_name ?? $request->school_name }}</span>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge badge-modern bg-{{ $request->status === 'approved' ? 'success' : ($request->status === 'rejected' ? 'danger' : 'secondary') }}">
                                                 {{ ucfirst($request->status) }}
                                             </span>
                                         </td>
@@ -201,7 +221,7 @@
                         </table>
                     </div>
 
-                    @if($requests->hasPages())
+                    @if ($requests->hasPages())
                         <div class="d-flex justify-content-center mt-4">
                             {{ $requests->links() }}
                         </div>

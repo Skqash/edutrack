@@ -1,6 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        /** @var \Illuminate\Database\Eloquent\Collection $classesWithStudents */
+        /** @var \Illuminate\Database\Eloquent\Collection $classes */
+    @endphp
     <!-- Dashboard Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -303,7 +307,8 @@
                     type: 'line',
                     data: {
                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov',
-                            'Dec'],
+                            'Dec'
+                        ],
                         datasets: [{
                             label: 'Student Enrollment',
                             data: [850, 920, 980, 1050, 1120, 1150, 1180, 1220, 1250, 1280, 1285, 1285],

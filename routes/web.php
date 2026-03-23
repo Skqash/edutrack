@@ -3,6 +3,9 @@
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OptimizedCourseController;
+use App\Http\Controllers\Admin\OptimizedDashboardController;
+use App\Http\Controllers\Admin\OptimizedTeacherController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\TeacherAssignmentController;
@@ -13,17 +16,27 @@ use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
-use App\Http\Controllers\SchoolRequestController;
 use App\Http\Controllers\Super\DashboardController as SuperDashboardController;
 use Illuminate\Support\Facades\Route;
 
 /* -------- ROOT REDIRECT -------- */
 Route::get('/', function () {
-    if (auth('super')->check()) {
-        return redirect()->route('super.dashboard');
-    }
     if (auth()->check()) {
-        return redirect()->route('admin.dashboard');
+        $user = auth()->user();
+
+        if (in_array($user->role, ['super', 'superadmin'])) {
+            return redirect()->route('super.dashboard');
+        }
+
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->role === 'teacher') {
+            return redirect()->route('teacher.dashboard');
+        }
+
+        return redirect()->route('student.dashboard');
     }
 
     return redirect()->route('login');
@@ -125,11 +138,19 @@ Route::middleware(['role:super'])->prefix('super')->name('super.')->group(functi
 
 /* -------- ADMIN (ADMIN + SUPER CAN ACCESS) -------- */
 Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Optimized Dashboard
+    Route::get('/dashboard', [OptimizedDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/filtered-data', [OptimizedDashboardController::class, 'getFilteredData'])->name('dashboard.filtered-data');
+    Route::get('/dashboard/system-health', [OptimizedDashboardController::class, 'getSystemHealth'])->name('dashboard.system-health');
+    Route::get('/dashboard/export', [OptimizedDashboardController::class, 'exportData'])->name('dashboard.export');
 
-    // Courses Routes
-    Route::resource('courses', CourseController::class);
-    Route::get('/courses/{course}/subjects', [CourseController::class, 'manageSubjects'])->name('courses.manageSubjects');
+    // Optimized Courses Routes
+    Route::resource('courses', OptimizedCourseController::class);
+    Route::get('courses/{course}/subjects', [OptimizedCourseController::class, 'manageSubjects'])->name('courses.manageSubjects');
+    Route::post('/courses/bulk-action', [OptimizedCourseController::class, 'bulkAction'])->name('courses.bulk-action');
+    Route::get('/courses/export', [OptimizedCourseController::class, 'export'])->name('courses.export');
+    Route::get('/api/courses/by-department', [OptimizedCourseController::class, 'getCoursesByDepartment'])->name('courses.by-department');
+    Route::get('/api/courses/search', [OptimizedCourseController::class, 'searchCourses'])->name('courses.search');
 
     // Subjects Routes
     Route::resource('subjects', SubjectController::class);
@@ -139,15 +160,32 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('classes', ClassController::class);
     Route::post('/classes/get-students', [ClassController::class, 'getStudents'])->name('classes.get-students');
     Route::post('/classes/assign-students', [ClassController::class, 'assignStudentsToClass'])->name('classes.assign-students');
+    Route::post('/classes/{class}/add-student-manually', [ClassController::class, 'addStudentManually'])->name('classes.add-student-manually');
+    Route::delete('/classes/{class}/remove-student', [ClassController::class, 'removeStudentFromClass'])->name('classes.remove-student');
+    Route::post('/classes/{class}/import-excel', [ClassController::class, 'importStudentsExcel'])->name('classes.import-excel');
 
     // Students Routes
     Route::resource('students', StudentController::class);
 
-    // Teachers Routes
-    Route::resource('teachers', TeacherController::class);
-    Route::get('teachers/{teacher}/subjects', [TeacherController::class, 'subjects'])->name('teachers.subjects');
-    Route::post('teachers/{teacher}/assign-subjects', [TeacherController::class, 'assignSubjects'])->name('teachers.assign-subjects');
-    Route::delete('teachers/{teacher}/subjects/{subject}', [TeacherController::class, 'removeSubject'])->name('teachers.remove-subject');
+    // Optimized Teachers Routes
+    Route::resource('teachers', OptimizedTeacherController::class);
+    Route::get('teachers/{teacher}/subjects', [OptimizedTeacherController::class, 'subjects'])->name('teachers.subjects');
+    Route::post('teachers/{teacher}/assign-subjects', [OptimizedTeacherController::class, 'assignSubjects'])->name('teachers.assign-subjects');
+    Route::delete('teachers/{teacher}/subjects/{subject}', [OptimizedTeacherController::class, 'removeSubject'])->name('teachers.remove-subject');
+    Route::post('/teachers/bulk-action', [OptimizedTeacherController::class, 'bulkAction'])->name('teachers.bulk-action');
+    Route::get('/teachers/export', [OptimizedTeacherController::class, 'export'])->name('teachers.export');
+    Route::post('/teachers/import', [OptimizedTeacherController::class, 'import'])->name('teachers.import');
+    
+    // Campus Approval Routes (Optimized)
+    Route::get('/campus-approvals', [OptimizedTeacherController::class, 'campusApprovals'])->name('teachers.campus-approvals');
+    Route::post('/teachers/{teacher}/approve-campus', [OptimizedTeacherController::class, 'approveCampus'])->name('teachers.approve-campus');
+    Route::post('/teachers/{teacher}/reject-campus', [OptimizedTeacherController::class, 'rejectCampus'])->name('teachers.reject-campus');
+    Route::post('/teachers/{teacher}/revoke-campus', [OptimizedTeacherController::class, 'revokeCampus'])->name('teachers.revoke-campus');
+
+    // Course Access Request Routes (Optimized)
+    Route::get('/course-access-requests', [OptimizedTeacherController::class, 'courseAccessRequests'])->name('teachers.course-access-requests');
+    Route::post('/course-access-requests/{request}/approve', [OptimizedTeacherController::class, 'approveCourseAccess'])->name('teachers.approve-course-access');
+    Route::post('/course-access-requests/{request}/reject', [OptimizedTeacherController::class, 'rejectCourseAccess'])->name('teachers.reject-course-access');
 
     // Teacher Assignments Routes
     Route::resource('teacher-assignments', TeacherAssignmentController::class);
@@ -179,10 +217,26 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
 /* -------- TEACHER (TEACHER + SUPER CAN ACCESS) -------- */
 Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\TeacherController::class, 'dashboard'])->name('dashboard');
+    
+    // Profile Management
+    Route::get('/profile', [\App\Http\Controllers\TeacherController::class, 'showProfile'])->name('profile.show');
+    Route::get('/profile/edit', [\App\Http\Controllers\TeacherController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/profile', [\App\Http\Controllers\TeacherController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/profile/change-password', [\App\Http\Controllers\TeacherController::class, 'showChangePassword'])->name('profile.change-password');
+    Route::put('/profile/change-password', [\App\Http\Controllers\TeacherController::class, 'updatePassword'])->name('profile.update-password');
+    
+    // Settings Management
+    Route::get('/settings', [\App\Http\Controllers\TeacherController::class, 'showSettings'])->name('settings.index');
+    Route::put('/settings', [\App\Http\Controllers\TeacherController::class, 'updateSettings'])->name('settings.update');
+    
+    // Campus Management
+    Route::post('/request/campus-change', [\App\Http\Controllers\TeacherController::class, 'requestCampusChange'])->name('request.campus-change');
+    
     Route::get('/classes', [\App\Http\Controllers\TeacherController::class, 'classes'])->name('classes');
     Route::get('/subjects', [\App\Http\Controllers\TeacherController::class, 'subjectsIndex'])->name('subjects');
     Route::post('/subjects/request', [\App\Http\Controllers\TeacherController::class, 'requestSubject'])->name('subjects.request');
     Route::post('/subjects/create', [\App\Http\Controllers\TeacherController::class, 'createSubject'])->name('subjects.create');
+    Route::delete('/subjects/{subject}', [\App\Http\Controllers\TeacherController::class, 'removeSubjectFromTeacher'])->name('subjects.remove');
     Route::get('/classes/create', [\App\Http\Controllers\TeacherController::class, 'createClass'])->name('classes.create');
     Route::post('/classes', [\App\Http\Controllers\TeacherController::class, 'storeClass'])->name('classes.store');
     Route::get('/classes/{classId}', [\App\Http\Controllers\TeacherController::class, 'classDetail'])->name('classes.show');
@@ -194,9 +248,10 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::post('/classes/get-students', [\App\Http\Controllers\TeacherController::class, 'getStudents'])->name('classes.get-students');
 
     // Students
-    Route::get('/students/add', [\App\Http\Controllers\TeacherController::class, 'showAddStudent'])->name('students.add');
-    Route::post('/students', [\App\Http\Controllers\TeacherController::class, 'storeStudent'])->name('students.store');
     Route::post('/students/import', [\App\Http\Controllers\TeacherController::class, 'importStudents'])->name('students.import');
+    Route::get('/students/import/{classId}', [\App\Http\Controllers\TeacherController::class, 'showImportStudents'])->name('students.import.form');
+    Route::get('/students/add/{classId}', [\App\Http\Controllers\TeacherController::class, 'showAddStudent'])->name('students.add.form');
+    Route::post('/students', [\App\Http\Controllers\TeacherController::class, 'storeStudent'])->name('students.store');
     Route::get('/students/search', [\App\Http\Controllers\TeacherController::class, 'searchStudents'])->name('students.search');
     Route::post('/students/add-existing', [\App\Http\Controllers\TeacherController::class, 'addExistingStudents'])->name('students.add-existing');
     Route::get('/classes/{classId}/students', [\App\Http\Controllers\TeacherController::class, 'indexStudents'])->name('students.index');
@@ -215,6 +270,17 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::post('/grades/entry/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradeEntryByTerm'])->name('grades.store');
     Route::post('/grades/entry/{classId}/upload', [\App\Http\Controllers\TeacherController::class, 'uploadGradeEntry'])->name('grades.upload');
 
+    // Advanced Grade Entry System (NEW)
+    Route::get('/grades/advanced/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryAdvanced'])->name('grades.advanced');
+    Route::get('/grades/content/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeContent'])->name('grades.content');
+    Route::post('/grades/advanced/{classId}/save-config', [\App\Http\Controllers\TeacherController::class, 'saveGradeConfig'])->name('grades.advanced.save-config');
+    Route::post('/grades/advanced/{classId}/save-grades', [\App\Http\Controllers\TeacherController::class, 'saveAdvancedGrades'])->name('grades.advanced.save-grades');
+
+    // Grade Statistics and Export/Import
+    Route::get('/grades/statistics/{classId}', [\App\Http\Controllers\TeacherController::class, 'getGradeStatistics'])->name('grades.statistics');
+    Route::get('/grades/export/{classId}', [\App\Http\Controllers\TeacherController::class, 'exportGrades'])->name('grades.export');
+    Route::post('/grades/import/{classId}', [\App\Http\Controllers\TeacherController::class, 'importGrades'])->name('grades.import');
+
     // Legacy Routes (kept for backward compatibility)
     Route::post('/grades/store-new/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeGradeEntryAdvanced'])->name('grades.store.new');
     Route::get('/grades/grade-entry/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeEntryAdvanced'])->name('grades.grade_entry');
@@ -229,13 +295,79 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/grades/analytics/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeAnalytics'])->name('grades.analytics');
     Route::get('/grades/results', [\App\Http\Controllers\TeacherController::class, 'gradeResults'])->name('grades.results');
 
-    // Assessment Configuration
+    // Assessment Configuration (Legacy)
     Route::get('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'configureAssessmentRanges'])->name('assessment.configure');
     Route::post('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'storeAssessmentRanges'])->name('assessment.configure.store');
+
+    // Grade Settings - Dynamic Components & KSA Percentages (NEW)
+    Route::prefix('grades/settings')->name('grades.settings.')->group(function () {
+        Route::get('/{classId}', [\App\Http\Controllers\GradeSettingsController::class, 'index'])->name('index');
+        Route::post('/{classId}/ksa', [\App\Http\Controllers\GradeSettingsController::class, 'updateKsaPercentages'])->name('update-ksa');
+        Route::post('/{classId}/attendance', [\App\Http\Controllers\GradeSettingsController::class, 'updateAttendanceSettings'])->name('update-attendance');
+        Route::post('/{classId}/component', [\App\Http\Controllers\GradeSettingsController::class, 'addComponent'])->name('add-component');
+        Route::put('/{classId}/component/{componentId}', [\App\Http\Controllers\GradeSettingsController::class, 'updateComponent'])->name('update-component');
+        Route::delete('/{classId}/component/{componentId}', [\App\Http\Controllers\GradeSettingsController::class, 'deleteComponent'])->name('delete-component');
+        Route::post('/{classId}/reorder', [\App\Http\Controllers\GradeSettingsController::class, 'reorderComponents'])->name('reorder');
+        Route::post('/{classId}/{term}/toggle-lock', [\App\Http\Controllers\GradeSettingsController::class, 'toggleLock'])->name('toggle-lock');
+        Route::post('/{classId}/initialize', [\App\Http\Controllers\GradeSettingsController::class, 'initializeDefaults'])->name('initialize');
+    });
+
+    // Dynamic Grade Entry Save Route
+    Route::post('/grades/dynamic/{classId}/save', [\App\Http\Controllers\GradeSettingsController::class, 'saveDynamicGrades'])->name('grades.dynamic.save');
+    Route::post('/grades/save/{classId}', [\App\Http\Controllers\TeacherController::class, 'saveComponentGrades'])->name('grades.save');
+
+    // Dynamic Assessment Components Management (NEW)
+    Route::prefix('components')->name('components.')->group(function () {
+        Route::get('/{classId}', [\App\Http\Controllers\AssessmentComponentController::class, 'getComponents'])->name('index');
+        Route::post('/{classId}', [\App\Http\Controllers\AssessmentComponentController::class, 'addComponent'])->name('store');
+        Route::put('/{classId}/{componentId}', [\App\Http\Controllers\AssessmentComponentController::class, 'updateComponent'])->name('update');
+        Route::delete('/{classId}/{componentId}', [\App\Http\Controllers\AssessmentComponentController::class, 'deleteComponent'])->name('destroy');
+        Route::post('/{classId}/reorder', [\App\Http\Controllers\AssessmentComponentController::class, 'reorderComponents'])->name('reorder');
+        Route::get('/templates/all', [\App\Http\Controllers\AssessmentComponentController::class, 'getTemplates'])->name('templates');
+        Route::get('/{classId}/subcategories/{category}', [\App\Http\Controllers\AssessmentComponentController::class, 'getSubcategories'])->name('subcategories');
+        Route::post('/{classId}/apply-template', [\App\Http\Controllers\AssessmentComponentController::class, 'applyTemplate'])->name('apply-template');
+        Route::get('/{classId}/stats', [\App\Http\Controllers\AssessmentComponentController::class, 'getComponentStats'])->name('stats');
+        Route::post('/{classId}/bulk-delete', [\App\Http\Controllers\AssessmentComponentController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::post('/{classId}/{componentId}/duplicate', [\App\Http\Controllers\AssessmentComponentController::class, 'duplicateComponent'])->name('duplicate');
+        Route::post('/{classId}/update-weights', [\App\Http\Controllers\AssessmentComponentController::class, 'updateWeights'])->name('update-weights');
+    });
+
+    // Dynamic Grade Entry Routes (NEW)
+    Route::prefix('grades/dynamic')->name('grades.dynamic.')->group(function () {
+        Route::get('/{classId}', [\App\Http\Controllers\GradeEntryDynamicController::class, 'show'])->name('show');
+        Route::get('/{classId}/entries', [\App\Http\Controllers\GradeEntryDynamicController::class, 'getEntries'])->name('entries');
+        Route::post('/{classId}/entries', [\App\Http\Controllers\GradeEntryDynamicController::class, 'saveEntries'])->name('entries.store');
+        Route::get('/{classId}/averages', [\App\Http\Controllers\GradeEntryDynamicController::class, 'getAverages'])->name('averages');
+        Route::get('/{classId}/{studentId}/entries', [\App\Http\Controllers\GradeEntryDynamicController::class, 'getStudentEntries'])->name('student.entries');
+        Route::delete('/entries/{entryId}', [\App\Http\Controllers\GradeEntryDynamicController::class, 'deleteEntry'])->name('entries.destroy');
+        Route::delete('/{classId}/{studentId}/entries', [\App\Http\Controllers\GradeEntryDynamicController::class, 'deleteStudentEntries'])->name('student.entries.destroy');
+    });
+
+    // Grade Settings & Configuration Routes (NEW)
+    Route::prefix('grade-settings')->name('grades.settings.')->group(function () {
+        Route::get('/{classId}/{term}', [\App\Http\Controllers\GradeSettingsController::class, 'show'])->name('show');
+        Route::get('/{classId}/{term}/settings', [\App\Http\Controllers\GradeSettingsController::class, 'getSettings'])->name('get');
+        Route::post('/{classId}/{term}/percentages', [\App\Http\Controllers\GradeSettingsController::class, 'updatePercentages'])->name('percentages.update');
+        Route::post('/{classId}/components', [\App\Http\Controllers\GradeSettingsController::class, 'addComponent'])->name('components.store');
+        Route::put('/{classId}/components/{componentId}', [\App\Http\Controllers\GradeSettingsController::class, 'updateComponent'])->name('components.update');
+        Route::delete('/{classId}/components/{componentId}', [\App\Http\Controllers\GradeSettingsController::class, 'deleteComponent'])->name('components.destroy');
+        Route::post('/{classId}/components/reorder', [\App\Http\Controllers\GradeSettingsController::class, 'reorderComponents'])->name('components.reorder');
+    });
+
+    // Shortened routes for easier access
+    Route::get('/grades/settings/{classId}/{term?}', [\App\Http\Controllers\GradeSettingsController::class, 'show'])->name('grades.settings');
+    Route::get('/grades/entry/{classId}/{term?}', [\App\Http\Controllers\GradeEntryDynamicController::class, 'show'])->name('grades.entry.dynamic');
 
     // Attendance Management
     Route::get('/attendance/manage/{classId}', [\App\Http\Controllers\TeacherController::class, 'manageAttendance'])->name('attendance.manage');
     Route::post('/attendance/record/{classId}', [\App\Http\Controllers\TeacherController::class, 'recordAttendance'])->name('attendance.record');
+    Route::get('/attendance/settings/{classId}', [\App\Http\Controllers\TeacherController::class, 'attendanceSettings'])->name('attendance.settings');
+    Route::put('/attendance/settings/{classId}', [\App\Http\Controllers\TeacherController::class, 'updateAttendanceSettings'])->name('attendance.settings.update');
+
+    // Attendance-Grade Integration
+    Route::get('/attendance/grade-integration/{classId}/{term?}', [\App\Http\Controllers\TeacherController::class, 'showGradeIntegration'])->name('attendance.grade-integration');
+    Route::get('/attendance/grades/{classId}/{term?}', [\App\Http\Controllers\TeacherController::class, 'getAttendanceGrades'])->name('attendance.grades');
+    Route::post('/attendance/sync-grades/{classId}', [\App\Http\Controllers\TeacherController::class, 'syncAttendanceToGrades'])->name('attendance.sync-grades');
     // Attendance History / Search
     Route::get('/attendance/history/{classId}', [\App\Http\Controllers\TeacherController::class, 'attendanceHistory'])->name('attendance.history');
 
@@ -263,10 +395,15 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::post('/settings/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
     Route::post('/settings/theme', [\App\Http\Controllers\SettingsController::class, 'changeTheme'])->name('settings.theme');
 
-    // School connection request (teacher)
-    Route::get('/school-request', [SchoolRequestController::class, 'create'])->name('school-request.create');
-    Route::post('/school-request', [SchoolRequestController::class, 'store'])->name('school-request.store');
-    Route::get('/school-requests', [SchoolRequestController::class, 'history'])->name('school-requests.history');
+    // Course Access Management
+    Route::get('/courses', [\App\Http\Controllers\TeacherController::class, 'coursesIndex'])->name('courses');
+    Route::post('/courses/request', [\App\Http\Controllers\TeacherController::class, 'requestCourseAccess'])->name('courses.request');
+    Route::delete('/courses/requests/{requestId}/cancel', [\App\Http\Controllers\TeacherController::class, 'cancelCourseRequest'])->name('courses.requests.cancel');
+
+    // Unified teacher request center (subjects, courses, class and school connection)
+    Route::get('/requests', [\App\Http\Controllers\TeacherController::class, 'requestHistory'])->name('requests');
+    Route::post('/courses/request-legacy', [\App\Http\Controllers\TeacherController::class, 'requestCourse'])->name('courses.request-legacy');
+    Route::post('/classes/request', [\App\Http\Controllers\TeacherController::class, 'requestClass'])->name('classes.request');
 
     // Profile routes
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'showTeacherProfile'])->name('profile.show');
@@ -276,11 +413,107 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::post('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.change-password.update');
 });
 
+/* -------- API ROUTES FOR DYNAMIC DROPDOWNS -------- */
+Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
+    // Subject API routes
+    Route::get('/subjects', [\App\Http\Controllers\Api\SearchController::class, 'subjects'])->name('subjects');
+    Route::get('/subjects/search', [\App\Http\Controllers\Api\SearchController::class, 'searchSubjects'])->name('subjects.search');
+    
+    // Course API routes
+    Route::get('/courses', [\App\Http\Controllers\Api\SearchController::class, 'courses'])->name('courses');
+    Route::get('/courses/search', [\App\Http\Controllers\Api\SearchController::class, 'searchCourses'])->name('courses.search');
+    
+    // Student API routes
+    Route::get('/students', [\App\Http\Controllers\Api\SearchController::class, 'students'])->name('students');
+    Route::get('/students/search', [\App\Http\Controllers\Api\SearchController::class, 'searchStudents'])->name('students.search');
+    
+    // Teacher API routes
+    Route::get('/teachers', [\App\Http\Controllers\Api\SearchController::class, 'teachers'])->name('teachers');
+    Route::get('/teachers/search', [\App\Http\Controllers\Api\SearchController::class, 'searchTeachers'])->name('teachers.search');
+    
+    // Class API routes
+    Route::get('/classes', [\App\Http\Controllers\Api\SearchController::class, 'classes'])->name('classes');
+    Route::get('/classes/search', [\App\Http\Controllers\Api\SearchController::class, 'searchClasses'])->name('classes.search');
+    
+    // Department API routes
+    Route::get('/departments', [\App\Http\Controllers\Api\SearchController::class, 'departments'])->name('departments');
+    Route::get('/departments/search', [\App\Http\Controllers\Api\SearchController::class, 'searchDepartments'])->name('departments.search');
+});
+
 /* -------- ADMIN (ADMIN + SUPER CAN ACCESS) -------- */
 Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/school-requests', [SchoolRequestController::class, 'index'])->name('school-requests.index');
-    Route::get('/school-requests/{schoolRequest}', [SchoolRequestController::class, 'show'])->name('school-requests.show');
-    Route::post('/school-requests/{schoolRequest}', [SchoolRequestController::class, 'update'])->name('school-requests.update');
+    // Optimized Dashboard
+    Route::get('/dashboard', [OptimizedDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/filtered-data', [OptimizedDashboardController::class, 'getFilteredData'])->name('dashboard.filtered-data');
+    Route::get('/dashboard/system-health', [OptimizedDashboardController::class, 'getSystemHealth'])->name('dashboard.system-health');
+    Route::get('/dashboard/export', [OptimizedDashboardController::class, 'exportData'])->name('dashboard.export');
+
+    // Optimized Courses Routes
+    Route::resource('courses', OptimizedCourseController::class);
+    Route::get('courses/{course}/subjects', [OptimizedCourseController::class, 'manageSubjects'])->name('courses.manageSubjects');
+    Route::post('/courses/bulk-action', [OptimizedCourseController::class, 'bulkAction'])->name('courses.bulk-action');
+    Route::get('/courses/export', [OptimizedCourseController::class, 'export'])->name('courses.export');
+    Route::get('/api/courses/by-department', [OptimizedCourseController::class, 'getCoursesByDepartment'])->name('courses.by-department');
+    Route::get('/api/courses/search', [OptimizedCourseController::class, 'searchCourses'])->name('courses.search');
+
+    // Subjects Routes
+    Route::resource('subjects', SubjectController::class);
+    Route::post('/subjects/sync', [SubjectController::class, 'syncAll'])->name('subjects.syncAll');
+
+    // Classes Routes
+    Route::resource('classes', ClassController::class);
+    Route::post('/classes/get-students', [ClassController::class, 'getStudents'])->name('classes.get-students');
+    Route::post('/classes/assign-students', [ClassController::class, 'assignStudentsToClass'])->name('classes.assign-students');
+    Route::post('/classes/{class}/add-student-manually', [ClassController::class, 'addStudentManually'])->name('classes.add-student-manually');
+    Route::delete('/classes/{class}/remove-student', [ClassController::class, 'removeStudentFromClass'])->name('classes.remove-student');
+    Route::post('/classes/{class}/import-excel', [ClassController::class, 'importStudentsExcel'])->name('classes.import-excel');
+
+    // Students Routes
+    Route::resource('students', StudentController::class);
+
+    // Optimized Teachers Routes
+    Route::resource('teachers', OptimizedTeacherController::class);
+    Route::get('teachers/{teacher}/subjects', [OptimizedTeacherController::class, 'subjects'])->name('teachers.subjects');
+    Route::post('teachers/{teacher}/assign-subjects', [OptimizedTeacherController::class, 'assignSubjects'])->name('teachers.assign-subjects');
+    Route::delete('teachers/{teacher}/subjects/{subject}', [OptimizedTeacherController::class, 'removeSubject'])->name('teachers.remove-subject');
+    Route::post('/teachers/bulk-action', [OptimizedTeacherController::class, 'bulkAction'])->name('teachers.bulk-action');
+    Route::get('/teachers/export', [OptimizedTeacherController::class, 'export'])->name('teachers.export');
+    Route::post('/teachers/import', [OptimizedTeacherController::class, 'import'])->name('teachers.import');
+    
+    // Campus Approval Routes (Optimized)
+    Route::get('/campus-approvals', [OptimizedTeacherController::class, 'campusApprovals'])->name('teachers.campus-approvals');
+    Route::post('/teachers/{teacher}/approve-campus', [OptimizedTeacherController::class, 'approveCampus'])->name('teachers.approve-campus');
+    Route::post('/teachers/{teacher}/reject-campus', [OptimizedTeacherController::class, 'rejectCampus'])->name('teachers.reject-campus');
+    Route::post('/teachers/{teacher}/revoke-campus', [OptimizedTeacherController::class, 'revokeCampus'])->name('teachers.revoke-campus');
+
+    // Course Access Request Routes (Optimized)
+    Route::get('/course-access-requests', [OptimizedTeacherController::class, 'courseAccessRequests'])->name('teachers.course-access-requests');
+    Route::post('/course-access-requests/{request}/approve', [OptimizedTeacherController::class, 'approveCourseAccess'])->name('teachers.approve-course-access');
+    Route::post('/course-access-requests/{request}/reject', [OptimizedTeacherController::class, 'rejectCourseAccess'])->name('teachers.reject-course-access');
+
+    // Teacher Assignments Routes
+    Route::resource('teacher-assignments', TeacherAssignmentController::class);
+    Route::get('/teacher-assignments/get-students', [TeacherAssignmentController::class, 'getStudentsByFilter'])->name('teacher-assignments.get-students');
+
+    // Attendance Routes
+    Route::resource('attendance', AdminAttendanceController::class);
+    Route::get('/attendance-by-class', [DashboardController::class, 'getAttendanceByClass'])->name('attendance.by-class');
+
+    // Grades Routes
+    Route::resource('grades', AdminGradeController::class);
+    Route::get('/grades-by-class', [DashboardController::class, 'getGradesByClass'])->name('grades.by-class');
+    Route::get('/class/{classId}/details', [DashboardController::class, 'getClassDetails'])->name('class.details');
+    Route::post('/grades/export-class/{classId}', [AdminGradeController::class, 'exportClass'])->name('grades.export-class');
+    Route::get('/grades/print-student/{classId}/{studentId}', [AdminGradeController::class, 'printStudent'])->name('grades.print-student');
+    Route::get('/grades/print-midterm/{classId}/{studentId}', [AdminGradeController::class, 'printMidtermGrades'])->name('grades.print-midterm');
+    Route::get('/grades/print-finals/{classId}/{studentId}', [AdminGradeController::class, 'printFinalGrades'])->name('grades.print-finals');
+    
+    // User Management Routes
+    Route::resource('users', AdminUserController::class);
+
+    // Profile routes
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'showAdminProfile'])->name('profile.show');
+    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'editAdminProfile'])->name('profile.edit');
 });
 
 /* -------- STUDENT (STUDENT + SUPER CAN ACCESS) -------- */

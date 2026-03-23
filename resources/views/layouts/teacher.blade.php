@@ -16,6 +16,12 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Mobile Responsive CSS -->
+    <link rel="stylesheet" href="{{ asset('css/teacher-mobile-responsive.css') }}">
+    
+    <!-- Teacher UI Improvements -->
+    <link rel="stylesheet" href="{{ asset('css/teacher-ui-improvements.css') }}">
+
     @php $theme = Auth::user()->theme ?? 'light'; @endphp
     <link rel="stylesheet" href="{{ asset('css/themes/' . $theme . '.css') }}">
 
@@ -529,6 +535,7 @@
 
             .main-content {
                 margin-left: 0;
+                width: 100%;
             }
 
             .topbar {
@@ -697,6 +704,14 @@
                 </div>
 
                 <div class="nav-item">
+                    <a href="{{ route('teacher.courses') }}"
+                        class="nav-link {{ request()->routeIs('teacher.courses*') ? 'active' : '' }}">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Courses</span>
+                    </a>
+                </div>
+
+                <div class="nav-item">
                     <a href="{{ route('teacher.grades') }}"
                         class="nav-link {{ request()->routeIs('teacher.grades*') ? 'active' : '' }}">
                         <i class="fas fa-star"></i>
@@ -738,12 +753,14 @@
                             Dashboard
                         @elseif(request()->routeIs('teacher.classes*'))
                             My Classes
+                        @elseif(request()->routeIs('teacher.subjects*'))
+                            My Subjects
+                        @elseif(request()->routeIs('teacher.courses*'))
+                            Courses
                         @elseif(request()->routeIs('teacher.grades*'))
                             Grades
                         @elseif(request()->routeIs('teacher.attendance*'))
                             Attendance
-                        @elseif(request()->routeIs('teacher.subjects*'))
-                            My Subjects
                         @elseif(request()->routeIs('teacher.settings*'))
                             Settings
                         @else
@@ -865,6 +882,9 @@
         </main>
     </div>
 
+    <!-- jQuery (required for Select2 and other plugins) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 

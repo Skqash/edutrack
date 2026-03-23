@@ -44,31 +44,78 @@
         <form action="{{ route('teacher.attendance.record', $class->id) }}" method="POST" id="attendanceForm">
             @csrf
             <input type="hidden" name="date" id="dateInput" value="{{ $today }}">
+            <input type="hidden" name="term" id="termInput" value="{{ $currentTerm }}">
 
-            {{-- Class info + date --}}
+            {{-- Class info + date + term --}}
             <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body py-3">
+                <parameter name="card-body py-3">
                     <div class="row align-items-center g-2">
-                        <div class="col">
+                        <div class="col-12 col-md">
                             <div class="fw-bold text-primary">
                                 <i class="fas fa-door-open me-1"></i>
                                 {{ $class->class_name ?? $class->name ?? 'Class' }}
                             </div>
                             <small class="text-muted">
-                                @if ($class->course)
-                                    {{ $class->course->course_name ?? '' }}
-                                    @if ($class->course->course_code)
-                                        ({{ $class->course->course_code }})
+                                @if ($class->program)
+                                    {{ $class->program->program_name ?? '' }}
+                                    @if ($class->program->program_code)
+                                        ({{ $class->program->program_code }})
                                     @endif
                                 @else
-                                    No course assigned
+                                    No program assigned
                                 @endif
                             </small>
                         </div>
                         <div class="col-auto">
-                            <label class="form-label small text-muted mb-1 d-block">Date</label>
+                            <label class="form-label small text-muted mb-1 d-block">
+                                <i class="fas fa-calendar-alt me-1"></i>Academic Term
+                            </label>
+                            <select id="termSelect" class="form-select form-select-sm fw-bold" style="min-width: 120px;">
+                                <option value="Midterm" {{ $currentTerm === 'Midterm' ? 'selected' : '' }}>
+                                    📚 Midterm Term
+                                </option>
+                                <option value="Final" {{ $currentTerm === 'Final' ? 'selected' : '' }}>
+                                    🎓 Final Term
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <label class="form-label small text-muted mb-1 d-block">
+                                <i class="fas fa-calendar-day me-1"></i>Attendance Date
+                            </label>
                             <input type="date" id="attendanceDate" class="form-control form-control-sm"
                                 value="{{ $today }}" max="{{ $today }}">
+                        </div>
+                    </div>
+                    
+                    {{-- Term Indicator --}}
+                    <div class="mt-2">
+                        <div class="alert alert-info py-2 px-3 mb-0" id="termIndicator">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Currently taking attendance for:</strong>
+                            <span class="badge bg-primary ms-1" id="currentTermBadge">{{ $currentTerm }} Term</span>
+                            <small class="text-muted ms-2">All records will be saved under this term</small>
+                        </div>
+                    </div>
+                    
+                    {{-- Attendance Settings Info --}}
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="row g-2 small">
+                            <div class="col-auto">
+                                <span class="text-muted">Total Meetings ({{ $currentTerm }}):</span>
+                                <strong class="text-primary ms-1">
+                                    {{ $currentTerm === 'Midterm' ? $class->total_meetings_midterm : $class->total_meetings_final }}
+                                </strong>
+                            </div>
+                            <div class="col-auto">
+                                <span class="text-muted">Attendance Weight:</span>
+                                <strong class="text-success ms-1">{{ $class->attendance_percentage }}%</strong>
+                            </div>
+                            <div class="col-auto">
+                                <a href="{{ route('teacher.attendance.settings', $class->id) }}" class="text-decoration-none">
+                                    <i class="fas fa-cog me-1"></i>Settings
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -108,7 +155,7 @@
                                 {{-- Number + name --}}
                                 <div class="student-num text-muted small fw-bold">{{ $index + 1 }}</div>
                                 <div class="flex-grow-1 min-w-0">
-                                    <div class="fw-semibold text-truncate">{{ $student->user->name ?? 'N/A' }}</div>
+                                    <div class="fw-semibold text-truncate">{{ $student->name ?? 'N/A' }}</div>
                                     <small class="text-muted">{{ $student->student_id ?? '–' }}</small>
                                 </div>
                                 {{-- Status buttons --}}
@@ -233,6 +280,49 @@
 <script>
     document.getElementById('attendanceDate').addEventListener('change', function () {
         document.getElementById('dateInput').value = this.value;
+    });
+    
+    document.getElementById('termSelect').addEventListener('change', function () {
+        const selectedTerm = this.value;
+        document.getElementById('termInput').value = selectedTerm;
+        
+        // Update term indicator
+        const badge = document.getElementById('currentTermBadge');
+        const indicator = document.getElementById('termIndicator');
+        
+        if (badge) {
+            badge.textContent = selectedTerm + ' Term';
+            badge.className = selectedTerm === 'Midterm' ? 'badge bg-warning ms-1' : 'badge bg-success ms-1';
+        }
+        
+        // Update indicator message
+        if (indicator) {
+            const termIcon = selectedTerm === 'Midterm' ? '📚' : '🎓';
+            indicator.innerHTML = `
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Currently taking attendance for:</strong>
+                <span class="badge ${selectedTerm === 'Midterm' ? 'bg-warning' : 'bg-success'} ms-1" id="currentTermBadge">${termIcon} ${selectedTerm} Term</span>
+                <small class="text-muted ms-2">All records will be saved under this term</small>
+            `;
+        }
+        
+        // Show confirmation before reloading
+        if (confirm(`Switch to ${selectedTerm} term? Any unsaved attendance will be lost.`)) {
+            // Reload page to get attendance for selected term
+            window.location.href = '{{ route("teacher.attendance.manage", $class->id) }}?term=' + selectedTerm;
+        } else {
+            // Revert selection if cancelled
+            this.value = '{{ $currentTerm }}';
+        }
+    });
+
+    // Initialize term indicator on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentTerm = '{{ $currentTerm }}';
+        const badge = document.getElementById('currentTermBadge');
+        if (badge) {
+            badge.className = currentTerm === 'Midterm' ? 'badge bg-warning ms-1' : 'badge bg-success ms-1';
+        }
     });
 
     function markAll(status) {

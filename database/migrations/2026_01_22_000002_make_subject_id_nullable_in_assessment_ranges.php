@@ -26,6 +26,9 @@ return new class extends Migration
     {
         Schema::table('assessment_ranges', function (Blueprint $table) {
             if (Schema::hasColumn('assessment_ranges', 'subject_id')) {
+                // First, update any NULL values to a default before making NOT NULL
+                \Illuminate\Support\Facades\DB::table('assessment_ranges')->whereNull('subject_id')->update(['subject_id' => 1]);
+                // Then modify the column
                 $table->foreignId('subject_id')->nullable(false)->change();
             }
         });

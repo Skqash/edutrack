@@ -282,6 +282,45 @@ a:hover {
     }
 }
 
+/* Password toggle button styling */
+.btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+    min-height: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+}
+
+.btn-outline-secondary:focus {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
+}
+
+.btn-outline-secondary i {
+    font-size: 16px;
+}
+
+/* Input group styling */
+.input-group .form-control {
+    border-right: 0;
+}
+
+.input-group .btn-outline-secondary {
+    border-left: 0;
+    border-color: #ced4da;
+}
+
+.input-group .form-control:focus + .btn-outline-secondary {
+    border-color: #6ec1e4;
+}
+
 /* Improve touch targets */
 @media (hover: none) and (pointer: coarse) {
     /* This targets touch devices */

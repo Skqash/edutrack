@@ -7,38 +7,120 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
- * @property int $user_id
  * @property string $student_id Format: YYYY-XXXX-S (e.g., 2022-0233-V)
+ * @property string $first_name
+ * @property string|null $middle_name
+ * @property string $last_name
+ * @property string $email
+ * @property string|null $password
+ * @property string|null $phone
+ * @property string|null $address
+ * @property date|null $birth_date
+ * @property string|null $gender
+ * @property int|null $course_id
  * @property int $year 1, 2, 3, or 4
+ * @property int|null $year_level Alias for year field (1-4)
  * @property string $section A, B, C, etc.
- * @property int $class_id
- * @property float $gpa
- * @property string $status
+ * @property int $class_id Reference to ClassModel
+ * @property string|null $department College department (e.g., 'BSIT', 'BEED', 'BSHM')
+ * @property float $gpa Grade Point Average
+ * @property string $status enrollment status
+ * @property string|null $school School/institution name
+ * @property string|null $campus Campus affiliation
+ * @property date|null $enrollment_date
+ * @property string|null $academic_year
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * 
+ * @method \Illuminate\Database\Eloquent\Relations\BelongsTo course()
+ * @method \Illuminate\Database\Eloquent\Relations\BelongsTo class()
+ * @method \Illuminate\Database\Eloquent\Relations\HasMany grades()
+ * @method \Illuminate\Database\Eloquent\Relations\HasMany attendance()
+ * 
+ * @method \Illuminate\Database\Eloquent\Builder byDepartment(string $department) Filter students by department
+ * @method \Illuminate\Database\Eloquent\Builder byYearLevel(int $year) Filter students by year level (1-4)
+ * @method \Illuminate\Database\Eloquent\Builder byClass(int $classId) Filter students by class
+ * @method \Illuminate\Database\Eloquent\Builder byDepartmentYearClass(string $dept, int $year, int $classId) Filter by dept, year, and class
  */
 class Student extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
         'student_id',
+        'first_name',
+        'middle_name',
+        'last_name',
+        'suffix',
+        'email',
+        'password',
+        'phone',
+        'address',
+        'birth_date',
+        'gender',
+        'course_id',
         'year',
+        'year_level',
         'section',
         'class_id',
         'gpa',
         'status',
         'school',
         'department',
+        'campus',
+        'enrollment_date',
+        'academic_year',
+        'school_id', // Add school_id
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    protected $casts = [
+        'birth_date' => 'date',
+        'enrollment_date' => 'date',
+        'password' => 'hashed',
     ];
 
     /**
-     * Eager load relationships by default for performance
+     * Get student's full name
      */
-    protected $with = ['user'];
-
-    public function user()
+    public function getFullNameAttribute()
     {
-        return $this->belongsTo(User::class);
+        $name = $this->first_name;
+        if ($this->middle_name) {
+            $name .= ' ' . $this->middle_name;
+        }
+        $name .= ' ' . $this->last_name;
+        if ($this->suffix) {
+            $name .= ' ' . $this->suffix;
+        }
+        return $name;
+    }
+
+    /**
+     * Get student's name for display (first + last)
+     */
+    public function getNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
+    /**
+     * Course relationship
+     */
+    public function course()
+    {
+        return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    /**
+     * School relationship
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 
     public function grades()
@@ -54,22 +136,6 @@ class Student extends Model
     public function class()
     {
         return $this->belongsTo(ClassModel::class, 'class_id');
-    }
-
-    /**
-     * Get student's full name from related user
-     */
-    public function getFullNameAttribute()
-    {
-        return $this->user?->name ?? 'N/A';
-    }
-
-    /**
-     * Get student's email from related user
-     */
-    public function getEmailAttribute()
-    {
-        return $this->user?->email ?? 'N/A';
     }
 
     /**
@@ -111,6 +177,31 @@ class Student extends Model
     }
 
     /**
+     * Query scope: Filter by campus
+     */
+    public function scopeByCampus($query, $campus)
+    {
+        return $query->where('campus', $campus);
+    }
+
+    /**
+     * Query scope: Filter by school
+     */
+    public function scopeBySchool($query, $schoolId)
+    {
+        return $query->where('school_id', $schoolId);
+    }
+
+    /**
+     * Query scope: Apply campus isolation for teacher
+     */
+    public function scopeForTeacher($query, $teacherCampus = null, $teacherSchoolId = null)
+    {
+        return $query->when($teacherCampus, fn($q) => $q->where('campus', $teacherCampus))
+                    ->when($teacherSchoolId, fn($q) => $q->where('school_id', $teacherSchoolId));
+    }
+
+    /**
      * Query scope: Filter by class
      */
     public function scopeInClass($query, $classId)
@@ -149,4 +240,41 @@ class Student extends Model
     {
         return $query->with('attendance');
     }
+
+    /**
+     * Query scope: Filter students by department (added Phase 4)
+     */
+    public function scopeByDepartment($query, $department)
+    {
+        return $query->where('department', $department);
+    }
+
+    /**
+     * Query scope: Filter students by year level (added Phase 4)
+     */
+    public function scopeByYearLevel($query, $year)
+    {
+        return $query->where('year', $year);
+    }
+
+    /**
+     * Query scope: Filter students by class (added Phase 4)
+     */
+    public function scopeByClassId($query, $classId)
+    {
+        return $query->where('class_id', $classId);
+    }
+
+    /**
+     * Query scope: Filter by department, year level, and class (added Phase 4)
+     * Usage: Student::byDepartmentYearClass('BSIT', 2, 5)->get()
+     */
+    public function scopeByDepartmentYearClass($query, $department, $year, $classId)
+    {
+        return $query
+            ->where('department', $department)
+            ->where('year', $year)
+            ->where('class_id', $classId);
+    }
 }
+

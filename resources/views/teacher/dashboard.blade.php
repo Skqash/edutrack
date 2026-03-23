@@ -2,952 +2,1019 @@
 
 @section('content')
     <style>
-        /* Modern Dashboard Styling */
-        :root {
-            --primary-color: #4f46e5;
-            --primary-dark: #4338ca;
-            --secondary-color: #64748b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --info-color: #06b6d4;
-            --light-bg: #f8fafc;
-            --white: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        /* Enhanced Professional Dashboard Styling */
+        body {
+            background-color: #f8f9fa;
         }
 
-        /* Dashboard Header */
         .dashboard-header {
-            background: var(--white);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .dashboard-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--info-color));
-        }
-
-        .welcome-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .welcome-text h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.025em;
-        }
-
-        .welcome-text p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            margin: 0;
-        }
-
-        .date-time {
-            text-align: right;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .current-date {
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 1.125rem;
-            margin-bottom: 0.25rem;
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
         }
 
         .stat-card {
-            background: var(--white);
+            transition: all 0.3s ease;
+            border: none;
+            background: #ffffff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            cursor: pointer;
             border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
-            transition: var(--transition);
-            position: relative;
             overflow: hidden;
         }
 
         .stat-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
             transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
         }
 
-        .stat-card::before {
+        .campus-status-card {
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .campus-status-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--info-color));
-            opacity: 0;
-            transition: var(--transition);
+            background: currentColor;
         }
 
-        .stat-card:hover::before {
-            opacity: 1;
+        .campus-approved {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
         }
 
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
+        .campus-pending {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
         }
 
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            flex-shrink: 0;
+        .campus-rejected {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
         }
 
-        .stat-icon.primary {
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary-color);
+        .campus-independent {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
         }
 
-        .stat-icon.success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .stat-icon.warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning-color);
-        }
-
-        .stat-icon.info {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--info-color);
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-            line-height: 1;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-change {
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.25rem 0.5rem;
-            border-radius: 6px;
-        }
-
-        .stat-change.positive {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .stat-change.negative {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-        }
-
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .quick-action-btn {
-            background: var(--white);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-decoration: none;
-            color: var(--text-primary);
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .quick-action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .quick-action-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            flex-shrink: 0;
-        }
-
-        .quick-action-content h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .quick-action-content p {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            margin: 0;
-        }
-
-        /* KSA Card */
-        .ksa-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
-            margin-bottom: 2rem;
-        }
-
-        .ksa-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .ksa-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .ksa-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .ksa-item {
-            background: var(--light-bg);
-            border-radius: 8px;
+        .performance-metric {
+            text-align: center;
             padding: 1rem;
-            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
 
-        .ksa-item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
+        .trend-up { color: #28a745; }
+        .trend-down { color: #dc3545; }
+        .trend-neutral { color: #6c757d; }
+
+        .activity-item {
+            padding: 1rem;
+            border-left: 4px solid #e9ecef;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
         }
 
-        .ksa-item-title {
-            font-weight: 600;
-            font-size: 0.875rem;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .activity-item:hover {
+            border-left-color: #007bff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .ksa-percentage {
-            font-weight: 700;
-            font-size: 0.875rem;
-            color: var(--primary-color);
-        }
-
-        .ksa-progress {
-            height: 6px;
-            background: var(--border-color);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-
-        .ksa-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-color), var(--info-color));
-            border-radius: 3px;
-            transition: width 0.6s ease;
-        }
-
-        .ksa-description {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 0.5rem;
-        }
-
-        /* Data Tables */
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .data-card {
-            background: var(--white);
+        .quick-action-card {
+            transition: all 0.3s ease;
+            border: none;
+            background: #ffffff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            cursor: pointer;
             border-radius: 12px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
-            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
         }
 
-        .data-card-header {
-            background: var(--light-bg);
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .quick-action-card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: inherit;
         }
 
-        .data-card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+        .quick-action-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
         }
 
-        .data-card-body {
-            padding: 0;
-        }
-
-        .modern-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .modern-table th {
-            background: var(--light-bg);
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.875rem;
-            text-align: left;
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modern-table td {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.875rem;
-        }
-
-        .modern-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .modern-table tr:hover {
-            background: var(--light-bg);
-        }
-
-        .badge-modern {
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        .badge-primary {
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary-color);
-        }
-
-        .badge-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success-color);
-        }
-
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning-color);
-        }
-
-        .badge-danger {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger-color);
-        }
-
-        .badge-info {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--info-color);
-        }
-
-        /* Animations */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        .slide-up {
-            animation: slideUp 0.6s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Responsive Design */
         @media (max-width: 768px) {
             .dashboard-header {
                 padding: 1.5rem;
+                margin-bottom: 1.5rem;
             }
-
-            .welcome-section {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .welcome-text h1 {
-                font-size: 1.5rem;
-            }
-
-            .date-time {
-                text-align: left;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .quick-actions {
-                grid-template-columns: 1fr;
-            }
-
-            .ksa-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .data-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .modern-table {
-                font-size: 0.75rem;
-            }
-
-            .modern-table th,
-            .modern-table td {
-                padding: 0.75rem 1rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .dashboard-header {
+            
+            .campus-status-card {
                 padding: 1rem;
-            }
-
-            .stat-card {
-                padding: 1rem;
-            }
-
-            .quick-action-btn {
-                padding: 1rem;
-            }
-
-            .ksa-card {
-                padding: 1rem;
+                margin-bottom: 1.5rem;
             }
         }
     </style>
 
-    <!-- Dashboard Header -->
-    <div class="dashboard-header fade-in">
-        <div class="welcome-section">
-            <div class="welcome-text">
-                <h1>Welcome back, {{ auth()->user()->name ?? 'Teacher' }}!</h1>
-                <p>Here's what's happening with your classes today.</p>
-            </div>
-            <div class="date-time">
-                <div class="current-date" id="currentDate"></div>
-                <div class="current-time" id="currentTime"></div>
-            </div>
-        </div>
-
-        {{-- Alert for approved/rejected school request --}}
-        @if (isset($latestSchoolRequest) && $latestSchoolRequest)
-            <div class="alert alert-{{ $latestSchoolRequest->status === 'approved' ? 'success' : 'danger' }} mt-4 mb-0"
-                role="alert">
-                <div class="d-flex align-items-start justify-content-between">
+    <!-- Enhanced Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="me-3">
+                        <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                    </div>
                     <div>
-                        <h5 class="alert-heading mb-1">
-                            School request {{ ucfirst($latestSchoolRequest->status) }}
-                        </h5>
-                        <p class="mb-1">
-                            Your request to connect to <strong>{{ $latestSchoolRequest->school_name }}</strong> has been
-                            <strong>{{ $latestSchoolRequest->status }}</strong>.
-                        </p>
-                        @if ($latestSchoolRequest->admin_note)
-                            <p class="mb-0"><strong>Admin note:</strong> {{ $latestSchoolRequest->admin_note }}</p>
+                        <h1 class="h2 fw-bold mb-1">Welcome back, {{ auth()->user()->name }}! 👋</h1>
+                        <p class="mb-0 opacity-90">{{ now()->format('l, F j, Y') }}</p>
+                    </div>
+                </div>
+                
+                @if(isset($campusInfo))
+                    <div class="d-flex align-items-center">
+                        <i class="{{ $campusInfo['icon'] }} me-2"></i>
+                        <span>{{ $campusInfo['name'] }}</span>
+                        @if($campusInfo['status'] === 'approved')
+                            <span class="badge bg-success bg-opacity-25 ms-2">✓ Approved</span>
+                        @elseif($campusInfo['status'] === 'pending')
+                            <span class="badge bg-warning bg-opacity-25 ms-2">⏳ Pending</span>
+                        @elseif($campusInfo['status'] === 'rejected')
+                            <span class="badge bg-danger bg-opacity-25 ms-2">✗ Rejected</span>
                         @endif
                     </div>
-                    <div class="text-end">
-                        <a href="{{ route('teacher.school-requests.history') }}" class="btn btn-sm btn-outline-light">
-                            View request history
-                        </a>
+                @endif
+            </div>
+            <div class="col-md-4 text-md-end">
+                @if($isApproved && $myClasses && method_exists($myClasses, 'count') && $myClasses->count() > 0)
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-light btn-lg dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-keyboard me-2"></i>Quick Grade
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            @foreach($myClasses as $class)
+                                <li class="dropdown-header">{{ $class->class_name }}</li>
+                                <li><a class="dropdown-item" href="{{ route('teacher.grades.entry', $class->id) }}?term=midterm">
+                                    <i class="fas fa-star me-2"></i>Midterm Grades
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ route('teacher.grades.entry', $class->id) }}?term=final">
+                                    <i class="fas fa-trophy me-2"></i>Final Grades
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            @endforeach
+                        </ul>
                     </div>
-                </div>
-            </div>
-        @endif
-    </div>
-
-    <!-- Stats Grid -->
-    <div class="stats-grid slide-up">
-        <div class="stat-card">
-            <div class="stat-header">
-                <div>
-                    <div class="stat-value">{{ $myClasses->count() ?? 0 }}</div>
-                    <div class="stat-label">My Classes</div>
-                    <span class="stat-change positive">
-                        <i class="fas fa-arrow-up"></i> 12% from last month
-                    </span>
-                </div>
-                <div class="stat-icon primary">
-                    <i class="fas fa-door-open"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-header">
-                <div>
-                    <div class="stat-value">{{ $myCourses->count() ?? 0 }}</div>
-                    <div class="stat-label">My Courses</div>
-                    <span class="stat-change positive">
-                        <i class="fas fa-arrow-up"></i> 8% from last month
-                    </span>
-                </div>
-                <div class="stat-icon success">
-                    <i class="fas fa-book"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-header">
-                <div>
-                    <div class="stat-value">{{ $totalStudents ?? 0 }}</div>
-                    <div class="stat-label">Total Students</div>
-                    <span class="stat-change positive">
-                        <i class="fas fa-arrow-up"></i> 15% from last month
-                    </span>
-                </div>
-                <div class="stat-icon info">
-                    <i class="fas fa-users"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-header">
-                <div>
-                    <div class="stat-value">{{ $gradesPosted ?? 0 }}</div>
-                    <div class="stat-label">Grades Posted</div>
-                    <span class="stat-change negative">
-                        <i class="fas fa-arrow-down"></i> 3% from last month
-                    </span>
-                </div>
-                <div class="stat-icon warning">
-                    <i class="fas fa-star"></i>
-                </div>
+                @else
+                    <button class="btn btn-light btn-lg" disabled>
+                        <i class="fas fa-lock me-2"></i>
+                        {{ $isApproved ? 'No Classes' : 'Approval Required' }}
+                    </button>
+                @endif
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions slide-up">
-        <a href="{{ route('teacher.classes.create') }}" class="quick-action-btn">
-            <div class="quick-action-icon">
-                <i class="fas fa-plus"></i>
-            </div>
-            <div class="quick-action-content">
-                <h3>Create Class</h3>
-                <p>Add a new class to your schedule</p>
-            </div>
-        </a>
-
-        <a href="{{ route('teacher.classes') }}" class="quick-action-btn">
-            <div class="quick-action-icon">
-                <i class="fas fa-edit"></i>
-            </div>
-            <div class="quick-action-content">
-                <h3>Enter Grades</h3>
-                <p>Record student grades and assessments</p>
-            </div>
-        </a>
-
-        <a href="{{ route('teacher.attendance') }}" class="quick-action-btn">
-            <div class="quick-action-icon">
-                <i class="fas fa-check-square"></i>
-            </div>
-            <div class="quick-action-content">
-                <h3>Take Attendance</h3>
-                <p>Mark student attendance for today</p>
-            </div>
-        </a>
-
-        <a href="{{ route('teacher.grades.results') }}" class="quick-action-btn">
-            <div class="quick-action-icon">
-                <i class="fas fa-chart-bar"></i>
-            </div>
-            <div class="quick-action-content">
-                <h3>View Reports</h3>
-                <p>Generate and view performance reports</p>
-            </div>
-        </a>
-    </div>
-
-    <!-- KSA Grading System -->
-    <div class="ksa-card fade-in">
-        <div class="ksa-header">
-            <div class="ksa-title">
-                <i class="fas fa-chart-line text-primary"></i>
-                KSA Grading System Overview
-            </div>
-            <button class="btn btn-sm btn-outline-primary">
-                <i class="fas fa-info-circle"></i> Learn More
-            </button>
-        </div>
-
-        <div class="ksa-grid">
-            <div class="ksa-item">
-                <div class="ksa-item-header">
-                    <div class="ksa-item-title">
-                        <i class="fas fa-brain text-primary"></i>
-                        Knowledge
-                    </div>
-                    <div class="ksa-percentage">40%</div>
+    <!-- Enhanced Campus Status Card -->
+    @if(isset($campusInfo))
+        <div class="campus-status-card campus-{{ $campusInfo['status'] }}">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <i class="{{ $campusInfo['icon'] }} fa-3x"></i>
                 </div>
-                <div class="ksa-progress">
-                    <div class="ksa-progress-fill" style="width: 40%;"></div>
+                <div class="col">
+                    <h5 class="fw-bold mb-1">{{ $campusInfo['name'] }}</h5>
+                    <p class="mb-2 opacity-90">{{ $campusInfo['description'] }}</p>
+                    @if(isset($campusInfo['school']))
+                        <small class="opacity-75">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ $campusInfo['school']->city ?? '' }}, {{ $campusInfo['school']->province ?? '' }}
+                        </small>
+                    @endif
                 </div>
-                <div class="ksa-description">
-                    Tests, quizzes, exams, and theoretical assessments
-                </div>
-            </div>
-
-            <div class="ksa-item">
-                <div class="ksa-item-header">
-                    <div class="ksa-item-title">
-                        <i class="fas fa-cogs text-success"></i>
-                        Skills
-                    </div>
-                    <div class="ksa-percentage">35%</div>
-                </div>
-                <div class="ksa-progress">
-                    <div class="ksa-progress-fill"
-                        style="width: 35%; background: linear-gradient(90deg, var(--success-color), var(--info-color));">
-                    </div>
-                </div>
-                <div class="ksa-description">
-                    Practical applications, projects, and hands-on activities
-                </div>
-            </div>
-
-            <div class="ksa-item">
-                <div class="ksa-item-header">
-                    <div class="ksa-item-title">
-                        <i class="fas fa-heart text-warning"></i>
-                        Attitude
-                    </div>
-                    <div class="ksa-percentage">25%</div>
-                </div>
-                <div class="ksa-progress">
-                    <div class="ksa-progress-fill"
-                        style="width: 25%; background: linear-gradient(90deg, var(--warning-color), var(--info-color));">
-                    </div>
-                </div>
-                <div class="ksa-description">
-                    Participation, behavior, and professional conduct
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Data Tables -->
-    <div class="data-grid slide-up">
-        <!-- My Courses -->
-        <div class="data-card">
-            <div class="data-card-header">
-                <div class="data-card-title">
-                    <i class="fas fa-book text-primary"></i>
-                    My Courses
-                </div>
-                <a href="{{ route('teacher.subjects') }}" class="btn btn-sm btn-outline-primary">View All</a>
-            </div>
-            <div class="data-card-body">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Course Name</th>
-                            <th>Classes</th>
-                            <th>Students</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($myCourses ?? [] as $course)
-                            @if ($course)
-                                <tr>
-                                    <td>
-                                        <div class="fw-semibold">{{ optional($course)->course_name ?? 'N/A' }}</div>
-                                        <small class="text-muted">{{ optional($course)->course_code ?? 'N/A' }}</small>
-                                    </td>
-                                    <td><span class="badge-modern badge-info">0</span></td>
-                                    <td><span class="badge-modern badge-success">0</span></td>
-                                </tr>
-                            @endif
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-3">
-                                    <i class="fas fa-inbox me-2"></i>No courses assigned yet
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- My Classes -->
-        <div class="data-card">
-            <div class="data-card-header">
-                <div class="data-card-title">
-                    <i class="fas fa-door-open text-success"></i>
-                    My Classes
-                </div>
-                <a href="{{ route('teacher.classes') }}" class="btn btn-sm btn-outline-primary">View All</a>
-            </div>
-            <div class="data-card-body">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th>Class Name</th>
-                            <th>Section</th>
-                            <th>Students</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($myClasses ?? [] as $class)
-                            @if ($class)
-                                <tr>
-                                    <td>
-                                        <div class="fw-semibold">{{ optional($class)->class_name ?? 'N/A' }}</div>
-                                        <small
-                                            class="text-muted">{{ optional(optional($class)->course)->course_name ?? 'N/A' }}</small>
-                                    </td>
-                                    <td><span class="badge-modern badge-primary">{{ $class->section ?? 'N/A' }}</span>
-                                    </td>
-                                    <td>{{ $class->students ? $class->students->count() : 0 }}</td>
-                                </tr>
-                            @endif
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-3">
-                                    <i class="fas fa-inbox me-2"></i>No classes assigned yet
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Recent Activity -->
-    <div class="data-card fade-in">
-        <div class="data-card-header">
-            <div class="data-card-title">
-                <i class="fas fa-clock text-info"></i>
-                Recent Grading Activity
-            </div>
-            <a href="{{ route('teacher.grades.results') }}" class="btn btn-sm btn-outline-primary">View All</a>
-        </div>
-        <div class="data-card-body">
-            <table class="modern-table">
-                <thead>
-                    <tr>
-                        <th>Class</th>
-                        <th>Course</th>
-                        <th>Graded Students</th>
-                        <th>Avg Knowledge</th>
-                        <th>Avg Skills</th>
-                        <th>Avg Attitude</th>
-                        <th>Last Updated</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($recentGrades ?? [] as $grade)
-                        @if ($grade)
-                            <tr>
-                                <td>
-                                    <div class="fw-semibold">{{ $grade->class_name ?? 'N/A' }}</div>
-                                </td>
-                                <td>{{ $grade->course_name ?? 'N/A' }}</td>
-                                <td><span
-                                        class="badge-modern badge-primary">{{ optional($grade)->student_count ?? 0 }}</span>
-                                </td>
-                                <td><span
-                                        class="badge-modern badge-info">{{ optional($grade)->avg_knowledge !== null ? number_format(optional($grade)->avg_knowledge, 1) : 'N/A' }}</span>
-                                </td>
-                                <td><span
-                                        class="badge-modern badge-success">{{ optional($grade)->avg_skills !== null ? number_format(optional($grade)->avg_skills, 1) : 'N/A' }}</span>
-                                </td>
-                                <td><span
-                                        class="badge-modern badge-warning">{{ optional($grade)->avg_attitude !== null ? number_format(optional($grade)->avg_attitude, 1) : 'N/A' }}</span>
-                                </td>
-                                <td>
-                                    @if (optional($grade)->updated_at)
-                                        {{ \Carbon\Carbon::parse(optional($grade)->updated_at)->format('M d, Y') }}
-                                    @else
-                                        N/A
+                @if(isset($performanceMetrics))
+                    <div class="col-md-auto d-none d-md-block">
+                        <div class="row g-3">
+                            <div class="col">
+                                <div class="performance-metric">
+                                    <div class="h4 fw-bold mb-1">{{ $performanceMetrics['current']['grades'] }}</div>
+                                    <small>Grades This Month</small>
+                                    @if($performanceMetrics['trends']['grades']['direction'] !== 'neutral')
+                                        <div class="trend-{{ $performanceMetrics['trends']['grades']['direction'] }}">
+                                            <i class="fas fa-arrow-{{ $performanceMetrics['trends']['grades']['direction'] === 'up' ? 'up' : 'down' }}"></i>
+                                            {{ $performanceMetrics['trends']['grades']['percentage'] }}%
+                                        </div>
                                     @endif
-                                </td>
-                            </tr>
-                        @endif
-                    @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted py-3">
-                                <i class="fas fa-inbox me-2"></i>No recent grading activity
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="performance-metric">
+                                    <div class="h4 fw-bold mb-1">{{ $performanceMetrics['current']['attendance'] }}</div>
+                                    <small>Attendance Records</small>
+                                    @if($performanceMetrics['trends']['attendance']['direction'] !== 'neutral')
+                                        <div class="trend-{{ $performanceMetrics['trends']['attendance']['direction'] }}">
+                                            <i class="fas fa-arrow-{{ $performanceMetrics['trends']['attendance']['direction'] === 'up' ? 'up' : 'down' }}"></i>
+                                            {{ $performanceMetrics['trends']['attendance']['percentage'] }}%
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    <!-- Enhanced Statistics Cards -->
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.classes') }}'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-chalkboard-teacher fa-2x text-primary"></i>
+                        </div>
+                        <div class="text-end">
+                            <h2 class="mb-0 fw-bold text-primary">{{ $statistics['totalClasses'] ?? 0 }}</h2>
+                            <small class="text-muted">Classes</small>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-primary" style="width: {{ min(($statistics['totalClasses'] ?? 0) * 10, 100) }}%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-arrow-right me-1"></i>Manage Classes
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.classes') }}'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-users fa-2x text-success"></i>
+                        </div>
+                        <div class="text-end">
+                            <h2 class="mb-0 fw-bold text-success">{{ $statistics['totalStudents'] ?? 0 }}</h2>
+                            <small class="text-muted">Students</small>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-success" style="width: {{ min(($statistics['totalStudents'] ?? 0) * 2, 100) }}%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-arrow-right me-1"></i>View Students
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.grades') }}'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-star fa-2x text-warning"></i>
+                        </div>
+                        <div class="text-end">
+                            <h2 class="mb-0 fw-bold text-warning">{{ $statistics['gradesPosted'] ?? 0 }}</h2>
+                            <small class="text-muted">Grades Posted</small>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-warning" style="width: {{ min(($statistics['gradesPosted'] ?? 0) * 1, 100) }}%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-arrow-right me-1"></i>Grade Management
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-lg-3">
+            <div class="stat-card h-100" onclick="window.location.href='{{ route('teacher.grades') }}'">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock fa-2x text-danger"></i>
+                        </div>
+                        <div class="text-end">
+                            <h2 class="mb-0 fw-bold text-danger">{{ $statistics['pendingGrades'] ?? 0 }}</h2>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 4px;">
+                        <div class="progress-bar bg-danger" style="width: {{ min(($statistics['pendingGrades'] ?? 0) * 10, 100) }}%"></div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-arrow-right me-1"></i>Complete Grades
+                    </small>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        // Date and Time Display
-        function updateDateTime() {
-            const now = new Date();
+    <!-- Enhanced KSA Grading System & Recent Activities -->
+    <div class="row mb-4 g-3">
+        <!-- KSA System Overview -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-star me-2"></i>KSA Grading System Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="text-muted mb-3">Comprehensive assessment based on three key components with performance insights:</p>
 
-            // Format date
-            const options = {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            };
-            const dateString = now.toLocaleDateString('en-US', options);
+                            <!-- Knowledge Component -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-primary">
+                                        <i class="fas fa-brain me-2"></i>Knowledge (40%)
+                                    </h6>
+                                    <span class="badge bg-primary">Avg: {{ $statistics['averages']['knowledge'] ?? 0 }}%</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ $statistics['averages']['knowledge'] ?? 0 }}%"></div>
+                                </div>
+                                <small class="text-muted">Quizzes (40%) + Exams (60%)</small>
+                            </div>
 
-            // Format time
-            const timeString = now.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+                            <!-- Skills Component -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-success">
+                                        <i class="fas fa-tools me-2"></i>Skills (50%)
+                                    </h6>
+                                    <span class="badge bg-success">Avg: {{ $statistics['averages']['skills'] ?? 0 }}%</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: {{ $statistics['averages']['skills'] ?? 0 }}%"></div>
+                                </div>
+                                <small class="text-muted">Output (40%) + Class Part (30%) + Activities (15%) + Assignments (15%)</small>
+                            </div>
 
-            const dateElement = document.getElementById('currentDate');
-            const timeElement = document.getElementById('currentTime');
+                            <!-- Attitude Component -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0 fw-bold text-info">
+                                        <i class="fas fa-handshake me-2"></i>Attitude (10%)
+                                    </h6>
+                                    <span class="badge bg-info">Avg: {{ $statistics['averages']['attitude'] ?? 0 }}%</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $statistics['averages']['attitude'] ?? 0 }}%"></div>
+                                </div>
+                                <small class="text-muted">Behavior (50%) + Awareness (50%)</small>
+                            </div>
 
-            if (dateElement) dateElement.textContent = dateString;
-            if (timeElement) timeElement.textContent = timeString;
-        }
+                            <div class="alert alert-light border-start border-4 border-primary">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Final Grade Formula:</strong>
+                                        <code>(K × 0.40) + (S × 0.50) + (A × 0.10)</code>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="h5 mb-0 text-primary">{{ $statistics['averages']['final_grade'] ?? 0 }}%</div>
+                                        <small class="text-muted">Overall Average</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-graduation-cap fa-4x text-primary mb-3"></i>
+                                <h5 class="fw-bold">Balanced Assessment</h5>
+                                <p class="text-muted small">Comprehensive evaluation system for holistic student development</p>
+                            </div>
+                            
+                            @if($isApproved)
+                                <div class="d-grid gap-2">
+                                    <a href="{{ route('teacher.grades.settings', ['classId' => $myClasses->first()->id ?? 1]) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-cog me-1"></i>Grade Settings
+                                    </a>
+                                    <a href="{{ route('teacher.grades') }}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-chart-line me-1"></i>View Analytics
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        // Initialize date/time and update every second
-        document.addEventListener('DOMContentLoaded', function() {
-            updateDateTime();
-            setInterval(updateDateTime, 1000);
+        <!-- Recent Activities -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="fas fa-clock me-2"></i>Recent Activities
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    @if(isset($recentActivities) && is_array($recentActivities) && count($recentActivities) > 0)
+                        <div class="list-group list-group-flush">
+                            @foreach(array_slice($recentActivities, 0, 5) as $activity)
+                                <div class="list-group-item border-0 py-3">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            <div class="rounded-circle bg-{{ $activity['color'] }} bg-opacity-10 p-2">
+                                                <i class="{{ $activity['icon'] }} text-{{ $activity['color'] }}"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 fw-bold">{{ $activity['title'] }}</h6>
+                                            <p class="mb-1 small text-muted">{{ $activity['description'] }}</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ $activity['time']->diffForHumans() }}
+                                            </small>
+                                        </div>
+                                        @if(isset($activity['link']))
+                                            <a href="{{ $activity['link'] }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-0">No recent activities</p>
+                            <small class="text-muted">Start grading or managing attendance to see activities here</small>
+                        </div>
+                    @endif
+                </div>
+                @if(isset($recentActivities) && is_array($recentActivities) && count($recentActivities) > 5)
+                    <div class="card-footer bg-light text-center">
+                        <a href="#" class="btn btn-sm btn-outline-primary">View All Activities</a>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
-            // Animate stats on scroll
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
+    <!-- Enhanced My Classes Section -->
+    <div class="row mb-4 g-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-bold text-dark">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>My Classes
+                            @if(isset($campusInfo) && $campusInfo['type'] === 'campus')
+                                <span class="badge bg-info ms-2">{{ $campusInfo['short_name'] }}</span>
+                            @endif
+                        </h5>
+                        @if($isApproved)
+                            <div class="btn-group">
+                                <a href="{{ route('teacher.classes.create') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Add Class
+                                </a>
+                                <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                                    <span class="visually-hidden">Toggle Dropdown</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{{ route('teacher.classes') }}">
+                                        <i class="fas fa-list me-2"></i>Manage All Classes
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('teacher.subjects') }}">
+                                        <i class="fas fa-book me-2"></i>My Subjects
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ route('teacher.grades') }}">
+                                        <i class="fas fa-chart-line me-2"></i>Grade Analytics
+                                    </a></li>
+                                </ul>
+                            </div>
+                        @else
+                            <span class="badge bg-warning">
+                                <i class="fas fa-lock me-1"></i>Campus Approval Required
+                            </span>
+                        @endif
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if($isApproved && $myClasses && method_exists($myClasses, 'count') && $myClasses->count() > 0)
+                        <div class="row g-3">
+                            @foreach($myClasses as $class)
+                                <div class="col-md-6 col-xl-4">
+                                    <div class="card quick-action-card h-100" onclick="window.location.href='{{ route('teacher.classes.show', $class->id) }}'">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <h6 class="card-title mb-0 fw-bold">{{ $class->class_name }}</h6>
+                                                <span class="badge bg-primary">{{ $class->students ? $class->students->count() : 0 }} students</span>
+                                            </div>
+                                            
+                                            @if($class->subject)
+                                                <div class="mb-2">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-book me-1"></i>{{ $class->subject->subject_name }}
+                                                    </small>
+                                                </div>
+                                            @endif
+                                            
+                                            @if($class->course)
+                                                <div class="mb-2">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-graduation-cap me-1"></i>{{ $class->course->program_name }}
+                                                    </small>
+                                                </div>
+                                            @endif
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, observerOptions);
+                                            @if($class->school)
+                                                <div class="mb-2">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-university me-1"></i>{{ $class->school->short_name }}
+                                                    </small>
+                                                </div>
+                                            @endif
+                                            
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar me-1"></i>{{ $class->academic_year ?? 'Current' }}
+                                                </small>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-success btn-sm" 
+                                                            onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('teacher.grades.entry', $class->id) }}'"
+                                                            title="Grade Entry">
+                                                        <i class="fas fa-star"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-info btn-sm" 
+                                                            onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('teacher.attendance.manage', $class->id) }}'"
+                                                            title="Attendance">
+                                                        <i class="fas fa-calendar-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                            onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('teacher.classes.edit', $class->id) }}'"
+                                                            title="Edit Class">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @elseif(!$isApproved)
+                        <div class="text-center py-5">
+                            <i class="fas fa-lock fa-4x text-warning mb-3"></i>
+                            <h5 class="text-muted">Campus Approval Required</h5>
+                            <p class="text-muted">Your campus affiliation is {{ auth()->user()->campus_status ?? 'pending' }}. Contact your campus admin for approval to access classes and grading features.</p>
+                            <div class="alert alert-warning d-inline-block">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Status:</strong> {{ ucfirst(auth()->user()->campus_status ?? 'pending') }}
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Classes Yet</h5>
+                            <p class="text-muted">Create your first class to start managing students, grades, and attendance.</p>
+                            <a href="{{ route('teacher.classes.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create First Class
+                            </a>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 
-            // Observe all cards
-            document.querySelectorAll('.stat-card, .quick-action-btn, .ksa-card, .data-card').forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(card);
-            });
-        });
-    </script>
+    <!-- Enhanced Quick Actions -->
+    <div class="row mb-4 g-3">
+        <div class="col-md-4">
+            <div class="card quick-action-card h-100 {{ !$isApproved ? 'disabled' : '' }}" 
+                 onclick="{{ $isApproved ? "window.location.href='" . route('teacher.subjects') . "'" : '' }}">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-{{ $isApproved ? 'book' : 'lock' }} fa-3x text-{{ $isApproved ? 'primary' : 'muted' }}"></i>
+                    </div>
+                    <h6 class="fw-bold {{ !$isApproved ? 'text-muted' : '' }}">My Subjects</h6>
+                    <p class="text-muted small mb-3">
+                        {{ $isApproved ? 'Manage your teaching subjects and curriculum' : 'Campus approval required' }}
+                    </p>
+                    @if($isApproved && isset($assignedSubjects))
+                        <span class="badge bg-primary">{{ $assignedSubjects ? $assignedSubjects->count() : 0 }} subjects</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card quick-action-card h-100 {{ !$isApproved ? 'disabled' : '' }}" 
+                 onclick="{{ $isApproved ? "window.location.href='" . route('teacher.grades') . "'" : '' }}">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-{{ $isApproved ? 'chart-line' : 'lock' }} fa-3x text-{{ $isApproved ? 'success' : 'muted' }}"></i>
+                    </div>
+                    <h6 class="fw-bold {{ !$isApproved ? 'text-muted' : '' }}">Grade Analytics</h6>
+                    <p class="text-muted small mb-3">
+                        {{ $isApproved ? 'View comprehensive grading statistics and reports' : 'Campus approval required' }}
+                    </p>
+                    @if($isApproved && isset($statistics))
+                        <span class="badge bg-success">{{ $statistics['averages']['final_grade'] }}% avg</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card quick-action-card h-100 {{ !$isApproved ? 'disabled' : '' }}" 
+                 onclick="{{ $isApproved ? "window.location.href='" . route('teacher.attendance') . "'" : '' }}">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-{{ $isApproved ? 'calendar-check' : 'lock' }} fa-3x text-{{ $isApproved ? 'warning' : 'muted' }}"></i>
+                    </div>
+                    <h6 class="fw-bold {{ !$isApproved ? 'text-muted' : '' }}">Attendance Management</h6>
+                    <p class="text-muted small mb-3">
+                        {{ $isApproved ? 'Track and manage student attendance records' : 'Campus approval required' }}
+                    </p>
+                    @if($isApproved && isset($statistics))
+                        <span class="badge bg-warning">{{ $statistics['attendanceRecords'] }} records</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Tasks Section -->
+    @if($isApproved && isset($pendingTasks) && is_array($pendingTasks) && count($pendingTasks) > 0)
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <h6 class="mb-0 fw-bold text-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Pending Tasks ({{ is_array($pendingTasks) ? count($pendingTasks) : 0 }})
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach(array_slice($pendingTasks, 0, 3) as $task)
+                                <div class="col-md-4">
+                                    <div class="alert alert-{{ $task['priority'] === 'high' ? 'danger' : ($task['priority'] === 'medium' ? 'warning' : 'info') }} mb-0">
+                                        <h6 class="alert-heading fw-bold">{{ $task['title'] }}</h6>
+                                        <p class="mb-2 small">{{ $task['description'] }}</p>
+                                        @if(isset($task['link']))
+                                            <a href="{{ $task['link'] }}" class="btn btn-sm btn-outline-{{ $task['priority'] === 'high' ? 'danger' : ($task['priority'] === 'medium' ? 'warning' : 'info') }}">
+                                                Take Action
+                                            </a>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Security Policies & Profile Management Section -->
+    @if($isApproved)
+        <div class="row mb-4 g-3">
+            <!-- Security Policies -->
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0 fw-bold text-dark">
+                            <i class="fas fa-shield-alt me-2"></i>Security & Policies
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        @if(isset($securityPolicies) && is_array($securityPolicies) && count($securityPolicies) > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($securityPolicies as $policy)
+                                    <div class="list-group-item border-0 px-0 py-2">
+                                        <div class="d-flex align-items-start">
+                                            <div class="me-3">
+                                                <div class="rounded-circle bg-{{ $policy['type'] }} bg-opacity-10 p-2">
+                                                    <i class="{{ $policy['icon'] }} text-{{ $policy['type'] }}"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 fw-bold">{{ $policy['title'] }}</h6>
+                                                <p class="mb-1 small text-muted">{{ $policy['description'] }}</p>
+                                                @if($policy['enforced'])
+                                                    <span class="badge bg-success bg-opacity-25 text-success">
+                                                        <i class="fas fa-check me-1"></i>Enforced
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-3">
+                                <i class="fas fa-shield-alt fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-0">No security policies configured</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Management -->
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold text-dark">
+                                <i class="fas fa-user-cog me-2"></i>Profile Management
+                            </h6>
+                            <a href="{{ route('teacher.profile.edit') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit me-1"></i>Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @if(isset($profileManagement))
+                            <!-- Profile Completion -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold">Profile Completion</span>
+                                    <span class="badge bg-primary">{{ $profileManagement['profile_completion']['percentage'] }}%</span>
+                                </div>
+                                <div class="progress mb-2" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ $profileManagement['profile_completion']['percentage'] }}%"></div>
+                                </div>
+                                <small class="text-muted">
+                                    {{ $profileManagement['profile_completion']['completed_fields'] }}/{{ $profileManagement['profile_completion']['total_fields'] }} fields completed
+                                </small>
+                            </div>
+
+                            <!-- Campus Connections -->
+                            @if(isset($profileManagement['campus_connections']) && is_array($profileManagement['campus_connections']) && count($profileManagement['campus_connections']) > 0)
+                                <div class="mb-3">
+                                    <h6 class="fw-bold mb-2">Campus Connections</h6>
+                                    @foreach($profileManagement['campus_connections'] as $connection)
+                                        <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded mb-2">
+                                            <div>
+                                                <div class="fw-bold">{{ $connection['short_name'] }}</div>
+                                                <small class="text-muted">{{ $connection['role'] }} since {{ $connection['since']->format('M Y') }}</small>
+                                            </div>
+                                            <span class="badge bg-{{ $connection['status'] === 'approved' ? 'success' : 'warning' }}">
+                                                {{ ucfirst($connection['status']) }}
+                                            </span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <!-- Quick Actions -->
+                            <div class="d-grid gap-2">
+                                <a href="{{ route('teacher.profile.change-password') }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-key me-1"></i>Change Password
+                                </a>
+                                <a href="{{ route('teacher.settings.index') }}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-cog me-1"></i>Account Settings
+                                </a>
+                                @if(empty(auth()->user()->campus))
+                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#campusRequestModal">
+                                        <i class="fas fa-university me-1"></i>Request Campus Affiliation
+                                    </button>
+                                @else
+                                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#campusChangeModal">
+                                        <i class="fas fa-exchange-alt me-1"></i>Request Campus Change
+                                    </button>
+                                @endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Enhanced Teacher CRUD Modals -->
+    
+    <!-- Subject Creation Modal -->
+    <div class="modal fade" id="createSubjectModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-book me-2"></i>Create New Subject
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('teacher.subjects.create') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="subject_name" class="form-label">Subject Name *</label>
+                                <input type="text" class="form-control" id="subject_name" name="subject_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="subject_code" class="form-label">Subject Code *</label>
+                                <input type="text" class="form-control" id="subject_code" name="subject_code" required>
+                                @if(isset($campusInfo) && $campusInfo['type'] === 'campus')
+                                    <small class="text-muted">Campus code will be automatically added</small>
+                                @endif
+                            </div>
+                            <div class="col-md-6">
+                                <label for="credit_hours" class="form-label">Credit Hours *</label>
+                                <select class="form-select" id="credit_hours" name="credit_hours" required>
+                                    <option value="">Select Credit Hours</option>
+                                    <option value="1">1 Credit Hour</option>
+                                    <option value="2">2 Credit Hours</option>
+                                    <option value="3" selected>3 Credit Hours</option>
+                                    <option value="4">4 Credit Hours</option>
+                                    <option value="5">5 Credit Hours</option>
+                                    <option value="6">6 Credit Hours</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="semester" class="form-label">Semester *</label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="">Select Semester</option>
+                                    <option value="1">First Semester</option>
+                                    <option value="2">Second Semester</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="year_level" class="form-label">Year Level</label>
+                                <select class="form-select" id="year_level" name="year_level">
+                                    <option value="">Select Year Level</option>
+                                    <option value="1" selected>1st Year</option>
+                                    <option value="2">2nd Year</option>
+                                    <option value="3">3rd Year</option>
+                                    <option value="4">4th Year</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="category">
+                                    <option value="">Select Category</option>
+                                    <option value="Core">Core Subject</option>
+                                    <option value="Major">Major Subject</option>
+                                    <option value="Minor">Minor Subject</option>
+                                    <option value="Elective">Elective</option>
+                                    <option value="General">General Education</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Brief description of the subject..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Create Subject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campus Request Modal -->
+    <div class="modal fade" id="campusRequestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-university me-2"></i>Request Campus Affiliation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('teacher.request.campus-change') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="requested_campus" class="form-label">Requested Campus *</label>
+                            <select class="form-select" id="requested_campus" name="requested_campus" required>
+                                <option value="">Select Campus</option>
+                                <option value="Kabankalan">CPSU Main Campus - Kabankalan City</option>
+                                <option value="Victorias">CPSU Victorias Campus</option>
+                                <option value="Sipalay">CPSU Sipalay Campus - Brgy. Gil Montilla</option>
+                                <option value="Cauayan">CPSU Cauayan Campus</option>
+                                <option value="Candoni">CPSU Candoni Campus</option>
+                                <option value="Hinoba-an">CPSU Hinoba-an Campus</option>
+                                <option value="Ilog">CPSU Ilog Campus</option>
+                                <option value="Hinigaran">CPSU Hinigaran Campus</option>
+                                <option value="Moises Padilla">CPSU Moises Padilla Campus</option>
+                                <option value="San Carlos">CPSU San Carlos Campus</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason for Request *</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="4" required placeholder="Please explain why you want to be affiliated with this campus..."></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Your request will be reviewed by the campus administrator. You will receive a notification once your request is processed.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campus Change Modal -->
+    <div class="modal fade" id="campusChangeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exchange-alt me-2"></i>Request Campus Change
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('teacher.request.campus-change') }}" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Current Campus:</strong> {{ auth()->user()->campus ?? 'None' }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="requested_campus_change" class="form-label">New Campus *</label>
+                            <select class="form-select" id="requested_campus_change" name="requested_campus" required>
+                                <option value="">Select New Campus</option>
+                                <option value="Kabankalan">CPSU Main Campus - Kabankalan City</option>
+                                <option value="Victorias">CPSU Victorias Campus</option>
+                                <option value="Sipalay">CPSU Sipalay Campus - Brgy. Gil Montilla</option>
+                                <option value="Cauayan">CPSU Cauayan Campus</option>
+                                <option value="Candoni">CPSU Candoni Campus</option>
+                                <option value="Hinoba-an">CPSU Hinoba-an Campus</option>
+                                <option value="Ilog">CPSU Ilog Campus</option>
+                                <option value="Hinigaran">CPSU Hinigaran Campus</option>
+                                <option value="Moises Padilla">CPSU Moises Padilla Campus</option>
+                                <option value="San Carlos">CPSU San Carlos Campus</option>
+                                <option value="">Independent Teacher (No Campus)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="change_reason" class="form-label">Reason for Change *</label>
+                            <textarea class="form-control" id="change_reason" name="reason" rows="4" required placeholder="Please explain why you want to change your campus affiliation..."></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Changing campus will affect your access to current classes and data. Your request will be reviewed by administrators.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-exchange-alt me-1"></i>Request Change
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Floating Button -->
+    @if($isApproved)
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+            <div class="btn-group-vertical">
+                <button type="button" class="btn btn-primary btn-lg rounded-circle mb-2" data-bs-toggle="modal" data-bs-target="#createSubjectModal" title="Create Subject">
+                    <i class="fas fa-book"></i>
+                </button>
+                <a href="{{ route('teacher.classes.create') }}" class="btn btn-success btn-lg rounded-circle mb-2" title="Create Class">
+                    <i class="fas fa-plus"></i>
+                </a>
+                <a href="{{ route('teacher.grades') }}" class="btn btn-warning btn-lg rounded-circle" title="Grade Entry">
+                    <i class="fas fa-star"></i>
+                </a>
+            </div>
+        </div>
+    @endif
+
 @endsection

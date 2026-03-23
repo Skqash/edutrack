@@ -52,14 +52,26 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('grades', function (Blueprint $table) {
-            $table->dropColumn([
+            $columns = [
                 'output_1', 'output_2', 'output_3',
                 'class_participation_1', 'class_participation_2', 'class_participation_3',
                 'activities_1', 'activities_2', 'activities_3',
                 'assignments_1', 'assignments_2', 'assignments_3',
                 'behavior_1', 'behavior_2', 'behavior_3',
                 'awareness_1', 'awareness_2', 'awareness_3',
-            ]);
+            ];
+            
+            // Only drop columns that exist
+            $existingColumns = [];
+            foreach ($columns as $column) {
+                if (Schema::hasColumn('grades', $column)) {
+                    $existingColumns[] = $column;
+                }
+            }
+            
+            if (!empty($existingColumns)) {
+                $table->dropColumn($existingColumns);
+            }
         });
     }
 };

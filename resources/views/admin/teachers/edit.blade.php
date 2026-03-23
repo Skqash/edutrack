@@ -46,6 +46,59 @@
                     </div>
 
                     <div class="form-group mb-3">
+                        <label for="employee_id" class="form-label"><i class="fas fa-id-card"></i> Employee ID (Optional)</label>
+                        <input type="text" class="form-control @error('employee_id') is-invalid @enderror" id="employee_id" 
+                               name="employee_id" value="{{ $teacher->employee_id ?? '' }}">
+                        @error('employee_id')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="qualification" class="form-label"><i class="fas fa-graduation-cap"></i> Qualification (Optional)</label>
+                        <input type="text" class="form-control @error('qualification') is-invalid @enderror" id="qualification" 
+                               name="qualification" value="{{ $teacher->qualification ?? '' }}" placeholder="e.g., Master of Education, PhD in Mathematics">
+                        @error('qualification')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="specialization" class="form-label"><i class="fas fa-star"></i> Specialization (Optional)</label>
+                        <input type="text" class="form-control @error('specialization') is-invalid @enderror" id="specialization" 
+                               name="specialization" value="{{ $teacher->specialization ?? '' }}" placeholder="e.g., Mathematics, Computer Science, English">
+                        @error('specialization')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="department" class="form-label"><i class="fas fa-building"></i> Department (Optional)</label>
+                        <input type="text" class="form-control @error('department') is-invalid @enderror" id="department" 
+                               name="department" value="{{ $teacher->department ?? '' }}" placeholder="e.g., College of Engineering, College of Education">
+                        @error('department')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="status" class="form-label"><i class="fas fa-toggle-on"></i> Status</label>
+                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
+                            <option value="Active" {{ $teacher->status === 'Active' ? 'selected' : '' }}>Active</option>
+                            <option value="Inactive" {{ $teacher->status === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                        @error('status')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    @if($teacher->campus)
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> This teacher is assigned to <strong>{{ $teacher->campus }}</strong> campus.
+                    </div>
+                    @endif
+
+                    <div class="form-group mb-3">
                         <label for="password" class="form-label"><i class="fas fa-lock"></i> Password (Leave blank to keep current)</label>
                         <div class="input-group">
                             <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" 

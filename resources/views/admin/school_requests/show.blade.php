@@ -26,7 +26,9 @@
                     </div>
                     <div class="col-lg-6">
                         <h5>Request Details</h5>
-                        <p class="mb-1"><strong>School:</strong> {{ $schoolRequest->school_name }}</p>
+                        <p class="mb-1"><strong>Request Type:</strong> {{ ucfirst($schoolRequest->request_type) }}</p>
+                        <p class="mb-1"><strong>Target:</strong>
+                            {{ $schoolRequest->related_name ?? $schoolRequest->school_name }}</p>
                         @if ($schoolRequest->school_email)
                             <p class="mb-1"><strong>School Email:</strong> {{ $schoolRequest->school_email }}</p>
                         @endif
@@ -78,8 +80,7 @@
                                 $currentConnected =
                                     old('connected_school') ??
                                     ($schoolRequest->user->teacher->connected_school ??
-                                        null ??
-                                        $schoolRequest->school_name);
+                                        (null ?? $schoolRequest->school_name));
                             @endphp
                             <select name="connected_school" class="form-select">
                                 <option value="">(Select campus or use requested school)</option>

@@ -2,17 +2,15 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Course;
-use App\Models\Subject;
-use App\Models\ClassModel;
-use App\Models\SuperAdmin;
 use App\Models\Admin;
-use App\Models\Teacher;
-use App\Models\Student;
-use App\Models\Grade;
 use App\Models\Attendance;
 use App\Models\Classes;
+use App\Models\ClassModel;
+use App\Models\Course;
+use App\Models\Grade;
+use App\Models\Student;
+use App\Models\Subject;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -23,19 +21,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Only seed if database is empty
-        if (SuperAdmin::exists()) {
+        // Only seed if a superadmin user already exists
+        if (User::where('role', 'superadmin')->exists()) {
             return;
         }
 
         /* ============= SUPER ADMIN ============= */
-        SuperAdmin::create([
-            'super_id' => 'SA001',
-            'first_name' => 'Super',
-            'last_name' => 'Admin',
+        User::create([
+            'name' => 'Super Admin',
             'email' => 'superadmin@example.com',
             'password' => bcrypt('password123'),
-            'contact_number' => '1234567890',
+            'role' => 'superadmin',
+            'status' => 'Active',
         ]);
 
         /* ============= ADMIN USER ============= */
@@ -44,6 +41,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@example.com',
             'password' => bcrypt('password123'),
             'role' => 'admin',
+            'status' => 'Active',
         ]);
 
         /* ============= TEACHERS ============= */
@@ -69,59 +67,131 @@ class DatabaseSeeder extends Seeder
             $teachers[] = $teacher;
         }
 
-        /* ============= COURSES ============= */
+        /* ============= COURSES (Programs) ============= */
         $courses = [];
         $courseData = [
-            ['code' => 'CS101', 'name' => 'Introduction to Programming', 'credits' => 3, 'desc' => 'Learn basic programming concepts and languages', 'teacher' => 0],
-            ['code' => 'CS102', 'name' => 'Data Structures', 'credits' => 4, 'desc' => 'Study arrays, linked lists, trees, and graphs', 'teacher' => 4],
-            ['code' => 'CS201', 'name' => 'Web Development', 'credits' => 4, 'desc' => 'Frontend and backend web development', 'teacher' => 4],
-            ['code' => 'CS301', 'name' => 'Artificial Intelligence', 'credits' => 4, 'desc' => 'Machine learning and AI algorithms', 'teacher' => 4],
-            ['code' => 'MATH201', 'name' => 'Calculus I', 'credits' => 4, 'desc' => 'Advanced calculus concepts', 'teacher' => 1],
-            ['code' => 'MATH301', 'name' => 'Linear Algebra', 'credits' => 3, 'desc' => 'Matrices and vector spaces', 'teacher' => 1],
-            ['code' => 'ENG102', 'name' => 'English Literature', 'credits' => 3, 'desc' => 'Classic and modern literature', 'teacher' => 2],
-            ['code' => 'PHY101', 'name' => 'Physics I', 'credits' => 4, 'desc' => 'Mechanics and waves', 'teacher' => 0],
-            ['code' => 'CHEM101', 'name' => 'Chemistry I', 'credits' => 4, 'desc' => 'General chemistry principles', 'teacher' => 3],
-            ['code' => 'BIO101', 'name' => 'Biology I', 'credits' => 3, 'desc' => 'Cell biology and genetics', 'teacher' => 5],
+            ['program_code' => 'BSIT', 'program_name' => 'Bachelor of Science in Information Technology', 'desc' => 'Advanced IT program focusing on software development and systems', 'teacher' => 4],
+            ['program_code' => 'BEED', 'program_name' => 'Bachelor of Elementary Education', 'desc' => 'Teacher education program for elementary schools', 'teacher' => 2],
+            ['program_code' => 'BSAFE', 'program_name' => 'Bachelor of Science in Agriculture and Food Engineering', 'desc' => 'Agriculture and food engineering degree program', 'teacher' => 6],
+            ['program_code' => 'BSHM', 'program_name' => 'Bachelor of Science in Hospitality Management', 'desc' => 'Hospitality and tourism management program', 'teacher' => 7],
         ];
 
         foreach ($courseData as $cData) {
             $course = Course::create([
-                'course_code' => $cData['code'],
-                'course_name' => $cData['name'],
+                'program_code' => $cData['program_code'],
+                'course_code' => $cData['program_code'],
                 'description' => $cData['desc'],
                 'instructor_id' => $teachers[$cData['teacher']]->id,
                 'status' => 'Active',
-                'credit_hours' => $cData['credits'],
+                'credit_hours' => 120,
+                'college' => 'College of Education and Technology',
+                'department' => ucfirst(strtolower(substr($cData['program_code'], 0, 3))),
             ]);
             $courses[] = $course;
         }
 
         /* ============= SUBJECTS ============= */
+        /* Organized by Program (Course), Year, and Semester */
         $subjects = [];
-        $subjectData = [
-            ['code' => 'SCI101', 'name' => 'Physics I', 'category' => 'Science', 'credits' => 4, 'course' => 0, 'teacher' => 0],
-            ['code' => 'MATH101', 'name' => 'Algebra Fundamentals', 'category' => 'Mathematics', 'credits' => 3, 'course' => 4, 'teacher' => 1],
-            ['code' => 'ENG101', 'name' => 'English Grammar', 'category' => 'Languages', 'credits' => 3, 'course' => 6, 'teacher' => 2],
-            ['code' => 'CS201', 'name' => 'Data Structures', 'category' => 'Computer Science', 'credits' => 4, 'course' => 1, 'teacher' => 4],
-            ['code' => 'CS202', 'name' => 'Web Development Basics', 'category' => 'Computer Science', 'credits' => 3, 'course' => 2, 'teacher' => 4],
-            ['code' => 'CHEM101', 'name' => 'General Chemistry', 'category' => 'Science', 'credits' => 4, 'course' => 8, 'teacher' => 3],
-            ['code' => 'BIO101', 'name' => 'Cell Biology', 'category' => 'Science', 'credits' => 3, 'course' => 9, 'teacher' => 5],
-            ['code' => 'HIST101', 'name' => 'World History', 'category' => 'Social Studies', 'credits' => 3, 'course' => 6, 'teacher' => 6],
-            ['code' => 'ECO101', 'name' => 'Microeconomics', 'category' => 'Economics', 'credits' => 3, 'course' => 4, 'teacher' => 7],
-            ['code' => 'MATH301', 'name' => 'Matrix Theory', 'category' => 'Mathematics', 'credits' => 3, 'course' => 5, 'teacher' => 1],
+
+        // BSIT Subjects
+        $bsitSubjects = [
+            // First Year - First Semester
+            ['code' => 'BSIT101', 'name' => 'Introduction to Programming', 'category' => 'CS Core', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 4],
+            ['code' => 'BSIT102', 'name' => 'Computer Fundamentals', 'category' => 'CS Core', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 4],
+            ['code' => 'BSIT103', 'name' => 'Mathematics for IT', 'category' => 'General Ed', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 1],
+            // First Year - Second Semester
+            ['code' => 'BSIT104', 'name' => 'Data Structures', 'category' => 'CS Core', 'credits' => 4, 'year' => 1, 'sem' => '2', 'teacher' => 4],
+            ['code' => 'BSIT105', 'name' => 'Database Systems', 'category' => 'CS Core', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 4],
+            ['code' => 'BSIT106', 'name' => 'English Communication', 'category' => 'General Ed', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 2],
+            // Second Year - First Semester
+            ['code' => 'BSIT201', 'name' => 'Web Development I', 'category' => 'CS Core', 'credits' => 4, 'year' => 2, 'sem' => '1', 'teacher' => 4],
+            ['code' => 'BSIT202', 'name' => 'Software Engineering', 'category' => 'CS Core', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 4],
+            ['code' => 'BSIT203', 'name' => 'Operating Systems', 'category' => 'CS Core', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 0],
+            // Second Year - Second Semester
+            ['code' => 'BSIT204', 'name' => 'Web Development II', 'category' => 'CS Core', 'credits' => 4, 'year' => 2, 'sem' => '2', 'teacher' => 4],
+            ['code' => 'BSIT205', 'name' => 'Network Administration', 'category' => 'CS Core', 'credits' => 3, 'year' => 2, 'sem' => '2', 'teacher' => 0],
         ];
 
-        foreach ($subjectData as $sData) {
-            $subject = Subject::create([
-                'subject_code' => $sData['code'],
-                'subject_name' => $sData['name'],
-                'category' => $sData['category'],
-                'credit_hours' => $sData['credits'],
-                'course_id' => $courses[$sData['course']]->id,
-                'instructor_id' => $teachers[$sData['teacher']]->id,
-                'description' => 'Comprehensive course on ' . $sData['name'],
-            ]);
-            $subjects[] = $subject;
+        // BEED Subjects
+        $beedSubjects = [
+            // First Year - First Semester
+            ['code' => 'BEED101', 'name' => 'Foundations of Education', 'category' => 'Education', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 2],
+            ['code' => 'BEED102', 'name' => 'Child Development', 'category' => 'Education', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 2],
+            ['code' => 'BEED103', 'name' => 'English Language Arts', 'category' => 'Specialization', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 2],
+            // First Year - Second Semester
+            ['code' => 'BEED104', 'name' => 'Mathematics Education', 'category' => 'Specialization', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 1],
+            ['code' => 'BEED105', 'name' => 'Science Education', 'category' => 'Specialization', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 5],
+            ['code' => 'BEED106', 'name' => 'Educational Psychology', 'category' => 'Education', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 2],
+            // Second Year - First Semester
+            ['code' => 'BEED201', 'name' => 'Curriculum Development', 'category' => 'Education', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 2],
+            ['code' => 'BEED202', 'name' => 'Teaching Methods', 'category' => 'Education', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 2],
+            ['code' => 'BEED203', 'name' => 'Social Studies Teaching', 'category' => 'Specialization', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 6],
+            // Second Year - Second Semester
+            ['code' => 'BEED204', 'name' => 'Educational Assessment', 'category' => 'Education', 'credits' => 3, 'year' => 2, 'sem' => '2', 'teacher' => 2],
+            ['code' => 'BEED205', 'name' => 'Practicum I', 'category' => 'Practicum', 'credits' => 6, 'year' => 2, 'sem' => '2', 'teacher' => 2],
+        ];
+
+        // BSAFE Subjects
+        $bsafeSubjects = [
+            // First Year - First Semester
+            ['code' => 'BSAFE101', 'name' => 'Agricultural Science Fundamentals', 'category' => 'Agriculture', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 6],
+            ['code' => 'BSAFE102', 'name' => 'Soil Science', 'category' => 'Agriculture', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 6],
+            ['code' => 'BSAFE103', 'name' => 'Plant Science', 'category' => 'Agriculture', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 5],
+            // First Year - Second Semester
+            ['code' => 'BSAFE104', 'name' => 'Farm Machinery', 'category' => 'Engineering', 'credits' => 4, 'year' => 1, 'sem' => '2', 'teacher' => 0],
+            ['code' => 'BSAFE105', 'name' => 'Food Science Basics', 'category' => 'Food Engineering', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 3],
+            ['code' => 'BSAFE106', 'name' => 'Agricultural Economics', 'category' => 'Management', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 7],
+            // Second Year - First Semester
+            ['code' => 'BSAFE201', 'name' => 'Horticulture', 'category' => 'Agriculture', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 6],
+            ['code' => 'BSAFE202', 'name' => 'Food Preservation', 'category' => 'Food Engineering', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 3],
+            ['code' => 'BSAFE203', 'name' => 'Agricultural Engineering Design', 'category' => 'Engineering', 'credits' => 4, 'year' => 2, 'sem' => '1', 'teacher' => 0],
+            // Second Year - Second Semester
+            ['code' => 'BSAFE204', 'name' => 'Food Quality Management', 'category' => 'Food Engineering', 'credits' => 3, 'year' => 2, 'sem' => '2', 'teacher' => 3],
+            ['code' => 'BSAFE205', 'name' => 'AGRribusiness Management', 'category' => 'Management', 'credits' => 3, 'year' => 2, 'sem' => '2', 'teacher' => 7],
+        ];
+
+        // BSHM Subjects
+        $bshmSubjects = [
+            // First Year - First Semester
+            ['code' => 'BSHM101', 'name' => 'Hospitality Management Fundamentals', 'category' => 'Hospitality', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 7],
+            ['code' => 'BSHM102', 'name' => 'Food and Beverage Service', 'category' => 'Hospitality', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 7],
+            ['code' => 'BSHM103', 'name' => 'Front Office Operations', 'category' => 'Hospitality', 'credits' => 3, 'year' => 1, 'sem' => '1', 'teacher' => 7],
+            // First Year - Second Semester
+            ['code' => 'BSHM104', 'name' => 'Housekeeping Management', 'category' => 'Hospitality', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 7],
+            ['code' => 'BSHM105', 'name' => 'Hotel Accounting', 'category' => 'Business', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 1],
+            ['code' => 'BSHM106', 'name' => 'Tourism Planning', 'category' => 'Tourism', 'credits' => 3, 'year' => 1, 'sem' => '2', 'teacher' => 7],
+            // Second Year - First Semester
+            ['code' => 'BSHM201', 'name' => 'Event Management', 'category' => 'Hospitality', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 7],
+            ['code' => 'BSHM202', 'name' => 'Restaurant Management', 'category' => 'F&B', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 7],
+            ['code' => 'BSHM203', 'name' => 'Hotel Marketing', 'category' => 'Business', 'credits' => 3, 'year' => 2, 'sem' => '1', 'teacher' => 7],
+            // Second Year - Second Semester
+            ['code' => 'BSHM204', 'name' => 'Destination Management', 'category' => 'Tourism', 'credits' => 3, 'year' => 2, 'sem' => '2', 'teacher' => 7],
+            ['code' => 'BSHM205', 'name' => 'Hospitality Internship', 'category' => 'Practicum', 'credits' => 6, 'year' => 2, 'sem' => '2', 'teacher' => 7],
+        ];
+
+        // Combine all subjects
+        $allSubjects = [
+            ['subjects' => $bsitSubjects, 'course_index' => 0],
+            ['subjects' => $beedSubjects, 'course_index' => 1],
+            ['subjects' => $bsafeSubjects, 'course_index' => 2],
+            ['subjects' => $bshmSubjects, 'course_index' => 3],
+        ];
+
+        foreach ($allSubjects as $programSubjects) {
+            foreach ($programSubjects['subjects'] as $sData) {
+                $subject = Subject::create([
+                    'subject_code' => $sData['code'],
+                    'subject_name' => $sData['name'],
+                    'category' => $sData['category'],
+                    'semester' => $sData['sem'],
+                    'credit_hours' => $sData['credits'],
+                    'course_id' => $courses[$programSubjects['course_index']]->id,
+                    'instructor_id' => $teachers[$sData['teacher']]->id,
+                    'description' => $sData['name'].' - Year '.$sData['year'].' Semester '.$sData['sem'],
+                ]);
+                $subjects[] = $subject;
+            }
         }
 
         /* ============= CLASSES ============= */
@@ -141,7 +211,7 @@ class DatabaseSeeder extends Seeder
                 'section' => $clData['section'],
                 'capacity' => $clData['capacity'],
                 'teacher_id' => $teachers[$clData['teacher']]->id,
-                'description' => $clData['name'] . ' - ' . ($clData['level'] >= 11 ? 'Science Stream' : 'General Stream'),
+                'description' => $clData['name'].' - '.($clData['level'] >= 11 ? 'Science Stream' : 'General Stream'),
                 'status' => 'Active',
             ]);
             $classes[] = $class;
@@ -149,28 +219,26 @@ class DatabaseSeeder extends Seeder
 
         /* ============= STUDENTS ============= */
         $students = [];
-        $firstNames = ['John', 'Jane', 'Michael', 'Emily', 'David', 'Sarah', 'Robert', 'Jessica', 'James', 'Lisa', 
-                      'William', 'Mary', 'Richard', 'Patricia', 'Joseph', 'Jennifer', 'Thomas', 'Linda', 'Charles', 'Barbara'];
+        $firstNames = ['John', 'Jane', 'Michael', 'Emily', 'David', 'Sarah', 'Robert', 'Jessica', 'James', 'Lisa',
+            'William', 'Mary', 'Richard', 'Patricia', 'Joseph', 'Jennifer', 'Thomas', 'Linda', 'Charles', 'Barbara'];
         $lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
-                     'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
+            'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
 
         for ($i = 1; $i <= 30; $i++) {
             $firstName = $firstNames[array_rand($firstNames)];
             $lastName = $lastNames[array_rand($lastNames)];
-            
+
             $student = User::create([
                 'name' => "$firstName $lastName",
                 'email' => "student$i@example.com",
-                'phone' => '555' . str_pad($i, 7, '0', STR_PAD_LEFT),
+                'phone' => '555'.str_pad($i, 7, '0', STR_PAD_LEFT),
                 'password' => bcrypt('password123'),
                 'role' => 'student',
             ]);
 
             $studentModel = Student::create([
                 'user_id' => $student->id,
-                'student_id' => 'STU' . str_pad($i, 5, '0', STR_PAD_LEFT),
-                'admission_number' => 'ADM' . str_pad($i, 5, '0', STR_PAD_LEFT),
-                'roll_number' => str_pad($i, 3, '0', STR_PAD_LEFT),
+                'student_id' => 'STU'.str_pad($i, 5, '0', STR_PAD_LEFT),
                 'class_id' => $classes[array_rand($classes)]->id,
                 'gpa' => rand(2, 4) + (rand(0, 9) / 10),
                 'status' => 'Active',
@@ -185,35 +253,20 @@ class DatabaseSeeder extends Seeder
         foreach ($students as $student) {
             // Get random subjects from the array
             $randomKeys = array_rand($subjects, min(rand(3, 6), count($subjects)));
-            $randomSubjects = is_array($randomKeys) ? array_map(fn($k) => $subjects[$k], $randomKeys) : [$subjects[$randomKeys]];
-            
+            $randomSubjects = is_array($randomKeys) ? array_map(fn ($k) => $subjects[$k], $randomKeys) : [$subjects[$randomKeys]];
+
             foreach ($randomSubjects as $subject) {
                 foreach ($semesters as $semester) {
                     $marksObtained = rand(40, 100);
                     $totalMarks = 100;
                     $percentage = ($marksObtained / $totalMarks) * 100;
 
-                    // Determine grade
-                    if ($percentage >= 90) {
-                        $grade = 'A+';
-                    } elseif ($percentage >= 80) {
-                        $grade = 'A';
-                    } elseif ($percentage >= 70) {
-                        $grade = 'B';
-                    } elseif ($percentage >= 60) {
-                        $grade = 'C';
-                    } elseif ($percentage >= 50) {
-                        $grade = 'D';
-                    } else {
-                        $grade = 'F';
-                    }
-
                     Grade::create([
                         'student_id' => $student->id,
                         'subject_id' => $subject->id,
                         'marks_obtained' => $marksObtained,
                         'total_marks' => $totalMarks,
-                        'grade' => $grade,
+                        'grade' => $percentage,
                         'semester' => $semester,
                         'academic_year' => $academicYears[array_rand($academicYears)],
                     ]);
@@ -231,8 +284,8 @@ class DatabaseSeeder extends Seeder
             foreach ($students as $student) {
                 // Each student attends 3-4 classes per day
                 $randomClassKeys = array_rand($classes, min(rand(3, 4), count($classes)));
-                $randomClasses = is_array($randomClassKeys) ? array_map(fn($k) => $classes[$k], $randomClassKeys) : [$classes[$randomClassKeys]];
-                
+                $randomClasses = is_array($randomClassKeys) ? array_map(fn ($k) => $classes[$k], $randomClassKeys) : [$classes[$randomClassKeys]];
+
                 foreach ($randomClasses as $class) {
                     Attendance::create([
                         'student_id' => $student->id,

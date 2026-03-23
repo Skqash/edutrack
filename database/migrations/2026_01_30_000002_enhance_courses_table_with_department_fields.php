@@ -24,7 +24,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('courses', function (Blueprint $table) {
-            $table->dropForeignIdFor('users', 'head_id');
+            // Drop foreign key first
+            if (Schema::hasColumn('courses', 'head_id')) {
+                $table->dropForeign(['head_id']);
+            }
             $table->dropColumn(['head_id', 'department_code']);
         });
     }

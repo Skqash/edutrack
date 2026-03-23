@@ -62,13 +62,13 @@
 
                     <tr class="studentRow">
                         <td class="ps-4 fw-semibold text-dark">
-                            <i class="fas fa-user-circle text-primary me-2"></i>{{ $student->user->name ?? 'N/A' }}
+                            <i class="fas fa-user-circle text-primary me-2"></i>{{ $student->name ?? 'N/A' }}
                         </td>
                         <td>
                             <code class="text-secondary">{{ $student->student_id ?? 'N/A' }}</code>
                         </td>
                         <td>
-                            <small class="text-muted">{{ $student->user->email ?? 'N/A' }}</small>
+                            <small class="text-muted">{{ $student->email ?? 'N/A' }}</small>
                         </td>
                         <td>
                             <span class="badge bg-info text-dark">Year {{ $student->year ?? 'N/A' }}</span>
@@ -120,7 +120,7 @@
                         <div class="alert alert-danger mb-3">
                             <strong>⚠️ Warning!</strong> This action cannot be undone.
                         </div>
-                        <p>Are you sure you want to remove <strong>{{ $student->user->name }}</strong> from this class?</p>
+                        <p>Are you sure you want to remove <strong>{{ $student->name }}</strong> from this class?</p>
                         <p class="text-muted small mb-0">
                             All grade entries for this student in this class will be permanently deleted.
                         </p>

@@ -16,10 +16,8 @@ class AdminGradeController extends Controller
     {
         // Get all classes with their grade records
         $classes = \App\Models\ClassModel::with(['grades' => function ($query) {
-            $query->with('student.user', 'subject', 'teacher')->orderBy('created_at', 'desc');
-        }, 'students' => function ($query) {
-            $query->with('user');
-        }])->get();
+            $query->with('student', 'subject', 'teacher')->orderBy('created_at', 'desc');
+        }, 'students'])->get();
 
         // Group grades by class and calculate statistics
         $gradesByClass = [];
@@ -39,7 +37,7 @@ class AdminGradeController extends Controller
         }
 
         // Get total counts
-        $totalStudents = Student::with('user')->count();
+        $totalStudents = Student::count();
         $totalTeachers = User::where('role', 'teacher')->count();
         $totalClasses = ClassModel::count();
         $totalSubjects = Subject::count();
@@ -49,7 +47,7 @@ class AdminGradeController extends Controller
 
     public function create()
     {
-        $students = Student::with('user')->get();
+        $students = Student::all();
         $subjects = Subject::where('status', 'Active')->get();
 
         return view('admin.grades.create', compact('students', 'subjects'));
@@ -74,7 +72,7 @@ class AdminGradeController extends Controller
 
     public function edit(Grade $grade)
     {
-        $students = Student::with('user')->get();
+        $students = Student::all();
         $subjects = Subject::where('status', 'Active')->get();
 
         return view('admin.grades.edit', compact('grade', 'students', 'subjects'));
@@ -109,7 +107,7 @@ class AdminGradeController extends Controller
      */
     public function exportClass($classId)
     {
-        $class = ClassModel::with(['students.user', 'grades' => function ($query) {
+        $class = ClassModel::with(['students', 'grades' => function ($query) {
             $query->with('subject', 'teacher');
         }])->findOrFail($classId);
 
@@ -129,7 +127,7 @@ class AdminGradeController extends Controller
                     $finals = $grade->final_exam ?? 'N/A';
                     $average = $grade->grade_point ?? 'N/A';
 
-                    $csv .= '"'.($student->user->name ?? 'N/A').'",'
+                    $csv .= '"'.($student->name ?? 'N/A').'",'
                          .'"'.($grade->subject->subject_name ?? 'N/A').'",'
                          .'"'.$midterm.'",'
                          .'"'.$finals.'",'
@@ -137,7 +135,7 @@ class AdminGradeController extends Controller
                 }
             } else {
                 // Add student with N/A if no grades
-                $csv .= '"'.($student->user->name ?? 'N/A').'",N/A,N/A,N/A,N/A'."\n";
+                $csv .= '"'.($student->name ?? 'N/A').'",N/A,N/A,N/A,N/A'."\n";
             }
         }
 
@@ -153,7 +151,7 @@ class AdminGradeController extends Controller
      */
     public function printMidtermGrades($studentId, $classId)
     {
-        $student = Student::with('user')->findOrFail($studentId);
+        $student = Student::findOrFail($studentId);
         $class = ClassModel::findOrFail($classId);
 
         // Get grades for this student in this class
@@ -183,7 +181,7 @@ class AdminGradeController extends Controller
         // Configure DomPDF to allow remote images
         $pdf->setOptions(['isRemoteEnabled' => true]);
 
-        return $pdf->download($student->user->name.'_Midterm_Grades.pdf');
+        return $pdf->download($student->name.'_Midterm_Grades.pdf');
     }
 
     /**
@@ -191,7 +189,7 @@ class AdminGradeController extends Controller
      */
     public function printFinalGrades($studentId, $classId)
     {
-        $student = Student::with('user')->findOrFail($studentId);
+        $student = Student::findOrFail($studentId);
         $class = ClassModel::findOrFail($classId);
 
         // Get grades for this student in this class
@@ -221,6 +219,6 @@ class AdminGradeController extends Controller
         // Configure DomPDF to allow remote images
         $pdf->setOptions(['isRemoteEnabled' => true]);
 
-        return $pdf->download($student->user->name.'_Final_Grades.pdf');
+        return $pdf->download($student->name.'_Final_Grades.pdf');
     }
 }

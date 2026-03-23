@@ -9,13 +9,20 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $program_code
  * @property string $program_name
- * @property string $department
+ * @property int|null $department_id
+ * @property int|null $program_head_id
+ * @property int $total_years
  * @property string|null $description
- * @property int|null $head_id
  * @property string $status
- * @property string|null $duration
- * @property int|null $max_students
- * @property int|null $current_students
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ *
+ * @method \Illuminate\Database\Eloquent\Relations\BelongsTo head()
+ * @method \Illuminate\Database\Eloquent\Relations\BelongsTo department()
+ * @method \Illuminate\Database\Eloquent\Relations\HasMany subjects()
+ * @method \Illuminate\Database\Eloquent\Relations\HasMany classes()
+ * @method \Illuminate\Database\Eloquent\Relations\HasMany instructors() Multiple course instructors via pivot
+ * @method \Illuminate\Database\Eloquent\Relations\BelongsToMany instructorUsers() Users assigned as instructors
  */
 class Course extends Model
 {
@@ -24,55 +31,141 @@ class Course extends Model
     protected $fillable = [
         'program_code',
         'program_name',
-        'department',
+        'course_code',
+        'department_id',
+        'program_head_id',
+        'total_years',
         'description',
-        'head_id',
         'status',
-        'duration',
-        'max_students',
-        'current_students',
+        'campus',
+        'school_id',
+        'college', // Add college field
+        'department', // Add department field
+    ];
+
+    protected $hidden = [
+        'course_name', // Hide virtual attribute from JSON
+        'course_code', // Hide virtual attribute from JSON
     ];
 
     protected $casts = [
-        'max_students' => 'integer',
-        'current_students' => 'integer',
+        'department_id' => 'integer',
+        'program_head_id' => 'integer',
+        'total_years' => 'integer',
     ];
 
-    // Accessor for backward compatibility
+    // Accessors for backwards compatibility
     public function getCourseCodeAttribute()
     {
         return $this->program_code;
     }
 
-    public function getCourseNameAttribute()
+    public function getDepartmentAttribute()
     {
-        return $this->program_name;
+        // First try the department relationship
+        $department = $this->getRelationValue('department');
+        if ($department) {
+            return $department->department_name;
+        }
+        
+        // Fall back to college field if no department relationship
+        $college = $this->getAttributeFromArray('college');
+        if ($college) {
+            return $college;
+        }
+        
+        // Fall back to string department field
+        return $this->getAttributeFromArray('department');
     }
 
-    // Accessor for students count
+    public function getCollegeAttribute()
+    {
+        $department = $this->getRelationValue('department');
+        if ($department && $department->college) {
+            return $department->college->college_name;
+        }
+        
+        // Fall back to string field if relationship not loaded
+        return $this->getAttributeFromArray('college');
+    }
+
+    public function getDurationAttribute()
+    {
+        // Keep legacy support for code that expects duration string
+        if ($this->getAttributeFromArray('duration')) {
+            return $this->getAttributeFromArray('duration');
+        }
+
+        return $this->total_years ? "{$this->total_years} Years" : null;
+    }
+
     public function getStudentsAttribute()
     {
-        return $this->current_students ?? 0;
+        // If eager-loaded count is available, use it for performance
+        if (array_key_exists('students_count', $this->attributes)) {
+            return (int) $this->attributes['students_count'];
+        }
+
+        return $this->students()->count();
+    }
+
+    public function getStudentCountAttribute()
+    {
+        // Get actual enrolled students count for this course
+        return Student::where('course_id', $this->id)->count();
     }
 
     public function head()
     {
-        return $this->belongsTo(User::class, 'head_id');
+        return $this->belongsTo(User::class, 'program_head_id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    /**
+     * School relationship
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 
     public function subjects()
     {
-        return $this->hasMany(Subject::class);
+        // Subjects are linked via program_id (not course_id) in the subjects table
+        return $this->hasMany(Subject::class, 'program_id');
     }
 
     public function students()
     {
-        return $this->hasManyThrough(User::class, ClassModel::class, 'course_id', 'id');
+        return $this->hasMany(Student::class, 'course_id');
     }
 
     public function classes()
     {
         return $this->hasMany(ClassModel::class);
+    }
+
+    // Multiple instructors support via pivot table
+    public function instructors()
+    {
+        return $this->hasMany(CourseInstructor::class);
+    }
+
+    // Get all users assigned as instructors for this course
+    public function instructorUsers()
+    {
+        return $this->belongsToMany(
+            User::class,
+            'course_instructors',
+            'course_id',
+            'user_id'
+        )
+            ->withPivot('role')
+            ->withTimestamps();
     }
 
     // Scope for active programs
@@ -81,10 +174,16 @@ class Course extends Model
         return $query->where('status', 'Active');
     }
 
-    // Scope by department
+    // Scope by department (accepts department id or department name)
     public function scopeByDepartment($query, $department)
     {
-        return $query->where('department', $department);
+        if (is_numeric($department)) {
+            return $query->where('department_id', $department);
+        }
+
+        return $query->whereHas('department', function ($q) use ($department) {
+            $q->where('department_name', $department);
+        });
     }
 
     // Sync all subjects in this course

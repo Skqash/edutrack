@@ -29,19 +29,14 @@
 
                             <div class="mb-3">
                                 <label for="class_id" class="form-label fw-bold">Class<span class="text-danger">*</span></label>
-                                <select class="form-select @error('class_id') is-invalid @enderror" id="class_id"
-                                    name="class_id" required onchange="updateClassInfo()">
-                                    <option value="">-- Select Class --</option>
-                                    @foreach ($myClasses as $class)
-                                        <option value="{{ $class->id }}"
-                                                data-student-count="{{ $class->students->count() }}"
-                                                data-capacity="{{ $class->capacity }}"
-                                                data-year="{{ $class->year }}"
-                                                data-section="{{ $class->section }}">
-                                            {{ $class->class_name }} ({{ $class->year ?? 'Year 1' }}) - Section {{ $class->section }} - {{ $class->students->count() }}/{{ $class->capacity }} students
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-dropdown
+                                    name="class_id"
+                                    id="class_id"
+                                    placeholder="Search and select class..."
+                                    api-url="{{ route('api.classes') }}"
+                                    required="true"
+                                    class="form-select @error('class_id') is-invalid @enderror"
+                                />
                                 @error('class_id')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -234,8 +229,8 @@
                                                         style="font-size: 0.85rem; letter-spacing: 0.5px;">{{ $student->student_id ?? 'N/A' }}</span>
                                                 </td>
                                                 <td>
-                                                    <strong>{{ $student->user->name ?? 'N/A' }}</strong>
-                                                <td>{{ $student->user->email ?? 'N/A' }}</td>
+                                                    <strong>{{ $student->name ?? 'N/A' }}</strong>
+                                                <td>{{ $student->email ?? 'N/A' }}</td>
                                                 <td>{{ $student->admission_number ?? '-' }}</td>
                                                 <td>{{ $student->roll_number ?? '-' }}</td>
                                                 <td>
@@ -287,12 +282,12 @@
             const selectedOption = classSelect.options[classSelect.selectedIndex];
             if (selectedOption && selectedOption.value) {
                 const studentCount = selectedOption.getAttribute('data-student-count');
-                const capacity = selectedOption.getAttribute('data-capacity');
+                const totalStudents = selectedOption.getAttribute('data-total-students');
                 const year = selectedOption.getAttribute('data-year');
                 const section = selectedOption.getAttribute('data-section');
                 
                 // Show class info alert
-                showClassInfo(studentCount, capacity, year, section);
+                showClassInfo(studentCount, totalStudents, year, section);
             }
         };
 
@@ -317,7 +312,7 @@
         };
 
         // Show class information
-        function showClassInfo(studentCount, capacity, year, section) {
+        function showClassInfo(studentCount, totalStudents, year, section) {
             // Remove existing alerts
             const existingAlerts = document.querySelectorAll('.class-info-alert');
             existingAlerts.forEach(alert => alert.remove());
@@ -328,7 +323,7 @@
             alert.innerHTML = `
                 <i class="fas fa-info-circle me-2"></i>
                 <strong>Class Information:</strong> ${year} - Section ${section}<br>
-                <small>Current students: ${studentCount}/${capacity}</small>
+                <small>Current students: ${studentCount}/${totalStudents}</small>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             `;
             

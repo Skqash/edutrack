@@ -260,9 +260,9 @@
                                                         <div class="student-item selected">
                                                             <label class="d-flex align-items-center cursor-pointer">
                                                                 <input type="checkbox" name="selected_students[]" value="{{ $student->id }}" 
-                                                                       class="student-checkbox" checked data-name="{{ $student->user->name }}">
+                                                                       class="student-checkbox" checked data-name="{{ $student->name }}">
                                                                 <div class="ms-2">
-                                                                    <div class="fw-medium">{{ $student->user->name }}</div>
+                                                                    <div class="fw-medium">{{ $student->name }}</div>
                                                                     <small class="text-muted">
                                                                         {{ $student->student_id }} • Year {{ $student->year }} • {{ $student->section }} • {{ $student->class?->class_name ?? 'N/A' }}
                                                                     </small>

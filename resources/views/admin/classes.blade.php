@@ -1,6 +1,10 @@
 @extends('layouts.admin')
 
 @section('content')
+    @php
+        /** @var \Illuminate\Database\Eloquent\Collection|\App\Models\ClassModel[] $classes */
+    @endphp
+
     <style>
         /* Modern Page Header */
         .page-header-modern {
@@ -175,53 +179,88 @@
                 <table class="table table-hover">
                     <thead style="background-color: #f8f9fa;">
                         <tr>
-                            <th class="fw-bold">Class Name</th>
-                            <th class="fw-bold">Class Level</th>
-                            <th class="fw-bold">Section</th>
-                            <th class="fw-bold">Students</th>
+                            <th class="fw-bold">Subject Name</th>
+                            <th class="fw-bold">Year/Section</th>
+                            <th class="fw-bold">School Year</th>
+                            <th class="fw-bold">Semester</th>
+                            <th class="fw-bold">Enrolled</th>
                             <th class="fw-bold">Class Teacher</th>
                             <th class="fw-bold">Capacity</th>
                             <th class="fw-bold">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($classes as $class)
-                            <tr data-class-id="{{ $class->id }}">
-                                <td><strong>{{ $class->class_name }}</strong></td>
-                                <td><span class="badge bg-light text-dark">{{ $class->class_level }}</span></td>
-                                <td>{{ $class->section }}</td>
-                                <td><span class="badge bg-info">{{ $class->students()->count() }}</span></td>
-                                <td>{{ $class->teacher->name ?? 'N/A' }}</td>
-                                <td>
-                                    <div class="progress" style="height: 20px; width: 100px;">
-                                        <div class="progress-bar {{ $class->utilizationPercentage() > 85 ? 'bg-danger' : ($class->utilizationPercentage() > 70 ? 'bg-warning' : 'bg-success') }}"
-                                            style="width: {{ $class->utilizationPercentage() }}%;"></div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('admin.classes.edit', $class->id) }}"
-                                            class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>
-                                        <a href="{{ route('admin.classes.show', $class->id) }}"
-                                            class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a>
-                                        <button type="button" class="btn btn-sm btn-outline-success"
-                                            onclick="openStudentModal({{ $class->id }}, '{{ $class->class_name }}')">
-                                            <i class="fas fa-user-plus"></i> Add Students
-                                        </button>
-                                        <form action="{{ route('admin.classes.destroy', $class->id) }}" method="POST"
-                                            style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('Are you sure?')"><i
-                                                    class="fas fa-trash"></i></button>
-                                        </form>
-                                    </div>
+                        @forelse($classesByCourse as $courseName => $courseClasses)
+                            <!-- Course Header Row -->
+                            <tr class="table-primary">
+                                <td colspan="8" class="fw-bold">
+                                    <i class="fas fa-graduation-cap me-2"></i>
+                                    {{ $courseName }}
+                                    <span class="badge bg-primary ms-2">{{ $courseClasses->count() }} classes</span>
                                 </td>
                             </tr>
+                            
+                            <!-- Classes under this course -->
+                            @foreach($courseClasses as $class)
+                                <tr data-class-id="{{ $class->id }}">
+                                    <td><strong>{{ $class->class_name }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            Year {{ $class->year }}-{{ strtoupper($class->section) }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $class->school_year ?? 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-info text-white">
+                                            Semester {{ $class->semester ?? '1' }}
+                                        </span>
+                                    </td>
+                                    <td><span class="badge bg-success">{{ $class->total_students ?? 0 }}</span></td>
+                                    <td>{{ $class->teacher->name ?? 'N/A' }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 100px;">
+                                            @php
+                                                $capacity = $class->capacity ?? 50;
+                                                $enrolled = $class->total_students ?? 0;
+                                                $percentage = $capacity > 0 ? min(100, ($enrolled / $capacity) * 100) : 0;
+                                                $barClass =
+                                                    $percentage > 85
+                                                        ? 'bg-danger'
+                                                        : ($percentage > 70
+                                                            ? 'bg-warning'
+                                                            : 'bg-success');
+                                            @endphp
+                                            <div class="progress-bar {{ $barClass }}"
+                                                style="width: {{ $percentage }}%; title='{{ $enrolled }}/{{ $capacity }} students'">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('admin.classes.edit', $class->id) }}"
+                                                class="btn btn-sm btn-outline-primary" title="Edit"><i
+                                                    class="fas fa-edit"></i></a>
+                                            <a href="{{ route('admin.classes.show', $class->id) }}"
+                                                class="btn btn-sm btn-outline-info" title="View Details"><i
+                                                    class="fas fa-eye"></i></a>
+                                            <button type="button" class="btn btn-sm btn-outline-success"
+                                                onclick="openStudentModal({{ $class->id }}, '{{ $class->class_name }}')"
+                                                title="Add Students"><i class="fas fa-user-plus"></i></button>
+                                            <form action="{{ route('admin.classes.destroy', $class->id) }}" method="POST"
+                                                style="display:inline;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Are you sure you want to delete this class?')"
+                                                    title="Delete"><i class="fas fa-trash"></i></button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4">
+                                <td colspan="8" class="text-center py-4">
                                     <p class="text-muted">No classes found</p>
                                 </td>
                             </tr>

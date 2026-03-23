@@ -6,16 +6,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * Subject Model - Represents curriculum subjects
+ *
  * @property int $id
  * @property string $subject_code
  * @property string $subject_name
- * @property string $category
+ * @property string $category (Core / General Ed / Major / Specialization)
  * @property int $credit_hours
- * @property int|null $course_id
- * @property int|null $instructor_id
+ * @property int|null $program_id (FK to courses table)
  * @property string|null $description
- * @property string|null $type
- * @property string|null $program
+ * @property string|null $semester (1 or 2)
+ * @property int|null $year_level (1-4)
+ * @property-read Course $program
  */
 class Subject extends Model
 {
@@ -26,53 +28,24 @@ class Subject extends Model
         'subject_name',
         'category',
         'credit_hours',
-        'course_id',
-        'instructor_id',
+        'program_id',
         'description',
-        'type',
-        'program',
+        'semester',
+        'year_level',
+        'campus',
+        'school_id',
+        'campus_code', // Campus code separated from subject code
     ];
 
     protected $casts = [
         'credit_hours' => 'integer',
+        'year_level' => 'integer',
     ];
 
-    // Boot method to sync program with course
-    protected static function boot()
+    // Accessor for program code from course
+    public function getProgramCodeAttribute()
     {
-        parent::boot();
-
-        static::saving(function ($subject) {
-            // Auto-sync program with course when course_id is set
-            if ($subject->course_id && ! $subject->program) {
-                $course = Course::find($subject->course_id);
-                $subject->program = $course ? $course->program_name : 'General Education';
-            }
-
-            // If no course_id and no program, set to General Education
-            if (! $subject->course_id && ! $subject->program) {
-                $subject->program = 'General Education';
-            }
-        });
-
-        static::updated(function ($subject) {
-            // Update program when course changes
-            if ($subject->wasChanged('course_id') && $subject->course_id) {
-                $course = Course::find($subject->course_id);
-                $subject->program = $course ? $course->program_name : 'General Education';
-                $subject->saveQuietly(); // Avoid infinite loop
-            }
-        });
-    }
-
-    // Accessor for program name
-    public function getProgramAttribute()
-    {
-        if (isset($this->attributes['program'])) {
-            return $this->attributes['program'];
-        }
-
-        return $this->course?->program_name ?? 'General Education';
+        return $this->program?->program_code ?? 'GEN';
     }
 
     // Accessor for units (alias for credit_hours)
@@ -81,15 +54,45 @@ class Subject extends Model
         return $this->credit_hours;
     }
 
-    // Accessor for program code from course
-    public function getProgramCodeAttribute()
+    /**
+     * Relationship: Subject belongs to a Program (Course)
+     * Renamed from course() to program() for clarity
+     */
+    public function program()
     {
-        return $this->course?->program_code ?? 'GEN';
+        return $this->belongsTo(Course::class, 'program_id');
     }
 
+    /**
+     * Alias for backward compatibility
+     */
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->program();
+    }
+
+    /**
+     * School relationship
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    /**
+     * Campus school relationship via campus_code
+     */
+    public function campusSchool()
+    {
+        return $this->belongsTo(School::class, 'campus_code', 'school_code');
+    }
+
+    /**
+     * Get full subject code with campus prefix
+     */
+    public function getFullSubjectCodeAttribute()
+    {
+        return $this->campus_code ? $this->campus_code . '-' . $this->subject_code : $this->subject_code;
     }
 
     public function instructor()
@@ -103,6 +106,30 @@ class Subject extends Model
             ->withPivot('status', 'assigned_at')
             ->withTimestamps()
             ->where('role', 'teacher');
+    }
+
+    /**
+     * Get all instructors for this subject (via pivot table)
+     * Supports multiple instructors with different roles
+     */
+    public function instructors()
+    {
+        return $this->hasMany(SubjectInstructor::class);
+    }
+
+    /**
+     * Get all instructor users for this subject
+     */
+    public function instructorUsers()
+    {
+        return $this->belongsToMany(User::class, 'subject_instructors', 'subject_id', 'user_id')
+            ->withPivot('role', 'status', 'assigned_at')
+            ->withTimestamps();
+    }
+
+    public function classes()
+    {
+        return $this->belongsToMany(ClassModel::class, 'class_subjects', 'subject_id', 'class_id');
     }
 
     // Scope by category
@@ -147,7 +174,8 @@ class Subject extends Model
     // Scope by course
     public function scopeByCourse($query, $courseId)
     {
-        return $query->where('course_id', $courseId);
+        // Subject uses program_id to link to courses
+        return $query->where('program_id', $courseId);
     }
 
     // Get subjects grouped by program for display
@@ -161,10 +189,10 @@ class Subject extends Model
     // Sync subject with course
     public function syncWithCourse()
     {
-        if ($this->course_id) {
-            $course = Course::find($this->course_id);
+        if ($this->program_id) {
+            $course = Course::find($this->program_id);
             if ($course) {
-                $this->program = $course->program_name;
+                $this->program_name = $course->program_name;
                 $this->saveQuietly();
             }
         }

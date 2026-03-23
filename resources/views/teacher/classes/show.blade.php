@@ -46,8 +46,8 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <h6 class="text-white-50 mb-1">Capacity</h6>
-                            <h3 class="mb-0">{{ $class->capacity }}</h3>
+                            <h6 class="text-white-50 mb-1">Total Students</h6>
+                            <h3 class="mb-0">{{ $class->total_students }}</h3>
                         </div>
                         <i class="fas fa-door-open fa-2x opacity-50"></i>
                     </div>
@@ -131,7 +131,7 @@
                                                     style="font-size: 0.85rem; letter-spacing: 0.5px;">{{ $student->student_id ?? 'N/A' }}</span>
                                             </td>
                                             <td>
-                                                <strong>{{ $student->user->name ?? $student->name }}</strong>
+                                                <strong>{{ $student->name }}</strong>
                                                 <br>
                                                 <small class="text-muted">{{ $student->status ?? 'Active' }}</small>
                                             </td>
@@ -140,10 +140,10 @@
                                                     <strong>{{ $student->section }}</strong></small>
                                             </td>
                                             <td class="d-none d-md-table-cell">
-                                                <small>{{ $student->user->email ?? 'N/A' }}</small>
+                                                <small>{{ $student->email ?? 'N/A' }}</small>
                                             </td>
                                             <td class="d-none d-lg-table-cell">
-                                                <small>{{ $student->user->phone ?? 'N/A' }}</small>
+                                                <small>{{ $student->phone ?? 'N/A' }}</small>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group btn-group-sm" role="group">

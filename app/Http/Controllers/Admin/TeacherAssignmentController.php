@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\ClassModel;
 use App\Models\Subject;
 use App\Models\Course;
+use App\Models\Department;
 use App\Models\Student;
 use Illuminate\Http\Request;
 
@@ -42,7 +43,7 @@ class TeacherAssignmentController extends Controller
 
         // Get filter options
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
-        $departments = Course::distinct()->pluck('department')->filter();
+        $departments = Department::orderBy('department_name')->pluck('department_name');
         $academicYears = ['2024-2025', '2025-2026', '2026-2027'];
         $semesters = ['First', 'Second', 'Summer'];
 
@@ -60,8 +61,8 @@ class TeacherAssignmentController extends Controller
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
         $classes = ClassModel::with('course')->get();
         $subjects = Subject::with('course')->get();
-        $courses = Course::orderBy('department')->get();
-        $departments = Course::distinct()->pluck('department')->filter();
+        $courses = Course::with('department')->orderBy('program_name')->get();
+        $departments = Department::orderBy('department_name')->pluck('department_name');
         $academicYears = ['2024-2025', '2025-2026', '2026-2027'];
         $semesters = ['First', 'Second', 'Summer'];
 
@@ -123,8 +124,8 @@ class TeacherAssignmentController extends Controller
         $teachers = User::where('role', 'teacher')->orderBy('name')->get();
         $classes = ClassModel::with('course')->get();
         $subjects = Subject::with('course')->get();
-        $courses = Course::orderBy('department')->get();
-        $departments = Course::distinct()->pluck('department')->filter();
+        $courses = Course::with('department')->orderBy('program_name')->get();
+        $departments = Department::orderBy('department_name')->pluck('department_name');
         $academicYears = ['2024-2025', '2025-2026', '2026-2027'];
         $semesters = ['First', 'Second', 'Summer'];
 
@@ -185,9 +186,9 @@ class TeacherAssignmentController extends Controller
             ->with('success', 'Teacher assignment deleted successfully.');
     }
 
-    public function getAvailableStudents(TeacherAssignment $assignment = null)
+    public function getAvailableStudents(?TeacherAssignment $assignment = null)
     {
-        $query = Student::with('user')->active();
+        $query = Student::active();
 
         // Filter by class if assignment has class
         if ($assignment && $assignment->class_id) {
@@ -203,8 +204,8 @@ class TeacherAssignmentController extends Controller
 
         // Filter by department if assignment has department
         if ($assignment && $assignment->department) {
-            $query->whereHas('class.course', function ($q) use ($assignment) {
-                $q->where('department', $assignment->department);
+            $query->whereHas('class.course.department', function ($q) use ($assignment) {
+                $q->where('department_name', $assignment->department);
             });
         }
 
@@ -213,7 +214,7 @@ class TeacherAssignmentController extends Controller
 
     public function getStudentsByFilter(Request $request)
     {
-        $query = Student::with('user')->active();
+        $query = Student::active();
 
         if ($request->filled('class_id')) {
             $query->where('class_id', $request->class_id);
@@ -226,8 +227,8 @@ class TeacherAssignmentController extends Controller
         }
 
         if ($request->filled('department')) {
-            $query->whereHas('class.course', function ($q) use ($request) {
-                $q->where('department', $request->department);
+            $query->whereHas('class.course.department', function ($q) use ($request) {
+                $q->where('department_name', $request->department);
             });
         }
 

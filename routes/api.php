@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+// Search API routes for dynamic dropdowns
+Route::middleware('auth')->group(function () {
+    Route::get('/courses/search', [SearchController::class, 'courses']);
+    Route::get('/subjects/search', [SearchController::class, 'subjects']);
+    Route::get('/teachers/search', [SearchController::class, 'teachers']);
+    Route::get('/departments/search', [SearchController::class, 'departments']);
 });

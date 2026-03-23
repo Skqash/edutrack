@@ -18,6 +18,9 @@ class SchoolRequest extends Model
         'note',
         'status',
         'admin_note',
+        'request_type',
+        'related_id',
+        'related_name',
     ];
 
     protected $casts = [

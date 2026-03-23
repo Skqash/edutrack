@@ -18,17 +18,20 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, ...$roles)
     {
-        // Check if user is super admin
-        if (Auth::guard('super')->check()) {
-            return $next($request);
+        // Ensure the user is authenticated
+        if (! Auth::check()) {
+            return redirect('/login')->with('error', 'Please login to access this page.');
         }
 
-        // Check if user is logged in via web guard and has the required role
-        if (Auth::check()) {
-            $user = Auth::user();
-            if (in_array($user->role, $roles)) {
-                return $next($request);
-            }
+        $user = Auth::user();
+
+        // Support both `super` and `superadmin` role naming for backward compatibility
+        $normalizedRoles = array_map(function ($role) {
+            return $role === 'super' ? 'superadmin' : $role;
+        }, $roles);
+
+        if (in_array($user->role, $normalizedRoles)) {
+            return $next($request);
         }
 
         return redirect('/login')->with('error', 'Unauthorized access.');

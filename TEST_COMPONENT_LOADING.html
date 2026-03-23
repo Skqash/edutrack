@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Component Loading</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .result { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Component Loading Test</h1>
+    
+    <p>Enter Class ID: <input type="number" id="classId" value="1" /></p>
+    <button onclick="testLoad()">Test Load Components</button>
+    
+    <div id="result"></div>
+    
+    <script>
+        function testLoad() {
+            const classId = document.getElementById('classId').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.innerHTML = '<div class="result">Loading...</div>';
+            
+            const startTime = Date.now();
+            
+            fetch(`/teacher/components/${classId}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                const loadTime = Date.now() - startTime;
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json().then(data => ({data, loadTime}));
+            })
+            .then(({data, loadTime}) => {
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✓ Success! (${loadTime}ms)</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                const loadTime = Date.now() - startTime;
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>✗ Error! (${loadTime}ms)</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

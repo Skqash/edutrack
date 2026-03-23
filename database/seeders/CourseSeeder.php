@@ -67,7 +67,7 @@ class CourseSeeder extends Seeder
         foreach ($courses as $index => $course) {
             Course::create([
                 'course_code' => $course['course_code'],
-                'course_name' => $course['course_name'],
+                'program_name' => $course['program_name'],
                 'instructor_id' => $teachers[$index % count($teachers)]->id,
                 'credit_hours' => $course['credit_hours'],
                 'description' => $course['description'],

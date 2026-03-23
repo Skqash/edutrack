@@ -245,13 +245,13 @@
                                             <td>
                                                 <div class="d-flex align-items-center gap-3">
                                                     <div class="avatar-circle">
-                                                        {{ strtoupper(substr($student->user->name ?? $student->name, 0, 1)) }}
+                                                        {{ strtoupper(substr($student->name, 0, 1)) }}
                                                     </div>
-                                                    <span class="fw-semibold">{{ $student->user->name ?? $student->name }}</span>
+                                                    <span class="fw-semibold">{{ $student->name }}</span>
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="text-muted">{{ $student->user->email ?? $student->email }}</span>
+                                                <span class="text-muted">{{ $student->email }}</span>
                                             </td>
                                             <td>
                                                 <span class="text-muted">{{ $student->created_at->format('d M Y') }}</span>

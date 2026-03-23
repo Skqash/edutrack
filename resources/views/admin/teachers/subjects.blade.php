@@ -20,6 +20,58 @@
         </div>
 
         <div class="row">
+            <!-- Pending Subject Requests for approval -->
+            <div class="col-md-12 mb-4">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-white">
+                        <h4 class="card-title mb-0"><i class="fas fa-clock me-2"></i>Pending Subject requests</h4>
+                    </div>
+                    <div class="card-body">
+                        @if (isset($pendingSubjects) && $pendingSubjects->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Teacher</th>
+                                            <th>Course</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($pendingSubjects as $subject)
+                                            <tr>
+                                                <td>{{ $subject->subject_code }}</td>
+                                                <td>{{ $subject->subject_name }}</td>
+                                                <td>{{ $teacher->name }}</td>
+                                                <td>{{ $subject->program->program_name ?? 'N/A' }}</td>
+                                                <td>
+                                                    <form
+                                                        action="{{ route('admin.teachers.subjects.approve', [$teacher->id, $subject->id]) }}"
+                                                        method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button class="btn btn-sm btn-success">Approve</button>
+                                                    </form>
+                                                    <form
+                                                        action="{{ route('admin.teachers.subjects.reject', [$teacher->id, $subject->id]) }}"
+                                                        method="POST" class="d-inline ms-1">
+                                                        @csrf
+                                                        <button class="btn btn-sm btn-danger">Reject</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <p class="mb-0 text-muted">No pending subject requests at the moment.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             <!-- Assigned Subjects -->
             <div class="col-md-6">
                 <div class="card">
@@ -54,18 +106,21 @@
                                                     <small class="text-muted">{{ $subject->category }}</small>
                                                 </td>
                                                 <td>
-                                                    <span class="badge bg-secondary">{{ $subject->credit_hours }} units</span>
+                                                    <span class="badge bg-secondary">{{ $subject->credit_hours }}
+                                                        units</span>
                                                 </td>
                                                 <td>
-                                                    <small class="text-muted">{{ $subject->course->course_name ?? 'N/A' }}</small>
+                                                    <small
+                                                        class="text-muted">{{ $subject->program->program_name ?? 'N/A' }}</small>
                                                 </td>
                                                 <td>
-                                                    <form action="{{ route('admin.teachers.remove-subject', [$teacher->id, $subject->id]) }}" 
-                                                          method="POST" style="display:inline;">
+                                                    <form
+                                                        action="{{ route('admin.teachers.remove-subject', [$teacher->id, $subject->id]) }}"
+                                                        method="POST" style="display:inline;">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger" 
-                                                                onclick="return confirm('Remove this subject assignment?')">
+                                                        <button type="submit" class="btn btn-sm btn-danger"
+                                                            onclick="return confirm('Remove this subject assignment?')">
                                                             <i class="fas fa-times"></i>
                                                         </button>
                                                     </form>
@@ -115,8 +170,9 @@
                                             @foreach ($availableSubjects as $subject)
                                                 <tr>
                                                     <td>
-                                                        <input type="checkbox" name="subject_ids[]" value="{{ $subject->id }}" 
-                                                               class="form-check-input subject-checkbox">
+                                                        <input type="checkbox" name="subject_ids[]"
+                                                            value="{{ $subject->id }}"
+                                                            class="form-check-input subject-checkbox">
                                                     </td>
                                                     <td>
                                                         <span class="badge bg-info">{{ $subject->subject_code }}</span>
@@ -127,10 +183,12 @@
                                                         <small class="text-muted">{{ $subject->category }}</small>
                                                     </td>
                                                     <td>
-                                                        <span class="badge bg-secondary">{{ $subject->credit_hours }} units</span>
+                                                        <span class="badge bg-secondary">{{ $subject->credit_hours }}
+                                                            units</span>
                                                     </td>
                                                     <td>
-                                                        <small class="text-muted">{{ $subject->course->course_name ?? 'N/A' }}</small>
+                                                        <small
+                                                            class="text-muted">{{ $subject->program->program_name ?? 'N/A' }}</small>
                                                     </td>
                                                 </tr>
                                             @endforeach
@@ -168,7 +226,7 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="badge badge-gradient-warning rounded-circle me-3"
-                                 style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
                                 {{ strtoupper(substr($teacher->name, 0, 1)) }}
                             </div>
                             <div>
@@ -212,13 +270,15 @@
             subjectCheckboxes.forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     updateSelectedCount();
-                    
+
                     // Update select all checkbox state
                     const totalCheckboxes = subjectCheckboxes.length;
-                    const checkedCheckboxes = document.querySelectorAll('.subject-checkbox:checked').length;
-                    
+                    const checkedCheckboxes = document.querySelectorAll('.subject-checkbox:checked')
+                        .length;
+
                     selectAllCheckbox.checked = totalCheckboxes === checkedCheckboxes;
-                    selectAllCheckbox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+                    selectAllCheckbox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes <
+                        totalCheckboxes;
                 });
             });
 

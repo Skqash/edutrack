@@ -59,7 +59,7 @@
                                     <i class="fas fa-user text-primary me-2"></i>Full Name
                                 </label>
                                 <input type="text" id="name" name="name" class="form-control form-control-lg @error('name') is-invalid @enderror"
-                                    value="{{ old('name', $student->user->name) }}" placeholder="John Doe" required>
+                                    value="{{ old('name', $student->name) }}" placeholder="John Doe" required>
                                 @error('name')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -71,7 +71,7 @@
                                     <i class="fas fa-envelope text-primary me-2"></i>Email Address
                                 </label>
                                 <input type="email" id="email" name="email" class="form-control form-control-lg @error('email') is-invalid @enderror"
-                                    value="{{ old('email', $student->user->email) }}" placeholder="john.doe@school.edu" required>
+                                    value="{{ old('email', $student->email) }}" placeholder="john.doe@school.edu" required>
                                 @error('email')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
@@ -83,14 +83,20 @@
                                     <label for="year" class="form-label fw-semibold text-dark">
                                         <i class="fas fa-graduation-cap text-primary me-2"></i>Grade Year
                                     </label>
-                                    <select id="year" name="year" class="form-select form-select-lg @error('year') is-invalid @enderror" required>
-                                        <option value="">-- Select Year --</option>
-                                        @for ($i = 1; $i <= 4; $i++)
-                                            <option value="{{ $i }}" @selected(old('year', $student->year) == $i)>
-                                                Year {{ $i }}
-                                            </option>
-                                        @endfor
-                                    </select>
+                                    <x-searchable-dropdown
+                                        name="year"
+                                        id="year"
+                                        placeholder="Select year level..."
+                                        :options="[
+                                            ['id' => '1', 'name' => 'Year 1', 'description' => 'First year students'],
+                                            ['id' => '2', 'name' => 'Year 2', 'description' => 'Second year students'],
+                                            ['id' => '3', 'name' => 'Year 3', 'description' => 'Third year students'],
+                                            ['id' => '4', 'name' => 'Year 4', 'description' => 'Fourth year students']
+                                        ]"
+                                        :selected="old('year', $student->year)"
+                                        required="true"
+                                        class="form-select form-select-lg @error('year') is-invalid @enderror"
+                                    />
                                     @error('year')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
@@ -100,14 +106,21 @@
                                     <label for="section" class="form-label fw-semibold text-dark">
                                         <i class="fas fa-layer-group text-primary me-2"></i>Section
                                     </label>
-                                    <select id="section" name="section" class="form-select form-select-lg @error('section') is-invalid @enderror" required>
-                                        <option value="">-- Select Section --</option>
-                                        @foreach (['A', 'B', 'C', 'D', 'E'] as $sec)
-                                            <option value="{{ $sec }}" @selected(old('section', $student->section) == $sec)>
-                                                Section {{ $sec }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <x-searchable-dropdown
+                                        name="section"
+                                        id="section"
+                                        placeholder="Select section..."
+                                        :options="[
+                                            ['id' => 'A', 'name' => 'Section A', 'description' => 'Section A'],
+                                            ['id' => 'B', 'name' => 'Section B', 'description' => 'Section B'],
+                                            ['id' => 'C', 'name' => 'Section C', 'description' => 'Section C'],
+                                            ['id' => 'D', 'name' => 'Section D', 'description' => 'Section D'],
+                                            ['id' => 'E', 'name' => 'Section E', 'description' => 'Section E']
+                                        ]"
+                                        :selected="old('section', $student->section)"
+                                        required="true"
+                                        class="form-select form-select-lg @error('section') is-invalid @enderror"
+                                    />
                                     @error('section')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
@@ -139,7 +152,7 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <small class="text-muted d-block mb-1">Full Name</small>
-                            <strong class="text-dark">{{ $student->user->name }}</strong>
+                            <strong class="text-dark">{{ $student->name }}</strong>
                         </div>
                         <div class="mb-3">
                             <small class="text-muted d-block mb-1">Student ID</small>
@@ -206,7 +219,7 @@
                     <div class="alert alert-danger mb-3">
                         <strong>⚠️ Warning!</strong> This action cannot be undone.
                     </div>
-                    <p>Are you sure you want to delete <strong>{{ $student->user->name }}'s</strong> record completely from the system?</p>
+                    <p>Are you sure you want to delete <strong>{{ $student->name }}'s</strong> record completely from the system?</p>
                     <p class="text-muted small mb-3">
                         This will permanently remove:
                     </p>

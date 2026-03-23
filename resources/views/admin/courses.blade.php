@@ -172,7 +172,7 @@
                         <div style="flex: 1;">
                             <h6 class="text-muted text-uppercase fw-bold" style="font-size: 11px; letter-spacing: 0.5px;">
                                 Departments</h6>
-                            <h2 class="mb-0 fw-bold" style="color: #9b59b6;">{{ $courses->pluck('department')->unique()->count() }}</h2>
+                            <h2 class="mb-0 fw-bold" style="color: #9b59b6;">{{ $courses->pluck('department.department_name')->filter()->unique()->count() }}</h2>
                         </div>
                         <i class="fas fa-building" style="font-size: 35px; color: rgba(155, 89, 182, 0.1);"></i>
                     </div>
@@ -191,7 +191,7 @@
                 <div class="d-flex gap-2">
                     <select class="form-select form-select-sm" style="width: 180px;" id="departmentFilter">
                         <option value="">All Departments</option>
-                        @foreach($courses->pluck('department')->unique() as $department)
+                        @foreach($courses->pluck('department.department_name')->filter()->unique() as $department)
                             <option value="{{ $department }}">{{ $department }}</option>
                         @endforeach
                     </select>
@@ -224,8 +224,8 @@
                             <td><strong class="text-success">{{ $course->course_code }}</strong></td>
                             <td>
                                 <div>
-                                    <strong>{{ $course->course_name }}</strong>
-                                    <br><small class="text-muted">{{ $course->description ?? 'Bachelor of Science in ' . $course->course_name }}</small>
+                                    <strong>{{ $course->program_name }}</strong>
+                                    <br><small class="text-muted">{{ $course->description ?? 'Bachelor of Science in ' . $course->program_name }}</small>
                                 </div>
                             </td>
                             <td><span class="badge bg-light text-dark border border-success">{{ $course->department ?? 'General Education' }}</span></td>

@@ -312,6 +312,21 @@
         }
     </style>
 
+    <!-- Modern Page Header -->
+    <div class="page-header-modern">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div>
+                    <h1 class="header-title">Attendance Management</h1>
+                    <p class="header-subtitle">Track and manage student attendance records</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- SUCCESS MESSAGE -->
     @if ($message = Session::get('success'))
         <div class="alert alert-success alert-dismissible fade show no-print" role="alert">

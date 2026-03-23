@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::table('courses', function (Blueprint $table) {
             // Check if columns don't exist before adding them
             if (!Schema::hasColumn('courses', 'program_code')) {
-                $table->string('program_code')->after('id');
+                $table->string('program_code')->default('GEN')->after('id');
             }
             if (!Schema::hasColumn('courses', 'program_name')) {
-                $table->string('program_name')->after('program_code');
+                $table->string('program_name')->default('General')->after('program_code');
             }
             if (!Schema::hasColumn('courses', 'college')) {
                 $table->string('college')->nullable()->after('program_name');

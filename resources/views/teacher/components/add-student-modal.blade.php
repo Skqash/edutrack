@@ -44,19 +44,28 @@
                             <div class="mb-3">
                                 <label for="manual_class_id" class="form-label fw-bold">Class <span
                                         class="text-danger">*</span></label>
-                                <select class="form-select form-select-lg @error('class_id') is-invalid @enderror"
-                                    id="manual_class_id" name="class_id" required>
-                                    <option value="">-- Select Class --</option>
-                                    @foreach ($myClasses as $class)
-                                        <option value="{{ $class->id }}">
-                                            {{ $class->class_name }} ({{ $class->class_level }}) -
-                                            {{ $class->students->count() }}/{{ $class->capacity }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                <x-searchable-dropdown
+                                    name="class_id"
+                                    id="manual_class_id"
+                                    placeholder="Search and select class..."
+                                    api-url="{{ route('api.classes') }}"
+                                    required="true"
+                                    class="form-select-lg"
+                                />
                                 @error('class_id')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="manual_student_id" class="form-label fw-bold">Student ID (Optional)</label>
+                                <input type="text"
+                                    class="form-control form-control-lg @error('student_id') is-invalid @enderror"
+                                    id="manual_student_id" name="student_id" placeholder="e.g., 2024-001">
+                                @error('student_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="form-text text-muted">Leave blank to auto-generate</small>
                             </div>
 
                             <div class="mb-3">
@@ -71,12 +80,22 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="manual_surname" class="form-label fw-bold">Surname <span
+                                <label for="manual_lastname" class="form-label fw-bold">Last Name <span
                                         class="text-danger">*</span></label>
                                 <input type="text"
-                                    class="form-control form-control-lg @error('surname') is-invalid @enderror"
-                                    id="manual_surname" name="surname" placeholder="e.g., Doe" required>
-                                @error('surname')
+                                    class="form-control form-control-lg @error('lastname') is-invalid @enderror"
+                                    id="manual_lastname" name="lastname" placeholder="e.g., Doe" required>
+                                @error('lastname')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="manual_middle_name" class="form-label fw-bold">Middle Name (Optional)</label>
+                                <input type="text"
+                                    class="form-control form-control-lg @error('middle_name') is-invalid @enderror"
+                                    id="manual_middle_name" name="middle_name" placeholder="e.g., Smith">
+                                @error('middle_name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -94,35 +113,74 @@
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
+                                    <label for="manual_phone" class="form-label fw-bold">Phone Number (Optional)</label>
+                                    <input type="tel"
+                                        class="form-control form-control-lg @error('phone') is-invalid @enderror"
+                                        id="manual_phone" name="phone" placeholder="e.g., +1234567890">
+                                    @error('phone')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="manual_birthdate" class="form-label fw-bold">Birth Date (Optional)</label>
+                                    <input type="date"
+                                        class="form-control form-control-lg @error('birthdate') is-invalid @enderror"
+                                        id="manual_birthdate" name="birthdate">
+                                    @error('birthdate')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="manual_address" class="form-label fw-bold">Address (Optional)</label>
+                                <textarea class="form-control form-control-lg @error('address') is-invalid @enderror"
+                                    id="manual_address" name="address" rows="2" placeholder="Complete address"></textarea>
+                                @error('address')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>                       <div class="row">
+                                <div class="col-md-6 mb-3">
                                     <label for="manual_year" class="form-label fw-bold">Year <span
                                             class="text-danger">*</span></label>
-                                    <select class="form-select form-select-lg @error('year') is-invalid @enderror"
-                                        id="manual_year" name="year" required>
-                                        <option value="">-- Select Year --</option>
-                                        <option value="1">1st Year</option>
-                                        <option value="2">2nd Year</option>
-                                        <option value="3">3rd Year</option>
-                                        <option value="4">4th Year</option>
-                                    </select>
+                                    <x-searchable-dropdown
+                                        name="year"
+                                        id="manual_year"
+                                        placeholder="Select year level..."
+                                        :options="[
+                                            ['id' => '1', 'name' => '1st Year', 'description' => 'First year students'],
+                                            ['id' => '2', 'name' => '2nd Year', 'description' => 'Second year students'],
+                                            ['id' => '3', 'name' => '3rd Year', 'description' => 'Third year students'],
+                                            ['id' => '4', 'name' => '4th Year', 'description' => 'Fourth year students']
+                                        ]"
+                                        required="true"
+                                        class="form-select-lg"
+                                    />
                                     @error('year')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label for="manual_section" class="form-label fw-bold">Section <span
                                             class="text-danger">*</span></label>
-                                    <select class="form-select form-select-lg @error('section') is-invalid @enderror"
-                                        id="manual_section" name="section" required>
-                                        <option value="">-- Select Section --</option>
-                                        <option value="A">Section A</option>
-                                        <option value="B">Section B</option>
-                                        <option value="C">Section C</option>
-                                        <option value="D">Section D</option>
-                                        <option value="E">Section E</option>
-                                    </select>
+                                    <x-searchable-dropdown
+                                        name="section"
+                                        id="manual_section"
+                                        placeholder="Select section..."
+                                        :options="[
+                                            ['id' => 'A', 'name' => 'Section A', 'description' => 'Section A'],
+                                            ['id' => 'B', 'name' => 'Section B', 'description' => 'Section B'],
+                                            ['id' => 'C', 'name' => 'Section C', 'description' => 'Section C'],
+                                            ['id' => 'D', 'name' => 'Section D', 'description' => 'Section D'],
+                                            ['id' => 'E', 'name' => 'Section E', 'description' => 'Section E']
+                                        ]"
+                                        required="true"
+                                        class="form-select-lg"
+                                    />
                                     @error('section')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -157,15 +215,14 @@
                         <div class="mb-3">
                             <label for="existing_class_id" class="form-label fw-bold">Select Class <span
                                     class="text-danger">*</span></label>
-                            <select class="form-select form-select-lg" id="existing_class_id" required>
-                                <option value="">-- Select Class --</option>
-                                @foreach ($myClasses as $class)
-                                    <option value="{{ $class->id }}">
-                                        {{ $class->class_name }} ({{ $class->section ?? 'Year 1' }}) -
-                                        {{ $class->students->count() }}/{{ $class->capacity }} students
-                                    </option>
-                                @endforeach
-                            </select>
+                            <x-searchable-dropdown
+                                name="existing_class_id"
+                                id="existing_class_id"
+                                placeholder="Search and select class..."
+                                api-url="{{ route('api.classes') }}"
+                                required="true"
+                                class="form-select form-select-lg"
+                            />
                         </div>
 
                         <div class="mb-4">

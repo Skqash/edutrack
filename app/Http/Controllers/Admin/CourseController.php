@@ -12,7 +12,7 @@ class CourseController extends Controller
 {
     public function index()
     {
-        $courses = Course::with('head')->get();
+        $courses = Course::with(['head', 'department'])->get();
 
         return view('admin.courses', compact('courses'));
     }
@@ -20,20 +20,7 @@ class CourseController extends Controller
     public function create()
     {
         $heads = User::where('role', 'teacher')->get();
-        $departments = [
-            'IT Department',
-            'Computer Science Department',
-            'Information Systems Department',
-            'Engineering Department',
-            'Education Department',
-            'Business Department',
-            'Accounting Department',
-            'Tourism Department',
-            'Agriculture Department',
-            'Arts and Sciences Department',
-            'Nursing Department',
-            'Hospitality Department',
-        ];
+        $departments = \App\Models\Department::orderBy('department_name')->pluck('department_name', 'id');
 
         return view('admin.courses.create', compact('heads', 'departments'));
     }
@@ -43,18 +30,12 @@ class CourseController extends Controller
         $validated = $request->validate([
             'program_code' => 'required|unique:courses,program_code|string|max:10',
             'program_name' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
+            'program_head_id' => 'nullable|exists:users,id',
+            'total_years' => 'required|integer|min:1|max:10',
             'description' => 'nullable|string',
-            'head_id' => 'nullable|exists:users,id',
             'status' => 'required|in:Active,Inactive',
-            'duration' => 'required|string|max:50',
-            'max_students' => 'nullable|integer|min:1',
-            'current_students' => 'nullable|integer|min:0',
         ]);
-
-        // Set default values
-        $validated['current_students'] = $validated['current_students'] ?? 0;
-        $validated['max_students'] = $validated['max_students'] ?? 50;
 
         Course::create($validated);
 
@@ -64,20 +45,7 @@ class CourseController extends Controller
     public function edit(Course $course)
     {
         $heads = User::where('role', 'teacher')->get();
-        $departments = [
-            'IT Department',
-            'Computer Science Department',
-            'Information Systems Department',
-            'Engineering Department',
-            'Education Department',
-            'Business Department',
-            'Accounting Department',
-            'Tourism Department',
-            'Agriculture Department',
-            'Arts and Sciences Department',
-            'Nursing Department',
-            'Hospitality Department',
-        ];
+        $departments = \App\Models\Department::orderBy('department_name')->pluck('department_name', 'id');
 
         return view('admin.courses.edit', compact('course', 'heads', 'departments'));
     }
@@ -87,13 +55,11 @@ class CourseController extends Controller
         $validated = $request->validate([
             'program_code' => 'required|unique:courses,program_code,'.$course->id.'|string|max:10',
             'program_name' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
+            'program_head_id' => 'nullable|exists:users,id',
+            'total_years' => 'required|integer|min:1|max:10',
             'description' => 'nullable|string',
-            'head_id' => 'nullable|exists:users,id',
             'status' => 'required|in:Active,Inactive',
-            'duration' => 'required|string|max:50',
-            'max_students' => 'nullable|integer|min:1',
-            'current_students' => 'nullable|integer|min:0',
         ]);
 
         $course->update($validated);
@@ -109,7 +75,7 @@ class CourseController extends Controller
         }
 
         // Check if course has students
-        if ($course->current_students > 0) {
+        if ($course->students()->count() > 0) {
             return redirect()->route('admin.courses.index')->with('error', 'Cannot delete program with enrolled students');
         }
 
@@ -128,8 +94,10 @@ class CourseController extends Controller
     public function manageSubjects(Course $course)
     {
         $course->load('subjects');
-        $availableSubjects = Subject::whereNull('course_id')
-            ->orWhere('course_id', '!=', $course->id)
+
+        // Subjects are linked via program_id
+        $availableSubjects = Subject::whereNull('program_id')
+            ->orWhere('program_id', '!=', $course->id)
             ->get();
 
         return view('admin.courses.subjects', compact('course', 'availableSubjects'));

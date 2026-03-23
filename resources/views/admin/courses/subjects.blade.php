@@ -7,7 +7,7 @@
             <span class="page-title-icon bg-gradient-primary text-white me-2">
                 <i class="fas fa-book"></i>
             </span>
-            Manage Subjects - {{ $course->program_name ?? $course->course_name }}
+            Manage Subjects - {{ $course->program_name ?? $course->program_name }}
         </h3>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">

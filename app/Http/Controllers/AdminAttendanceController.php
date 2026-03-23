@@ -15,10 +15,8 @@ class AdminAttendanceController extends Controller
     {
         // Get all classes with their attendance records and students
         $classes = ClassModel::with(['attendance' => function ($query) {
-            $query->with('student.user')->orderBy('date', 'desc');
-        }, 'students' => function ($query) {
-            $query->with('user');
-        }])->get();
+            $query->with('student')->orderBy('date', 'desc');
+        }, 'students'])->get();
 
         // Group attendance by class and add statistics
         $attendanceByClass = [];
@@ -39,7 +37,7 @@ class AdminAttendanceController extends Controller
         }
 
         // Get total counts
-        $totalStudents = Student::with('user')->count();
+        $totalStudents = Student::count();
         $totalTeachers = User::where('role', 'teacher')->count();
         $totalClasses = ClassModel::count();
         $totalSubjects = Subject::count();
@@ -49,7 +47,7 @@ class AdminAttendanceController extends Controller
 
     public function create()
     {
-        $students = Student::with('user')->get();
+        $students = Student::all();
         $classes = ClassModel::all();
 
         return view('admin.attendance.create', compact('students', 'classes'));
@@ -72,7 +70,7 @@ class AdminAttendanceController extends Controller
 
     public function edit(Attendance $attendance)
     {
-        $students = Student::with('user')->get();
+        $students = Student::all();
         $classes = ClassModel::all();
 
         return view('admin.attendance.edit', compact('attendance', 'students', 'classes'));

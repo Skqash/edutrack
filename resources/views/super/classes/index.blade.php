@@ -1,79 +1,267 @@
-@extends('layouts.app')
+@extends('layouts.super')
 
 @section('content')
-    <div class="container-fluid p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h3"><i class="fas fa-school"></i> Class Management</h2>
-            <a href="{{ route('super.classes.create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> New Class
-            </a>
+    @php
+        /** @var \Illuminate\Pagination\LengthAwarePaginator|\App\Models\ClassModel[] $classes */
+    @endphp
+
+    <style>
+        /* Modern Page Header */
+        .page-header-modern {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+            color: white;
+        }
+
+        .page-header-modern .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-header-modern .header-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .page-header-modern .header-title {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header-modern .header-subtitle {
+            margin: 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .page-header-modern .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-modern {
+            padding: 0.65rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-modern-white {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-modern-white:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .page-header-modern {
+                padding: 1.5rem;
+            }
+
+            .page-header-modern .header-title {
+                font-size: 1.5rem;
+            }
+
+            .page-header-modern .header-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+
+    <!-- Modern Page Header -->
+    <div class="page-header-modern">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fas fa-school"></i>
+                </div>
+                <div>
+                    <h1 class="header-title">Classes Management</h1>
+                    <p class="header-subtitle">Manage all classes and organize students by class sections</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="{{ route('super.classes.create') }}" class="btn btn-modern btn-modern-white">
+                    <i class="fas fa-plus"></i> Add New Class
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Capacity Chart -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-chart-bar me-2" style="color: #3498db;"></i> Class Capacity Utilization
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="classCapacityChart" height="80"></canvas>
+                </div>
+            </div>
         </div>
 
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show">{{ session('success') }}<button class="btn-close"
-                    data-bs-dismiss="alert"></button></div>
-        @endif
+        <div class="col-lg-4 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-layer-group me-2" style="color: #27ae60;"></i> Class Levels
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="category-list" style="font-size: 14px;">
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <span>Class 1</span>
+                            <span class="badge bg-primary">{{ $classes->where('year', 1)->count() }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <span>Class 2</span>
+                            <span class="badge bg-success">{{ $classes->where('year', 2)->count() }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Class 3+</span>
+                            <span class="badge bg-warning">{{ $classes->where('year', '>=', 3)->count() }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <div class="card shadow-sm">
+    <!-- Classes Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" placeholder="Search classes...">
+            </div>
+        </div>
+        <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                <table class="table table-hover">
+                    <thead style="background-color: #f8f9fa;">
                         <tr>
-                            <th>Code</th>
-                            <th>Name</th>
-                            <th>Level</th>
-                            <th>Capacity</th>
-                            <th>Enrolled</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <th class="fw-bold">Subject Name</th>
+                            <th class="fw-bold">Year/Section</th>
+                            <th class="fw-bold">School Year</th>
+                            <th class="fw-bold">Semester</th>
+                            <th class="fw-bold">Enrolled</th>
+                            <th class="fw-bold">Class Teacher</th>
+                            <th class="fw-bold">Capacity</th>
+                            <th class="fw-bold">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($classes as $class)
-                            <tr>
-                                <td><strong>{{ $class->class_code }}</strong></td>
-                                <td>{{ $class->class_name }}</td>
-                                <td>{{ $class->level }}</td>
-                                <td>{{ $class->capacity ?? '30' }}</td>
+                            <tr data-class-id="{{ $class->id }}">
+                                <td><strong>{{ $class->class_name }}</strong></td>
                                 <td>
-                                    <span class="badge bg-info">
-                                        {{ $class->students_count ?? 0 }}
+                                    <span class="badge bg-light text-dark">
+                                        Year {{ $class->year }}-{{ strtoupper($class->section) }}
                                     </span>
                                 </td>
+                                <td>{{ $class->school_year ?? 'N/A' }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $class->status === 'Active' ? 'success' : 'secondary' }}">
-                                        {{ $class->status }}
+                                    <span class="badge bg-info text-white">
+                                        Semester {{ $class->semester ?? '1' }}
                                     </span>
                                 </td>
+                                <td><span class="badge bg-success">{{ $class->total_students ?? 0 }}</span></td>
+                                <td>{{ $class->teacher->name ?? 'N/A' }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-warning"
-                                        onclick="editClass({{ $class->id }})">Edit</button>
-                                    <form action="#" method="POST" style="display:inline;"
-                                        onsubmit="return confirm('Delete?')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
+                                    <div class="progress" style="height: 20px; width: 100px;">
+                                        @php
+                                            $capacity = $class->capacity ?? 50;
+                                            $enrolled = $class->total_students ?? 0;
+                                            $percentage = $capacity > 0 ? min(100, ($enrolled / $capacity) * 100) : 0;
+                                            $barClass =
+                                                $percentage > 85
+                                                    ? 'bg-danger'
+                                                    : ($percentage > 70
+                                                        ? 'bg-warning'
+                                                        : 'bg-success');
+                                        @endphp
+                                        <div class="progress-bar {{ $barClass }}"
+                                            style="width: {{ $percentage }}%; title='{{ $enrolled }}/{{ $capacity }} students'">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('super.classes.edit', $class->id) }}"
+                                            class="btn btn-sm btn-outline-primary" title="Edit"><i
+                                                class="fas fa-edit"></i></a>
+                                        <a href="{{ route('super.classes.show', $class->id) }}"
+                                            class="btn btn-sm btn-outline-info" title="View Details"><i
+                                                class="fas fa-eye"></i></a>
+                                        <button type="button" class="btn btn-sm btn-outline-success"
+                                            onclick="openStudentModal({{ $class->id }}, '{{ $class->class_name }}')"
+                                            title="Add Students"><i class="fas fa-user-plus"></i></button>
+                                        <form action="{{ route('super.classes.destroy', $class->id) }}" method="POST"
+                                            style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('Are you sure you want to delete this class?')"
+                                                title="Delete"><i class="fas fa-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">No classes found</td>
+                                <td colspan="8" class="text-center py-4">
+                                    <p class="text-muted">No classes found</p>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer">
-                {{ $classes->links() }}
-            </div>
-        </div>
-
-        <div class="mt-3">
-            <form action="{{ route('super.classes.delete-all') }}" method="POST"
-                onsubmit="return confirm('Delete ALL classes? This cannot be undone!')">
-                @csrf @method('DELETE')
-                <button class="btn btn-danger"><i class="fas fa-trash"></i> Delete All Classes</button>
-            </form>
         </div>
     </div>
+    </div>
+
+    @include('super.classes.partials.student-assignment-modal', [
+        'courses' => $courses,
+        'departments' => $departments,
+    ])
 @endsection

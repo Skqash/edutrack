@@ -47,11 +47,18 @@
 
                     <div class="form-group mb-3">
                         <label for="role" class="form-label"><i class="fas fa-user-tag"></i> Role</label>
-                        <select class="form-select @error('role') is-invalid @enderror" id="role" name="role" required>
-                            <option value="">Select a role...</option>
-                            <option value="teacher" {{ $user->role == 'teacher' ? 'selected' : '' }}>Teacher</option>
-                            <option value="student" {{ $user->role == 'student' ? 'selected' : '' }}>Student</option>
-                        </select>
+                        <x-searchable-dropdown
+                            name="role"
+                            id="role"
+                            placeholder="Select a role..."
+                            :options="[
+                                ['id' => 'teacher', 'name' => 'Teacher', 'description' => 'Teaching staff member'],
+                                ['id' => 'student', 'name' => 'Student', 'description' => 'Student user']
+                            ]"
+                            :selected="$user->role"
+                            required="true"
+                            class="form-select @error('role') is-invalid @enderror"
+                        />
                         @error('role')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror

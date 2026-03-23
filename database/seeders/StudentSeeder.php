@@ -4,55 +4,158 @@ namespace Database\Seeders;
 
 use App\Models\Student;
 use App\Models\User;
+use App\Models\ClassModel;
 use Illuminate\Database\Seeder;
 
+/**
+ * StudentSeeder - Phase 4 Enhanced
+ * Creates comprehensive student enrollment organized by:
+ * - Department (BSIT, BEED, BSHM)
+ * - Year Level (1-4)
+ * - Class Assignment (with proper class_id)
+ * - Distribution across sections (A, B)
+ */
 class StudentSeeder extends Seeder
 {
     public function run(): void
     {
-        // Get all student users
-        $studentUsers = User::where('role', 'student')->get();
+        // Define student generation structure
+        $programs = [
+            'BSIT' => [
+                'department' => 'BSIT',
+                'total_students' => 120, // 120 students for BSIT
+                'students_per_class' => 30, // Approx 30 per class
+            ],
+            'BEED' => [
+                'department' => 'BEED',
+                'total_students' => 100, // 100 students for BEED
+                'students_per_class' => 25,
+            ],
+            'BSHM' => [
+                'department' => 'BSHM',
+                'total_students' => 90, // 90 students for BSHM
+                'students_per_class' => 22,
+            ],
+        ];
 
-        $sections = ['A', 'B', 'C', 'D', 'E']; // Available sections
-        $years = [1, 2, 3, 4]; // Available years
-        $currentYear = date('Y'); // Current year for student ID
+        $studentCount = 0;
+        $yearOffset = 2021; // Start year for generating student IDs
 
-        foreach ($studentUsers as $index => $user) {
-            // Check if student record already exists for this user
-            $existingStudent = Student::where('user_id', $user->id)->first();
+        // Program mapping: program_code => program_name (from courses table)
+        $programMapping = [
+            'BSIT' => 'Bachelor of Science in Information Technology',
+            'BEED' => 'Bachelor of Elementary Education',
+            'BSHM' => 'Bachelor of Science in Hospitality Management',
+        ];
 
-            if ($existingStudent) {
-                // Skip if student record already exists
+        foreach ($programMapping as $programCode => $programName) {
+            $config = $programs[$programCode];
+            $department = $config['department'];
+            $totalStudents = $config['total_students'];
+            $studentsPerClass = $config['students_per_class'];
+
+            // Get all classes for this program based on course program_name
+            $programClasses = ClassModel::whereHas('course', function ($query) use ($programName) {
+                $query->where('program_name', $programName);
+            })->orderBy('year')->orderBy('semester')->orderBy('section')->get();
+
+            if ($programClasses->isEmpty()) {
+                echo "⚠️  No classes found for program '{$programName}'. Skipping.\n";
                 continue;
             }
 
-            // Generate student ID in format: YYYY-XXXX-S (e.g., 2022-0233-V)
-            // YYYY: Enrollment year
-            // XXXX: Sequential 4-digit number
-            // S: Single letter section (A, B, C, D, E)
-            $sequentialNumber = str_pad($index + 1, 4, '0', STR_PAD_LEFT);
-            $section = $sections[$index % count($sections)];
-            $year = $years[$index % count($years)];
+            // Generate students and distribute across classes
+            $studentsForProgram = 0;
 
-            // Use 2022 as base enrollment year, you can change this
-            $enrollmentYear = 2022 + ($index % 3); // Varies between 2022-2024
+            foreach ($programClasses as $class) {
+                // Check if class already has students assigned
+                $existingStudentCount = Student::where('class_id', $class->id)->count();
+                if ($existingStudentCount > 0) {
+                    echo "⚠️  Class {$class->class_name} already has students. Skipping.\n";
+                    continue;
+                }
 
-            $studentId = sprintf('%d-%s-%s', $enrollmentYear, $sequentialNumber, $section);
+                // Calculate students for this class
+                $studentsInClass = min(
+                    $studentsPerClass,
+                    $totalStudents - $studentsForProgram
+                );
 
-            // Check if student ID already exists, if so, generate a new one
-            while (Student::where('student_id', $studentId)->exists()) {
-                $sequentialNumber = str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
-                $studentId = sprintf('%d-%s-%s', $enrollmentYear, $sequentialNumber, $section);
+                if ($studentsInClass <= 0) {
+                    break;
+                }
+
+                // Generate students for this class
+                for ($i = 0; $i < $studentsInClass; $i++) {
+                    // Create a user for the student
+                    $studentFirstName = fake()->firstName();
+                    $studentLastName = fake()->lastName();
+                    $studentEmail = strtolower($studentFirstName . '.' . $studentLastName) . 
+                                   rand(1000, 9999) . '@student.college.edu';
+
+                    $user = User::firstOrCreate(
+                        ['email' => $studentEmail],
+                        [
+                            'name' => $studentFirstName . ' ' . $studentLastName,
+                            'password' => bcrypt('password123'),
+                            'role' => 'student',
+                            'email_verified_at' => now(),
+                        ]
+                    );
+
+                    // Generate student ID: YYYY-XXXX-S (e.g., 2021-0001-V)
+                    // Make it unique by including a random component
+                    $uniqueSequence = $studentsForProgram + $i + 1 + rand(1000, 9999);
+                    $enrollmentYear = $yearOffset + ((int)$class->year - 1);
+                    $studentId = sprintf(
+                        '%d-%04d-%s',
+                        $enrollmentYear,
+                        $uniqueSequence % 10000, // Keep it 4 digits
+                        $this->getStudentIdSuffix()
+                    );
+
+                    // Create student record
+                    Student::create([
+                        'user_id' => $user->id,
+                        'student_id' => $studentId,
+                        'year' => (int)$class->year,
+                        'year_level' => (int)$class->year, // Alias for year
+                        'section' => $class->section,
+                        'class_id' => $class->id,
+                        'department' => $department,
+                        'gpa' => round(rand(20, 40) / 10, 2), // Random GPA between 2.0 and 4.0
+                        'status' => 'Active',
+                        'school' => 'College University',
+                    ]);
+
+                    $studentCount++;
+                    $studentsForProgram++;
+                }
+
+                // Update class total_students count
+                $class->update([
+                    'total_students' => $studentsInClass,
+                ]);
             }
 
-            Student::create([
-                'user_id' => $user->id,
-                'student_id' => $studentId,  // Format: 2022-0001-A
-                'year' => $year,              // 1, 2, 3, or 4
-                'section' => $section,        // A, B, C, D, or E
-                'gpa' => rand(250, 400) / 100,
-                'status' => 'Active',
-            ]);
+            echo "✅ " . $studentsForProgram . " students seeded for {$department}\n";
         }
+
+        echo "\n✅ Total students seeded: " . $studentCount . "\n";
+        echo "📊 Distribution:\n";
+        echo "   - BSIT: 120 students\n";
+        echo "   - BEED: 100 students\n";
+        echo "   - BSHM: 90 students\n";
+        echo "📊 Organization: Students properly assigned to classes by department and year level\n";
+    }
+
+    /**
+     * Generate random student ID suffix (A-Z)
+     */
+    private function getStudentIdSuffix(): string
+    {
+        $suffixes = ['A', 'B', 'C', 'D', 'E', 'S', 'V', 'X'];
+        return $suffixes[array_rand($suffixes)];
     }
 }
+

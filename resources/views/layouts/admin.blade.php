@@ -423,7 +423,16 @@
             <!-- Sidebar Navigation -->
             <nav class="sidebar-nav">
                 @php
-                    $pendingRequests = \App\Models\SchoolRequest::where('status', 'pending')->count();
+                    $pendingCampusApprovals = \App\Models\User::where('role', 'teacher')
+                        ->where('campus_status', 'pending')
+                        ->whereNotNull('campus')
+                        ->when(auth()->user()->campus, fn($q) => $q->where('campus', auth()->user()->campus))
+                        ->count();
+                    $pendingCourseRequests = \App\Models\CourseAccessRequest::where('status', 'pending')
+                        ->when(auth()->user()->campus, function ($q) {
+                            $q->whereHas('teacher', fn($tq) => $tq->where('campus', auth()->user()->campus));
+                        })
+                        ->count();
                 @endphp
 
                 <div class="nav-item">
@@ -431,17 +440,6 @@
                         class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i class="fas fa-home"></i>
                         <span>Dashboard</span>
-                    </a>
-                </div>
-
-                <div class="nav-item">
-                    <a href="{{ route('admin.school-requests.index') }}"
-                        class="nav-link {{ request()->routeIs('admin.school-requests*') ? 'active' : '' }}">
-                        <i class="fas fa-school"></i>
-                        <span>School Requests</span>
-                        @if ($pendingRequests > 0)
-                            <span class="badge bg-danger badge-sidebar">{{ $pendingRequests }}</span>
-                        @endif
                     </a>
                 </div>
 
@@ -501,6 +499,31 @@
                     </a>
                 </div>
 
+                <!-- Approvals Section -->
+                <div class="nav-section-title">Approvals</div>
+                
+                <div class="nav-item">
+                    <a href="{{ route('admin.teachers.campus-approvals') }}"
+                        class="nav-link {{ request()->routeIs('admin.teachers.campus-approvals') ? 'active' : '' }}">
+                        <i class="fas fa-building"></i>
+                        <span>Campus Approvals</span>
+                        @if($pendingCampusApprovals > 0)
+                            <span class="badge bg-warning text-dark ms-auto">{{ $pendingCampusApprovals }}</span>
+                        @endif
+                    </a>
+                </div>
+
+                <div class="nav-item">
+                    <a href="{{ route('admin.teachers.course-access-requests') }}"
+                        class="nav-link {{ request()->routeIs('admin.teachers.course-access-requests') ? 'active' : '' }}">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>Course Access</span>
+                        @if($pendingCourseRequests > 0)
+                            <span class="badge bg-info ms-auto">{{ $pendingCourseRequests }}</span>
+                        @endif
+                    </a>
+                </div>
+
                 <div class="nav-item">
                     <a href="{{ route('admin.profile.show') }}"
                         class="nav-link {{ request()->routeIs('admin.profile*') ? 'active' : '' }}">
@@ -524,7 +547,6 @@
 
                 <div class="topbar-right">
                     <div class="topbar-actions">
-                        <!-- Notifications -->
                         @php
                             $unreadCount = \App\Models\Notification::unreadCount(auth()->id());
                             $notifications = \App\Models\Notification::where('user_id', auth()->id())
@@ -633,6 +655,10 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- TomSelect for searchable dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
     <script>
         // Layout Management
