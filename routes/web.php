@@ -41,6 +41,45 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
+/* -------- HEALTH CHECK -------- */
+Route::get('/health', function () {
+    $status = [
+        'status'    => 'ok',
+        'timestamp' => now()->toIso8601String(),
+        'php'       => PHP_VERSION,
+        'env'       => app()->environment(),
+        'debug'     => config('app.debug'),
+        'database'  => [
+            'driver'   => config('database.default'),
+            'host'     => config('database.connections.'.config('database.default').'.host'),
+            'database' => config('database.connections.'.config('database.default').'.database'),
+            'status'   => 'unknown',
+            'error'    => null,
+        ],
+    ];
+
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $status['database']['status'] = 'connected';
+
+        // Verify migrations table exists (proxy for migrations having run)
+        $migrated = \Illuminate\Support\Facades\Schema::hasTable('migrations');
+        $status['database']['migrations_table'] = $migrated ? 'exists' : 'missing';
+
+        if ($migrated) {
+            $status['database']['migration_count'] = \Illuminate\Support\Facades\DB::table('migrations')->count();
+        }
+    } catch (\Exception $e) {
+        $status['status']                    = 'degraded';
+        $status['database']['status']        = 'failed';
+        $status['database']['error']         = $e->getMessage();
+    }
+
+    $httpStatus = $status['status'] === 'ok' ? 200 : 503;
+
+    return response()->json($status, $httpStatus);
+})->name('health');
+
 /* -------- AUTH -------- */
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
