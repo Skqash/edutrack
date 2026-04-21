@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
-use App\Models\Teacher;
+use App\Models\User;
 use App\Services\AdminStudentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
-    protected $studentService;
+    protected $studentServ This teacher will be assigned to Victorias campus.ice;
 
     public function __construct(AdminStudentService $studentService)
     {
@@ -45,7 +45,7 @@ class StudentController extends Controller
 
         // Get campus-specific counts
         $totalStudents = $statistics['total'];
-        $totalTeachers = Teacher::query()
+        $totalTeachers = User::where('role', 'teacher')
             ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
             ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
             ->count();
