@@ -404,7 +404,7 @@ Route::middleware(['role:teacher,super'])->prefix('teacher')->name('teacher.')->
 
     // Settings routes
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index'])->name('settings.index');
-    Route::post('/settings/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('settings.save');
     Route::post('/settings/theme', [\App\Http\Controllers\SettingsController::class, 'changeTheme'])->name('settings.theme');
 
     // Course Access Management
