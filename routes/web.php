@@ -420,9 +420,9 @@ Route::middleware(['role:teacher,super'])->prefix('teacher')->name('teacher.')->
     // Profile routes
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'showTeacherProfile'])->name('profile.show');
     Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'editTeacherProfile'])->name('profile.edit');
-    Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'updateTeacherProfile'])->name('profile.update');
+    Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'updateTeacherProfile'])->name('profile.save');
     Route::get('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
-    Route::post('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.change-password.update');
+    Route::post('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
 });
 
 /* -------- API ROUTES FOR DYNAMIC DROPDOWNS -------- */
