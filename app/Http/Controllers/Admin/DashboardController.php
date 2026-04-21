@@ -10,7 +10,8 @@ use App\Models\Grade;
 use App\Models\SchoolRequest;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\User;
+use App\Models\Teacher;
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -21,24 +22,21 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // Cache dashboard stats for 1 hour
+        /** @var Admin $admin */
         $admin = Auth::user();
-        $adminCampus = $admin->campus ?? null;
         $adminSchoolId = $admin->school_id ?? null;
         
-        $cacheKey = 'dashboard_stats_' . ($adminCampus ?? 'all') . '_' . ($adminSchoolId ?? 'all');
+        $cacheKey = 'dashboard_stats_' . ($adminSchoolId ?? 'all');
         
-        $stats = Cache::remember($cacheKey, 3600, function () use ($adminCampus, $adminSchoolId) {
+        $stats = Cache::remember($cacheKey, 3600, function () use ($adminSchoolId) {
             return [
                 'totalStudents' => Student::query()
-                    ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
                     ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
                     ->count(),
-                'totalTeachers' => User::where('role', 'teacher')
-                    ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+                'totalTeachers' => Teacher::query()
                     ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
                     ->count(),
-                'totalAdmins' => User::where('role', 'admin')
-                    ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+                'totalAdmins' => Admin::query()
                     ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
                     ->count(),
                 'totalCourses' => Course::count(),
@@ -63,7 +61,7 @@ class DashboardController extends Controller
             ->get();
 
         // Get all teachers and classes for filters
-        $teachers = User::where('role', 'teacher')->get();
+        $teachers = Teacher::all();
         $classes = ClassModel::all();
         $periods = ['midterm', 'finals', 'first quarter', 'second quarter', 'third quarter', 'fourth quarter'];
 

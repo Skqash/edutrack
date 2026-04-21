@@ -53,6 +53,12 @@ class ClassModel extends Model
         'units',
         'campus',
         'school_id', // Add school_id
+        'school_year',
+        'total_meetings_midterm',
+        'total_meetings_final',
+        'attendance_weight',
+        'enable_e_signature',
+        'require_e_signature',
     ];
 
     public function teacher()

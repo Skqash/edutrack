@@ -492,6 +492,9 @@ class CPSUAccurateSeeder extends Seeder
 
         $bsafeSip = Course::where('program_code', 'BSAFE-SIP')->first();
         $bsceSip  = Course::where('program_code', 'BSCE-SIP')->first();
+        
+        // Counters for tracking
+        $studentsCreated = 0;
 
         // ── MAIN CAMPUS STUDENTS ──────────────────────────────────────────────
         $mainStudents = [
@@ -508,13 +511,30 @@ class CPSUAccurateSeeder extends Seeder
         foreach ($mainStudents as $i => $s) {
             $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             $slug = strtolower(str_replace(' ', '.', $s['last_name']));
-            Student::updateOrCreate(
-                ['student_id' => "2024-MAIN-{$num}"],
+            $email = "{$slug}.main{$num}@cpsu.edu.ph";
+            $studentId = "2024-MAIN-{$num}";
+            
+            // Create User first
+            $user = User::updateOrCreate(
+                ['email' => $email],
                 [
+                    'name' => "{$s['first_name']} {$s['last_name']}",
+                    'password' => Hash::make('student123'),
+                    'role' => 'student',
+                    'campus' => 'CPSU Main Campus - Kabankalan City',
+                    'status' => 'Active',
+                ]
+            );
+            
+            // Then create Student with user_id
+            Student::updateOrCreate(
+                ['student_id' => $studentId],
+                [
+                    'user_id' => $user->id,
                     'first_name'      => $s['first_name'],
                     'middle_name'     => $s['middle_name'],
                     'last_name'       => $s['last_name'],
-                    'email'           => "{$slug}.main{$num}@cpsu.edu.ph",
+                    'email'           => $email,
                     'password'        => Hash::make('student123'),
                     'gender'          => $s['gender'],
                     'year'            => $s['year'],
@@ -529,6 +549,7 @@ class CPSUAccurateSeeder extends Seeder
                     'academic_year'   => '2024-2025',
                 ]
             );
+            $studentsCreated++;
         }
 
         // ── VICTORIAS CAMPUS STUDENTS ─────────────────────────────────────────
@@ -550,13 +571,30 @@ class CPSUAccurateSeeder extends Seeder
         foreach ($victoriasStudents as $i => $s) {
             $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             $slug = strtolower(str_replace(' ', '.', $s['last_name']));
-            Student::updateOrCreate(
-                ['student_id' => "2024-VIC-{$num}"],
+            $email = "{$slug}.vic{$num}@cpsu.edu.ph";
+            $studentId = "2024-VIC-{$num}";
+            
+            // Create User first
+            $user = User::updateOrCreate(
+                ['email' => $email],
                 [
+                    'name' => "{$s['first_name']} {$s['last_name']}",
+                    'password' => Hash::make('student123'),
+                    'role' => 'student',
+                    'campus' => 'CPSU Victorias Campus',
+                    'status' => 'Active',
+                ]
+            );
+            
+            // Then create Student with user_id
+            Student::updateOrCreate(
+                ['student_id' => $studentId],
+                [
+                    'user_id' => $user->id,
                     'first_name'      => $s['first_name'],
                     'middle_name'     => $s['middle_name'],
                     'last_name'       => $s['last_name'],
-                    'email'           => "{$slug}.vic{$num}@cpsu.edu.ph",
+                    'email'           => $email,
                     'password'        => Hash::make('student123'),
                     'gender'          => $s['gender'],
                     'year'            => $s['year'],
@@ -571,6 +609,7 @@ class CPSUAccurateSeeder extends Seeder
                     'academic_year'   => '2024-2025',
                 ]
             );
+            $studentsCreated++;
         }
 
         // ── SIPALAY CAMPUS STUDENTS ───────────────────────────────────────────
@@ -586,13 +625,30 @@ class CPSUAccurateSeeder extends Seeder
         foreach ($sipalayStudents as $i => $s) {
             $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             $slug = strtolower(str_replace(' ', '.', $s['last_name']));
-            Student::updateOrCreate(
-                ['student_id' => "2024-SIP-{$num}"],
+            $email = "{$slug}.sip{$num}@cpsu.edu.ph";
+            $studentId = "2024-SIP-{$num}";
+            
+            // Create User first
+            $user = User::updateOrCreate(
+                ['email' => $email],
                 [
+                    'name' => "{$s['first_name']} {$s['last_name']}",
+                    'password' => Hash::make('student123'),
+                    'role' => 'student',
+                    'campus' => 'CPSU Sipalay Campus - Brgy. Gil Montilla',
+                    'status' => 'Active',
+                ]
+            );
+            
+            // Then create Student with user_id
+            Student::updateOrCreate(
+                ['student_id' => $studentId],
+                [
+                    'user_id' => $user->id,
                     'first_name'      => $s['first_name'],
                     'middle_name'     => $s['middle_name'],
                     'last_name'       => $s['last_name'],
-                    'email'           => "{$slug}.sip{$num}@cpsu.edu.ph",
+                    'email'           => $email,
                     'password'        => Hash::make('student123'),
                     'gender'          => $s['gender'],
                     'year'            => $s['year'],
@@ -607,6 +663,7 @@ class CPSUAccurateSeeder extends Seeder
                     'academic_year'   => '2024-2025',
                 ]
             );
+            $studentsCreated++;
         }
 
         // ── INDEPENDENT STUDENTS ──────────────────────────────────────────────
@@ -619,13 +676,30 @@ class CPSUAccurateSeeder extends Seeder
         foreach ($independentStudents as $i => $s) {
             $num = str_pad($i + 1, 4, '0', STR_PAD_LEFT);
             $slug = strtolower($s['last_name']);
-            Student::updateOrCreate(
-                ['student_id' => "2024-IND-{$num}"],
+            $email = "{$slug}.ind{$num}@gmail.com";
+            $studentId = "2024-IND-{$num}";
+            
+            // Create User first
+            $user = User::updateOrCreate(
+                ['email' => $email],
                 [
+                    'name' => "{$s['first_name']} {$s['last_name']}",
+                    'password' => Hash::make('student123'),
+                    'role' => 'student',
+                    'campus' => null,
+                    'status' => 'Active',
+                ]
+            );
+            
+            // Then create Student with user_id
+            Student::updateOrCreate(
+                ['student_id' => $studentId],
+                [
+                    'user_id' => $user->id,
                     'first_name'      => $s['first_name'],
                     'middle_name'     => $s['middle_name'],
                     'last_name'       => $s['last_name'],
-                    'email'           => "{$slug}.ind{$num}@gmail.com",
+                    'email'           => $email,
                     'password'        => Hash::make('student123'),
                     'gender'          => $s['gender'],
                     'year'            => $s['year'],
@@ -638,7 +712,10 @@ class CPSUAccurateSeeder extends Seeder
                     'academic_year'   => '2024-2025',
                 ]
             );
+            $studentsCreated++;
         }
+        
+        $this->command->info("✅ Students created: {$studentsCreated}");
     }
     private function createClasses(): void
     {

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\TeacherAssignment;
-use App\Models\User;
+use App\Models\Teacher;
 use App\Models\ClassModel;
 use App\Models\Subject;
 use App\Models\Course;
@@ -42,7 +42,7 @@ class TeacherAssignmentController extends Controller
         $assignments = $query->latest()->paginate(15);
 
         // Get filter options
-        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+        $teachers = Teacher::orderBy('last_name')->get();
         $departments = Department::orderBy('department_name')->pluck('department_name');
         $academicYears = ['2024-2025', '2025-2026', '2026-2027'];
         $semesters = ['First', 'Second', 'Summer'];
@@ -58,7 +58,7 @@ class TeacherAssignmentController extends Controller
 
     public function create()
     {
-        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+        $teachers = Teacher::orderBy('last_name')->get();
         $classes = ClassModel::with('course')->get();
         $subjects = Subject::with('course')->get();
         $courses = Course::with('department')->orderBy('program_name')->get();
@@ -121,7 +121,7 @@ class TeacherAssignmentController extends Controller
     {
         $teacherAssignment->load('students');
 
-        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+        $teachers = Teacher::orderBy('last_name')->get();
         $classes = ClassModel::with('course')->get();
         $subjects = Subject::with('course')->get();
         $courses = Course::with('department')->orderBy('program_name')->get();

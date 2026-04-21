@@ -1,735 +1,686 @@
-
+﻿
 
 <?php $__env->startSection('content'); ?>
-<style>
-    .settings-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 1.5rem;
-    }
-    
-    .settings-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem;
-        border-radius: 12px 12px 0 0;
-    }
-    
-    .ksa-slider-container {
-        padding: 2rem;
-    }
-    
-    .slider-group {
-        margin-bottom: 2rem;
-    }
-    
-    .slider-label {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-    }
-    
-    .slider-value {
-        font-size: 1.25rem;
-        color: #667eea;
-    }
-    
-    input[type="range"] {
-        width: 100%;
-        height: 8px;
-        border-radius: 5px;
-        background: #e0e0e0;
-        outline: none;
-        -webkit-appearance: none;
-    }
-    
-    input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #667eea;
-        cursor: pointer;
-    }
-    
-    input[type="range"]::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #667eea;
-        cursor: pointer;
-    }
-    
-    .progress-bar-ksa {
-        height: 30px;
-        border-radius: 8px;
-        overflow: hidden;
-        display: flex;
-        margin-top: 1rem;
-    }
-    
-    .progress-segment {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s;
-    }
-    
-    .component-list {
-        list-style: none;
-        padding: 0;
-    }
-    
-    .component-item {
-        background: #f8f9fa;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 0.75rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .component-info {
-        flex: 1;
-    }
-    
-    .component-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .badge-knowledge { background-color: #2196F3; }
-    .badge-skills { background-color: #4CAF50; }
-    .badge-attitude { background-color: #9C27B0; }
-    
-    .locked-banner {
-        background: #fff3cd;
-        border: 1px solid #ffc107;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .attendance-category-card {
-        border: 2px solid #dee2e6;
-        border-radius: 12px;
-        padding: 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background: white;
-    }
-    
-    .attendance-category-card:hover {
-        border-color: #667eea;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
-        transform: translateY(-2px);
-    }
-    
-    .attendance-category-card.selected {
-        border-color: #667eea;
-        background: rgba(102, 126, 234, 0.05);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-    }
-    
-    .attendance-category-card .form-check-input {
-        display: none;
-    }
-</style>
+    <style>
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
 
-<div class="container-fluid py-4">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1">⚙️ Grade Settings</h2>
-            <p class="text-muted mb-0"><?php echo e($class->class_name); ?> - <?php echo e(ucfirst($term)); ?> Term</p>
-        </div>
-        <div class="d-flex gap-2">
-            <div class="btn-group">
-                <a href="<?php echo e(route('teacher.grades.settings', ['classId' => $class->id, 'term' => 'midterm'])); ?>" 
-                   class="btn btn-sm <?php echo e($term === 'midterm' ? 'btn-primary' : 'btn-outline-primary'); ?>">
-                    Midterm
-                </a>
-                <a href="<?php echo e(route('teacher.grades.settings', ['classId' => $class->id, 'term' => 'final'])); ?>" 
-                   class="btn btn-sm <?php echo e($term === 'final' ? 'btn-primary' : 'btn-outline-primary'); ?>">
-                    Final
+        .card-header {
+            border-radius: 8px 8px 0 0;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .mode-options {
+            display: flex;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .mode-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .mode-option:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+
+        .mode-option.selected {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+        }
+
+        .mode-option input[type="radio"] {
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .mode-option h6 {
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .mode-option small {
+            display: block;
+            margin-bottom: 10px;
+        }
+    </style>
+
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2>⚙️ Grade Settings</h2>
+                        <p class="text-muted mb-0"><?php echo e($class->class_name); ?> - <?php echo e(ucfirst($term)); ?> Term</p>
+                    </div>
+                    <div>
+                        <span id="settingsModeIndicator" class="badge fs-5 px-3 py-2 <?php echo e(($gradingScaleSettings->component_weight_mode ?? 'semi-auto') === 'manual' ? 'bg-primary' : 
+                            (($gradingScaleSettings->component_weight_mode ?? 'semi-auto') === 'auto' ? 'bg-warning text-dark' : 'bg-success')); ?>">
+                            <?php echo e(($gradingScaleSettings->component_weight_mode ?? 'semi-auto') === 'manual' ? '🎯 Manual Mode' : 
+                                (($gradingScaleSettings->component_weight_mode ?? 'semi-auto') === 'auto' ? '🤖 Auto Mode' : '🔄 Semi-Auto Mode')); ?>
+
+                        </span>
+                    </div>
+                </div>
+                <a href="<?php echo e(route('teacher.classes')); ?>" class="btn btn-sm btn-outline-secondary mt-2">
+                    <i class="fas fa-arrow-left"></i> Back
                 </a>
             </div>
-            <a href="<?php echo e(route('teacher.grades.entry', $class->id)); ?>?term=<?php echo e($term); ?>" class="btn btn-sm btn-success">
-                <i class="fas fa-edit"></i> Grade Entry
-            </a>
-            <a href="<?php echo e(route('teacher.classes')); ?>" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
         </div>
-    </div>
 
-    <?php if(session('success')): ?>
-        <div class="alert alert-success alert-dismissible fade show">
-            <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
+        <?php if(session('success')): ?>
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i><?php echo e(session('success')); ?>
 
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
 
-    <?php if($errors->any()): ?>
-        <div class="alert alert-danger alert-dismissible fade show">
-            <i class="fas fa-exclamation-circle me-2"></i>
-            <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div><?php echo e($error); ?></div>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
+        <?php if($errors->any()): ?>
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <div><?php echo e($error); ?></div>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
 
-    <?php if($ksaSettings->is_locked): ?>
-        <div class="locked-banner">
-            <i class="fas fa-lock me-2"></i>
-            <strong>Settings Locked:</strong> These settings are currently locked. Unlock to make changes.
-            <form method="POST" action="<?php echo e(route('teacher.grades.settings.toggle-lock', [$class->id, $term])); ?>" class="d-inline">
-                <?php echo csrf_field(); ?>
-                <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                <button type="submit" class="btn btn-sm btn-warning ms-2">
-                    <i class="fas fa-unlock"></i> Unlock Settings
-                </button>
-            </form>
-        </div>
-    <?php endif; ?>
+        <!-- KSA Distribution -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-percentage me-2"></i>KSA Distribution</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="<?php echo e(route('teacher.grades.settings.update-ksa', $class->id)); ?>">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="term" value="<?php echo e($term); ?>">
 
-    <!-- KSA Percentage Settings -->
-    <div class="settings-card">
-        <div class="settings-header">
-            <h4 class="mb-0"><i class="fas fa-percentage me-2"></i>KSA Percentage Distribution</h4>
-            <small>Adjust the weight of Knowledge, Skills, and Attitude in final grade calculation</small>
-        </div>
-        <div class="ksa-slider-container">
-            <form method="POST" action="<?php echo e(route('teacher.grades.settings.update-ksa', $class->id)); ?>" id="ksaForm">
-                <?php echo csrf_field(); ?>
-                <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                
-                <!-- Knowledge Slider -->
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span><i class="fas fa-brain text-primary"></i> Knowledge (K)</span>
-                        <span class="slider-value" id="knowledge-value"><?php echo e($ksaSettings->knowledge_weight ?? 40); ?>%</span>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Knowledge (K)</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="range" name="knowledge_weight" class="form-range" min="0"
+                                    max="100" value="<?php echo e($ksaSettings->knowledge_weight ?? 40); ?>">
+                                <span class="badge bg-primary"
+                                    id="k-display"><?php echo e($ksaSettings->knowledge_weight ?? 40); ?>%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Skills (S)</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="range" name="skills_weight" class="form-range" min="0" max="100"
+                                    value="<?php echo e($ksaSettings->skills_weight ?? 50); ?>">
+                                <span class="badge bg-success"
+                                    id="s-display"><?php echo e($ksaSettings->skills_weight ?? 50); ?>%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Attitude (A)</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="range" name="attitude_weight" class="form-range" min="0"
+                                    max="100" value="<?php echo e($ksaSettings->attitude_weight ?? 10); ?>">
+                                <span class="badge bg-danger"
+                                    id="a-display"><?php echo e($ksaSettings->attitude_weight ?? 10); ?>%</span>
+                            </div>
+                        </div>
                     </div>
-                    <input type="range" name="knowledge_weight" id="knowledge-slider" 
-                           min="0" max="100" value="<?php echo e($ksaSettings->knowledge_weight ?? 40); ?>"
-                           <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>>
-                </div>
 
-                <!-- Skills Slider -->
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span><i class="fas fa-cogs text-success"></i> Skills (S)</span>
-                        <span class="slider-value" id="skills-value"><?php echo e($ksaSettings->skills_weight ?? 50); ?>%</span>
+                    <div class="mt-3 text-center">
+                        <span class="badge bg-secondary fs-6">Total: <span id="total-display">100</span>%</span>
                     </div>
-                    <input type="range" name="skills_weight" id="skills-slider" 
-                           min="0" max="100" value="<?php echo e($ksaSettings->skills_weight ?? 50); ?>"
-                           <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>>
-                </div>
 
-                <!-- Attitude Slider -->
-                <div class="slider-group">
-                    <div class="slider-label">
-                        <span><i class="fas fa-heart text-danger"></i> Attitude (A)</span>
-                        <span class="slider-value" id="attitude-value"><?php echo e($ksaSettings->attitude_weight ?? 10); ?>%</span>
-                    </div>
-                    <input type="range" name="attitude_weight" id="attitude-slider" 
-                           min="0" max="100" value="<?php echo e($ksaSettings->attitude_weight ?? 10); ?>"
-                           <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>>
-                </div>
-
-                <!-- Visual Progress Bar -->
-                <div class="progress-bar-ksa" id="ksa-progress">
-                    <div class="progress-segment" style="width: <?php echo e($ksaSettings->knowledge_weight ?? 40); ?>%; background: #2196F3;" id="k-segment">
-                        K: <span id="k-percent"><?php echo e($ksaSettings->knowledge_weight ?? 40); ?></span>%
-                    </div>
-                    <div class="progress-segment" style="width: <?php echo e($ksaSettings->skills_weight ?? 50); ?>%; background: #4CAF50;" id="s-segment">
-                        S: <span id="s-percent"><?php echo e($ksaSettings->skills_weight ?? 50); ?></span>%
-                    </div>
-                    <div class="progress-segment" style="width: <?php echo e($ksaSettings->attitude_weight ?? 10); ?>%; background: #9C27B0;" id="a-segment">
-                        A: <span id="a-percent"><?php echo e($ksaSettings->attitude_weight ?? 10); ?></span>%
-                    </div>
-                </div>
-
-                <div class="mt-3 text-center">
-                    <span class="badge bg-secondary" id="total-badge">Total: <span id="total-percent">100</span>%</span>
-                </div>
-
-                <?php if(!$ksaSettings->is_locked): ?>
                     <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save me-2"></i>Save KSA Percentages
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Save KSA Settings
                         </button>
                     </div>
-                <?php endif; ?>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <!-- Attendance Settings -->
-    <div class="settings-card">
-        <div class="settings-header">
-            <h4 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Attendance Configuration</h4>
-            <small>Configure how attendance affects the final grade</small>
+        <!-- Weight Mode -->
+        <div class="card">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-wand-magic-sparkles me-2"></i>Component Weight Automation Mode</h5>
+                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#modeInfoModal" title="Learn about modes">
+                    <i class="fas fa-question-circle"></i> Info
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="mode-options">
+                    <div class="mode-option" data-mode="manual" onclick="selectMode('manual')">
+                        <h6>🎯 Manual</h6>
+                        <small class="text-muted">Full control</small>
+                        <div>
+                            <input type="radio" name="mode" value="manual" id="mode-manual"
+                                <?php echo e(($gradingScaleSettings->component_weight_mode ?? 'semi-auto') === 'manual' ? 'checked' : ''); ?>>
+                        </div>
+                    </div>
+
+                    <div class="mode-option" data-mode="semi-auto" onclick="selectMode('semi-auto')">
+                        <h6>🔄 Semi-Auto</h6>
+                        <small class="text-muted">Recommended</small>
+                        <div>
+                            <input type="radio" name="mode" value="semi-auto" id="mode-semi"
+                                <?php echo e(($gradingScaleSettings->component_weight_mode ?? 'semi-auto') === 'semi-auto' ? 'checked' : ''); ?>>
+                        </div>
+                    </div>
+
+                    <div class="mode-option" data-mode="auto" onclick="selectMode('auto')">
+                        <h6>🤖 Auto</h6>
+                        <small class="text-muted">Equal weights</small>
+                        <div>
+                            <input type="radio" name="mode" value="auto" id="mode-auto"
+                                <?php echo e(($gradingScaleSettings->component_weight_mode ?? 'semi-auto') === 'auto' ? 'checked' : ''); ?>>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-primary" onclick="saveWeightMode()">
+                        <i class="fas fa-save me-2"></i>Save Mode
+                    </button>
+                </div>
+            </div>
         </div>
-        <div class="ksa-slider-container">
-            <form method="POST" action="<?php echo e(route('teacher.grades.settings.update-attendance', $class->id)); ?>" id="attendanceForm">
-                <?php echo csrf_field(); ?>
-                <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                
-                <div class="row">
-                    <!-- Number of Meetings -->
-                    <div class="col-md-6">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-calendar-alt text-primary me-2"></i>
-                                Total Number of Meetings
+
+        <!-- Attendance Settings -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Attendance Settings</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="<?php echo e(route('teacher.grades.settings.update-attendance', $class->id)); ?>">
+                    <?php echo csrf_field(); ?>
+                    <input type="hidden" name="term" value="<?php echo e($term); ?>">
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Total Meetings</label>
+                            <input type="number" name="total_meetings" class="form-control"
+                                value="<?php echo e($ksaSettings->total_meetings ?? 20); ?>" min="1" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Attendance Weight (%)</label>
+                            <input type="number" name="attendance_weight" class="form-control"
+                                value="<?php echo e($ksaSettings->attendance_weight ?? 10); ?>" min="0" max="100"
+                                step="0.1" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Attendance Affects:</label>
+                        <div class="form-check">
+                            <input type="radio" name="attendance_category" value="knowledge" id="att-k"
+                                class="form-check-input"
+                                <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'knowledge' ? 'checked' : ''); ?>>
+                            <label class="form-check-label" for="att-k">Knowledge</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="attendance_category" value="skills" id="att-s"
+                                class="form-check-input"
+                                <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'skills' ? 'checked' : ''); ?>>
+                            <label class="form-check-label" for="att-s">Skills</label>
+                        </div>
+                        <div class="form-check">
+                            <input type="radio" name="attendance_category" value="attitude" id="att-a"
+                                class="form-check-input"
+                                <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'attitude' ? 'checked' : ''); ?>>
+                            <label class="form-check-label" for="att-a">Attitude</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="enable_attendance_ksa" id="enable-att" class="form-check-input"
+                                <?php echo e(($ksaSettings->enable_attendance_ksa ?? true) ? 'checked' : ''); ?>>
+                            <label class="form-check-label" for="enable-att">
+                                Enable Attendance in KSA Calculation
                             </label>
-                            <input type="number" 
-                                   name="total_meetings" 
-                                   class="form-control form-control-lg" 
-                                   value="<?php echo e($ksaSettings->total_meetings ?? 20); ?>" 
-                                   min="1" 
-                                   max="100"
-                                   <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>
-
-                                   required>
-                            <small class="text-muted">
-                                Total class meetings for <?php echo e(ucfirst($term)); ?> term
-                            </small>
                         </div>
                     </div>
 
-                    <!-- Attendance Weight -->
-                    <div class="col-md-6">
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                <i class="fas fa-percentage text-success me-2"></i>
-                                Attendance Weight
-                            </label>
-                            <div class="input-group input-group-lg">
-                                <input type="number" 
-                                       name="attendance_weight" 
-                                       id="attendance-weight-input"
-                                       class="form-control" 
-                                       value="<?php echo e($ksaSettings->attendance_weight ?? 10); ?>" 
-                                       min="0" 
-                                       max="100"
-                                       step="0.1"
-                                       <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>
-
-                                       required>
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <small class="text-muted">
-                                Weight within selected category
-                            </small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Attendance Category Selection -->
-                <div class="mb-4">
-                    <label class="form-label fw-bold">
-                        <i class="fas fa-bullseye text-warning me-2"></i>
-                        Attendance Affects Which Category?
-                    </label>
-                    <p class="text-muted small mb-3">
-                        Choose which KSA category attendance should impact. For example:
-                        <br>• <strong>Skills-based subjects</strong> (Lab, PE, Workshop) → Select Skills
-                        <br>• <strong>Theory-based subjects</strong> (Math, Science) → Select Knowledge
-                        <br>• <strong>Behavior-focused subjects</strong> (Values, Ethics) → Select Attitude
-                    </p>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="form-check attendance-category-card <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'knowledge' ? 'selected' : ''); ?>" 
-                                 onclick="selectAttendanceCategory('knowledge')" 
-                                 style="<?php echo e(($ksaSettings->is_locked ?? false) ? 'pointer-events: none; opacity: 0.6;' : ''); ?>">
-                                <input class="form-check-input" 
-                                       type="radio" 
-                                       name="attendance_category" 
-                                       id="attendance-knowledge" 
-                                       value="knowledge"
-                                       <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'knowledge' ? 'checked' : ''); ?>
-
-                                       <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>>
-                                <label class="form-check-label w-100" for="attendance-knowledge">
-                                    <div class="text-center py-3">
-                                        <i class="fas fa-brain fa-3x text-primary mb-2"></i>
-                                        <h5 class="mb-1">Knowledge</h5>
-                                        <small class="text-muted">Theory-based subjects</small>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-check attendance-category-card <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'skills' ? 'selected' : ''); ?>" 
-                                 onclick="selectAttendanceCategory('skills')"
-                                 style="<?php echo e(($ksaSettings->is_locked ?? false) ? 'pointer-events: none; opacity: 0.6;' : ''); ?>">
-                                <input class="form-check-input" 
-                                       type="radio" 
-                                       name="attendance_category" 
-                                       id="attendance-skills" 
-                                       value="skills"
-                                       <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'skills' ? 'checked' : ''); ?>
-
-                                       <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>>
-                                <label class="form-check-label w-100" for="attendance-skills">
-                                    <div class="text-center py-3">
-                                        <i class="fas fa-cogs fa-3x text-success mb-2"></i>
-                                        <h5 class="mb-1">Skills</h5>
-                                        <small class="text-muted">Practical/Lab subjects</small>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <div class="form-check attendance-category-card <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'attitude' ? 'selected' : ''); ?>" 
-                                 onclick="selectAttendanceCategory('attitude')"
-                                 style="<?php echo e(($ksaSettings->is_locked ?? false) ? 'pointer-events: none; opacity: 0.6;' : ''); ?>">
-                                <input class="form-check-input" 
-                                       type="radio" 
-                                       name="attendance_category" 
-                                       id="attendance-attitude" 
-                                       value="attitude"
-                                       <?php echo e(($ksaSettings->attendance_category ?? 'skills') === 'attitude' ? 'checked' : ''); ?>
-
-                                       <?php echo e(($ksaSettings->is_locked ?? false) ? 'disabled' : ''); ?>>
-                                <label class="form-check-label w-100" for="attendance-attitude">
-                                    <div class="text-center py-3">
-                                        <i class="fas fa-heart fa-3x text-danger mb-2"></i>
-                                        <h5 class="mb-1">Attitude</h5>
-                                        <small class="text-muted">Behavior-focused subjects</small>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Attendance Formula Display -->
-                <div class="alert alert-info">
-                    <h6 class="alert-heading"><i class="fas fa-calculator me-2"></i>Attendance Calculation Formula</h6>
-                    <p class="mb-2">
-                        <strong>Attendance Score</strong> = (Attendance Count / Total Meetings) × 50 + 50
-                    </p>
-                    <p class="mb-2">
-                        <strong>Category Impact</strong> = Attendance Score × <span id="weight-display"><?php echo e($ksaSettings->attendance_weight ?? 10); ?></span>%
-                    </p>
-                    <hr>
-                    <p class="mb-0 small">
-                        <strong>Example:</strong> If a student attends 17 out of 20 meetings:
-                        <br>• Attendance Score = (17/20) × 50 + 50 = <strong>92.5</strong>
-                        <br>• Impact on <span id="category-display"><?php echo e(ucfirst($ksaSettings->attendance_category ?? 'Skills')); ?></span> = 92.5 × <?php echo e($ksaSettings->attendance_weight ?? 10); ?>% = <strong><?php echo e(number_format(92.5 * (($ksaSettings->attendance_weight ?? 10) / 100), 2)); ?></strong> points
-                    </p>
-                </div>
-
-                <?php if(!$ksaSettings->is_locked): ?>
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-success btn-lg">
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success">
                             <i class="fas fa-save me-2"></i>Save Attendance Settings
                         </button>
                     </div>
-                <?php endif; ?>
-            </form>
-        </div>
-    </div>
-
-    <!-- Component Management -->
-    <div class="row">
-        <!-- Knowledge Components -->
-        <div class="col-md-4">
-            <div class="settings-card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Knowledge Components</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="component-list">
-                        <?php $__empty_1 = true; $__currentLoopData = $components['knowledge'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $component): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <li class="component-item">
-                                <div class="component-info">
-                                    <strong><?php echo e($component->name); ?></strong>
-                                    <div class="small text-muted">
-                                        Max: <?php echo e($component->max_score); ?> pts | Weight: <?php echo e($component->weight); ?>%
-                                    </div>
-                                </div>
-                                <div class="component-actions">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editComponent(<?php echo e($component->id); ?>)" <?php echo e($ksaSettings->is_locked ? 'disabled' : ''); ?>>
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <form method="POST" action="<?php echo e(route('teacher.grades.settings.delete-component', [$class->id, $component->id])); ?>" class="d-inline">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this component?')" <?php echo e($ksaSettings->is_locked ? 'disabled' : ''); ?>>
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                            <li class="text-muted text-center py-3">No components yet</li>
-                        <?php endif; ?>
-                    </ul>
-                    <?php if(!$ksaSettings->is_locked): ?>
-                        <button class="btn btn-sm btn-primary w-100 mt-2" onclick="showAddModal('knowledge')">
-                            <i class="fas fa-plus me-1"></i>Add Component
-                        </button>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Skills Components -->
-        <div class="col-md-4">
-            <div class="settings-card">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Skills Components</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="component-list">
-                        <?php $__empty_1 = true; $__currentLoopData = $components['skills'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $component): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <li class="component-item">
-                                <div class="component-info">
-                                    <strong><?php echo e($component->name); ?></strong>
-                                    <div class="small text-muted">
-                                        Max: <?php echo e($component->max_score); ?> pts | Weight: <?php echo e($component->weight); ?>%
-                                    </div>
-                                </div>
-                                <div class="component-actions">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editComponent(<?php echo e($component->id); ?>)" <?php echo e($ksaSettings->is_locked ? 'disabled' : ''); ?>>
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <form method="POST" action="<?php echo e(route('teacher.grades.settings.delete-component', [$class->id, $component->id])); ?>" class="d-inline">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this component?')" <?php echo e($ksaSettings->is_locked ? 'disabled' : ''); ?>>
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                            <li class="text-muted text-center py-3">No components yet</li>
-                        <?php endif; ?>
-                    </ul>
-                    <?php if(!$ksaSettings->is_locked): ?>
-                        <button class="btn btn-sm btn-success w-100 mt-2" onclick="showAddModal('skills')">
-                            <i class="fas fa-plus me-1"></i>Add Component
-                        </button>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Attitude Components -->
-        <div class="col-md-4">
-            <div class="settings-card">
-                <div class="card-header bg-purple text-white" style="background-color: #9C27B0;">
-                    <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Attitude Components</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="component-list">
-                        <?php $__empty_1 = true; $__currentLoopData = $components['attitude'] ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $component): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <li class="component-item">
-                                <div class="component-info">
-                                    <strong><?php echo e($component->name); ?></strong>
-                                    <div class="small text-muted">
-                                        Max: <?php echo e($component->max_score); ?> pts | Weight: <?php echo e($component->weight); ?>%
-                                    </div>
-                                </div>
-                                <div class="component-actions">
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editComponent(<?php echo e($component->id); ?>)" <?php echo e($ksaSettings->is_locked ? 'disabled' : ''); ?>>
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <form method="POST" action="<?php echo e(route('teacher.grades.settings.delete-component', [$class->id, $component->id])); ?>" class="d-inline">
-                                        <?php echo csrf_field(); ?>
-                                        <?php echo method_field('DELETE'); ?>
-                                        <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this component?')" <?php echo e($ksaSettings->is_locked ? 'disabled' : ''); ?>>
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </li>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                            <li class="text-muted text-center py-3">No components yet</li>
-                        <?php endif; ?>
-                    </ul>
-                    <?php if(!$ksaSettings->is_locked): ?>
-                        <button class="btn btn-sm btn-purple w-100 mt-2" style="background-color: #9C27B0; color: white;" onclick="showAddModal('attitude')">
-                            <i class="fas fa-plus me-1"></i>Add Component
-                        </button>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="settings-card">
-        <div class="card-body">
-            <h5 class="mb-3">Quick Actions</h5>
-            <div class="d-flex gap-2 flex-wrap">
-                <form method="POST" action="<?php echo e(route('teacher.grades.settings.initialize', $class->id)); ?>">
-                    <?php echo csrf_field(); ?>
-                    <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                    <button type="submit" class="btn btn-outline-primary" onclick="return confirm('Initialize default components? This will add standard KSA components.')" <?php echo e($ksaSettings->is_locked ? 'disabled' : ''); ?>>
-                        <i class="fas fa-magic me-1"></i>Initialize Default Components
-                    </button>
-                </form>
-                
-                <form method="POST" action="<?php echo e(route('teacher.grades.settings.toggle-lock', [$class->id, $term])); ?>">
-                    <?php echo csrf_field(); ?>
-                    <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                    <button type="submit" class="btn <?php echo e($ksaSettings->is_locked ? 'btn-warning' : 'btn-secondary'); ?>">
-                        <i class="fas fa-<?php echo e($ksaSettings->is_locked ? 'unlock' : 'lock'); ?> me-1"></i>
-                        <?php echo e($ksaSettings->is_locked ? 'Unlock' : 'Lock'); ?> Settings
-                    </button>
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Add Component Modal -->
-<div class="modal fade" id="addComponentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="<?php echo e(route('teacher.grades.settings.add-component', $class->id)); ?>">
-                <?php echo csrf_field(); ?>
-                <input type="hidden" name="term" value="<?php echo e($term); ?>">
-                <input type="hidden" name="category" id="add-category">
-                
-                <div class="modal-header">
-                    <h5 class="modal-title">Add New Component</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Mode Information Modal -->
+    <div class="modal fade" id="modeInfoModal" tabindex="-1" aria-labelledby="modeInfoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modeInfoModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>Component Weight Automation Modes Explained
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Component Type</label>
-                        <input type="text" name="component_type" class="form-control" placeholder="e.g., quiz, output, activity" required>
+                    <!-- Manual Mode -->
+                    <div class="mode-info-section mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="mode-icon me-3">
+                                <span style="font-size: 2rem;">🎯</span>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 text-primary">Manual Mode</h5>
+                                <span class="badge bg-primary">Full Control</span>
+                            </div>
+                        </div>
+                        <div class="ps-5">
+                            <h6 class="fw-bold">How it works:</h6>
+                            <ul class="mb-3">
+                                <li>You manually set the weight percentage for <strong>each component</strong></li>
+                                <li>Total weights within each KSA category must equal <strong>100%</strong></li>
+                                <li>System validates but does not auto-adjust weights</li>
+                                <li>You have complete control over the distribution</li>
+                            </ul>
+                            
+                            <h6 class="fw-bold">Example:</h6>
+                            <div class="alert alert-light border">
+                                <strong>Knowledge Components:</strong><br>
+                                • Midterm Exam: <span class="text-primary">60%</span> (you set)<br>
+                                • Quiz 1: <span class="text-primary">10%</span> (you set)<br>
+                                • Quiz 2: <span class="text-primary">10%</span> (you set)<br>
+                                • Quiz 3: <span class="text-primary">20%</span> (you set)<br>
+                                <strong>Total: 100%</strong> ✓
+                            </div>
+                            
+                            <h6 class="fw-bold">Best for:</h6>
+                            <ul class="mb-0">
+                                <li>Teachers with specific grading requirements</li>
+                                <li>Custom grading schemes (e.g., major exam worth 70%)</li>
+                                <li>When you need precise control over each component</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" name="name" class="form-control" placeholder="e.g., Quiz 6" required>
+
+                    <hr>
+
+                    <!-- Semi-Auto Mode -->
+                    <div class="mode-info-section mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="mode-icon me-3">
+                                <span style="font-size: 2rem;">🔄</span>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 text-success">Semi-Auto Mode</h5>
+                                <span class="badge bg-success">Recommended - Subcategory-Level</span>
+                            </div>
+                        </div>
+                        <div class="ps-5">
+                            <h6 class="fw-bold">How it works:</h6>
+                            <ul class="mb-3">
+                                <li>System <strong>suggests equal distribution</strong> within each <strong>subcategory</strong></li>
+                                <li>You can <strong>override and adjust</strong> any component weight</li>
+                                <li>When you change one weight, <strong>only the same subcategory</strong> recalculates proportionally</li>
+                                <li>Different subcategories remain independent (like Auto Mode)</li>
+                                <li>Always maintains 100% total automatically</li>
+                            </ul>
+                            
+                            <h6 class="fw-bold">Example:</h6>
+                            <div class="alert alert-light border">
+                                <strong>Knowledge Category:</strong><br>
+                                <span class="text-primary">📝 Exam:</span> 60%<br>
+                                <span class="text-primary">📋 Quizzes (3 components):</span> 13.33% each = 40% total<br>
+                                <br>
+                                <strong>You change Quiz 1 to 20%:</strong><br>
+                                <span class="text-success">✓ Exam stays: 60%</span> (not affected)<br>
+                                <span class="text-success">✓ Quiz 1: 20%</span> (your override)<br>
+                                <span class="text-success">✓ Quiz 2 & 3: 10% each</span> (proportionally adjusted)<br>
+                                <strong>Total: 100%</strong> ✓
+                            </div>
+                            
+                            <h6 class="fw-bold">Best for:</h6>
+                            <ul class="mb-0">
+                                <li><strong>Most teachers</strong> - perfect balance of control and automation</li>
+                                <li>When you want flexibility within logical groupings</li>
+                                <li>Standard grading with customization per assessment type</li>
+                                <li>Saves time while maintaining precise control</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Maximum Score</label>
-                        <input type="number" name="max_score" class="form-control" value="100" min="1" required>
+
+                    <hr>
+
+                    <!-- Auto Mode -->
+                    <div class="mode-info-section mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="mode-icon me-3">
+                                <span style="font-size: 2rem;">🤖</span>
+                            </div>
+                            <div>
+                                <h5 class="mb-1 text-warning">Auto Mode</h5>
+                                <span class="badge bg-warning text-dark">Fully Automated (Subcategory-Level)</span>
+                            </div>
+                        </div>
+                        <div class="ps-5">
+                            <h6 class="fw-bold">How it works:</h6>
+                            <ul class="mb-3">
+                                <li>System <strong>automatically distributes weights equally</strong> within each <strong>subcategory</strong></li>
+                                <li>Weights are <strong>locked</strong> - you cannot manually adjust them</li>
+                                <li>When you add/remove components, <strong>only the same subcategory</strong> recalculates</li>
+                                <li>Different subcategories (Exam vs Quiz, Output vs Activity) remain independent</li>
+                                <li>Zero manual weight management required</li>
+                            </ul>
+                            
+                            <h6 class="fw-bold">Example:</h6>
+                            <div class="alert alert-light border">
+                                <strong>Knowledge Category:</strong><br>
+                                <span class="text-primary">📝 Exam (1 component):</span> 60%<br>
+                                <span class="text-primary">📋 Quizzes (3 components):</span> 13.33% each = 40% total<br>
+                                <br>
+                                <strong>Delete Quiz 1:</strong><br>
+                                <span class="text-success">✓ Exam stays: 60%</span> (not affected)<br>
+                                <span class="text-success">✓ Remaining 2 Quizzes: 20% each</span> (auto-adjusted)<br>
+                                <strong>Total: 100%</strong> ✓
+                            </div>
+                            
+                            <h6 class="fw-bold">Best for:</h6>
+                            <ul class="mb-0">
+                                <li>Structured grading with distinct assessment types</li>
+                                <li>When components within same type have equal importance</li>
+                                <li>Teachers who want minimal setup with logical grouping</li>
+                                <li>Standardized assessment with subcategory flexibility</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Weight Percentage</label>
-                        <input type="number" name="weight_percentage" class="form-control" value="10" min="0" max="100" step="0.01" required>
-                        <small class="text-muted">Percentage weight within this category</small>
+
+                    <hr>
+
+                    <!-- Comparison Table -->
+                    <div class="mode-info-section">
+                        <h5 class="mb-3 text-center">Quick Comparison</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Feature</th>
+                                        <th class="text-center">🎯 Manual</th>
+                                        <th class="text-center">🔄 Semi-Auto</th>
+                                        <th class="text-center">🤖 Auto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Control Level</strong></td>
+                                        <td class="text-center">100%</td>
+                                        <td class="text-center">75%</td>
+                                        <td class="text-center">0%</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Setup Time</strong></td>
+                                        <td class="text-center">High</td>
+                                        <td class="text-center">Medium</td>
+                                        <td class="text-center">Low</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Flexibility</strong></td>
+                                        <td class="text-center">Maximum</td>
+                                        <td class="text-center">High</td>
+                                        <td class="text-center">None</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Auto-Adjustment</strong></td>
+                                        <td class="text-center">❌ No</td>
+                                        <td class="text-center">✅ Proportional</td>
+                                        <td class="text-center">✅ Equal</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Manual Override</strong></td>
+                                        <td class="text-center">✅ Yes</td>
+                                        <td class="text-center">✅ Yes</td>
+                                        <td class="text-center">❌ No</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Recommended For</strong></td>
+                                        <td class="text-center">Advanced</td>
+                                        <td class="text-center">Most Users</td>
+                                        <td class="text-center">Beginners</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tips -->
+                    <div class="alert alert-info mt-4">
+                        <h6 class="alert-heading"><i class="fas fa-lightbulb me-2"></i>Pro Tips:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Start with Semi-Auto</strong> - It's the best balance for most teachers</li>
+                            <li><strong>Switch anytime</strong> - You can change modes at any point</li>
+                            <li><strong>Per term</strong> - Midterm and Final can use different modes</li>
+                            <li><strong>Test first</strong> - Try different modes to see what works best for you</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add Component</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-// KSA Slider Logic
-const knowledgeSlider = document.getElementById('knowledge-slider');
-const skillsSlider = document.getElementById('skills-slider');
-const attitudeSlider = document.getElementById('attitude-slider');
+    <script>
+        let lastChangedSlider = null;
 
-const knowledgeValue = document.getElementById('knowledge-value');
-const skillsValue = document.getElementById('skills-value');
-const attitudeValue = document.getElementById('attitude-value');
+        function updateKSADisplay() {
+            const kSlider = document.querySelector('input[name="knowledge_weight"]');
+            const sSlider = document.querySelector('input[name="skills_weight"]');
+            const aSlider = document.querySelector('input[name="attitude_weight"]');
 
-const kSegment = document.getElementById('k-segment');
-const sSegment = document.getElementById('s-segment');
-const aSegment = document.getElementById('a-segment');
+            let k = parseInt(kSlider.value);
+            let s = parseInt(sSlider.value);
+            let a = parseInt(aSlider.value);
+            let total = k + s + a;
 
-const kPercent = document.getElementById('k-percent');
-const sPercent = document.getElementById('s-percent');
-const aPercent = document.getElementById('a-percent');
+            // Auto-adjust to maintain 100% total
+            if (total > 100) {
+                const diff = total - 100;
 
-const totalPercent = document.getElementById('total-percent');
-const totalBadge = document.getElementById('total-badge');
+                // Determine which slider changed (wasn't changed by auto-adjust)
+                if (lastChangedSlider === 'knowledge') {
+                    // Reduce skills and attitude proportionally
+                    const sRatio = s / (s + a) || 0.5;
+                    s -= Math.round(diff * sRatio);
+                    a -= diff - Math.round(diff * sRatio);
+                } else if (lastChangedSlider === 'skills') {
+                    // Reduce knowledge and attitude proportionally
+                    const kRatio = k / (k + a) || 0.5;
+                    k -= Math.round(diff * kRatio);
+                    a -= diff - Math.round(diff * kRatio);
+                } else {
+                    // Reduce knowledge and skills proportionally
+                    const kRatio = k / (k + s) || 0.5;
+                    k -= Math.round(diff * kRatio);
+                    s -= diff - Math.round(diff * kRatio);
+                }
 
-function updateKSA() {
-    const k = parseInt(knowledgeSlider.value);
-    const s = parseInt(skillsSlider.value);
-    const a = parseInt(attitudeSlider.value);
-    const total = k + s + a;
-    
-    knowledgeValue.textContent = k + '%';
-    skillsValue.textContent = s + '%';
-    attitudeValue.textContent = a + '%';
-    
-    kSegment.style.width = k + '%';
-    sSegment.style.width = s + '%';
-    aSegment.style.width = a + '%';
-    
-    kPercent.textContent = k;
-    sPercent.textContent = s;
-    aPercent.textContent = a;
-    
-    totalPercent.textContent = total;
-    
-    if (total === 100) {
-        totalBadge.className = 'badge bg-success';
-    } else {
-        totalBadge.className = 'badge bg-danger';
-    }
-}
+                // Ensure no negative values
+                k = Math.max(0, k);
+                s = Math.max(0, s);
+                a = Math.max(0, a);
 
-knowledgeSlider?.addEventListener('input', updateKSA);
-skillsSlider?.addEventListener('input', updateKSA);
-attitudeSlider?.addEventListener('input', updateKSA);
+                // Update sliders
+                kSlider.value = k;
+                sSlider.value = s;
+                aSlider.value = a;
+            }
 
-function showAddModal(category) {
-    document.getElementById('add-category').value = category;
-    new bootstrap.Modal(document.getElementById('addComponentModal')).show();
-}
+            // Update displays
+            document.getElementById('k-display').textContent = k + '%';
+            document.getElementById('s-display').textContent = s + '%';
+            document.getElementById('a-display').textContent = a + '%';
+            document.getElementById('total-display').textContent = (k + s + a);
 
-function editComponent(id) {
-    // TODO: Implement edit modal
-    alert('Edit functionality coming soon!');
-}
+            lastChangedSlider = null;
+        }
 
-// Attendance category selection
-function selectAttendanceCategory(category) {
-    // Remove selected class from all cards
-    document.querySelectorAll('.attendance-category-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    
-    // Add selected class to clicked card
-    event.currentTarget.classList.add('selected');
-    
-    // Check the radio button
-    document.getElementById('attendance-' + category).checked = true;
-    
-    // Update category display in formula
-    document.getElementById('category-display').textContent = category.charAt(0).toUpperCase() + category.slice(1);
-}
+        // Function to select mode when card is clicked
+        function selectMode(mode) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.mode-option').forEach(card => {
+                card.classList.remove('selected');
+            });
 
-// Update weight display when attendance weight changes
-document.getElementById('attendance-weight-input')?.addEventListener('input', function() {
-    document.getElementById('weight-display').textContent = this.value;
-});
-</script>
+            // Add selected class to clicked card
+            const clickedCard = document.querySelector(`.mode-option[data-mode="${mode}"]`);
+            if (clickedCard) {
+                clickedCard.classList.add('selected');
+            }
+
+            // Check the corresponding radio button
+            const radio = document.getElementById(`mode-${mode}`);
+            if (radio) {
+                radio.checked = true;
+            }
+        }
+
+        // Function to update card selection based on checked radio
+        function updateCardSelection() {
+            const checkedRadio = document.querySelector('input[name="mode"]:checked');
+            if (checkedRadio) {
+                const mode = checkedRadio.value;
+                document.querySelectorAll('.mode-option').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                const selectedCard = document.querySelector(`.mode-option[data-mode="${mode}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected');
+                }
+            }
+        }
+
+        // Track which slider is being changed
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize KSA sliders
+            document.querySelector('input[name="knowledge_weight"]').addEventListener('input', function() {
+                lastChangedSlider = 'knowledge';
+                updateKSADisplay();
+            });
+            document.querySelector('input[name="skills_weight"]').addEventListener('input', function() {
+                lastChangedSlider = 'skills';
+                updateKSADisplay();
+            });
+            document.querySelector('input[name="attitude_weight"]').addEventListener('input', function() {
+                lastChangedSlider = 'attitude';
+                updateKSADisplay();
+            });
+
+            // Initialize card selection on page load
+            updateCardSelection();
+
+            // Add event listeners to radio buttons to update card selection
+            document.querySelectorAll('input[name="mode"]').forEach(radio => {
+                radio.addEventListener('change', updateCardSelection);
+            });
+        });
+
+        function saveWeightMode() {
+            const checkedRadio = document.querySelector('input[name="mode"]:checked');
+            if (!checkedRadio) {
+                alert('⚠️ Please select a mode first');
+                return;
+            }
+
+            const mode = checkedRadio.value;
+            const classId = '<?php echo e($class->id); ?>';
+            const term = '<?php echo e($term); ?>';
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+            if (!classId || !term) {
+                alert('❌ Error: Missing class ID or term');
+                return;
+            }
+
+            console.log('Saving mode:', mode, 'for class:', classId, 'term:', term);
+
+            fetch(`/teacher/grade-settings/${classId}/${term}/weight-mode`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        component_weight_mode: mode
+                    })
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Response data:', data);
+                    if (data.success) {
+                        // Update the mode indicator badge
+                        const indicator = document.getElementById('settingsModeIndicator');
+                        if (indicator) {
+                            let badgeClass = '';
+                            let badgeText = '';
+                            
+                            switch(mode) {
+                                case 'manual':
+                                    badgeClass = 'bg-primary';
+                                    badgeText = '🎯 Manual Mode';
+                                    break;
+                                case 'semi-auto':
+                                    badgeClass = 'bg-success';
+                                    badgeText = '🔄 Semi-Auto Mode';
+                                    break;
+                                case 'auto':
+                                    badgeClass = 'bg-warning text-dark';
+                                    badgeText = '🤖 Auto Mode';
+                                    break;
+                            }
+                            
+                            indicator.className = `badge fs-5 px-3 py-2 ${badgeClass}`;
+                            indicator.textContent = badgeText;
+                        }
+                        
+                        alert('✅ Mode saved successfully: ' + mode.toUpperCase() + '\n\nThe component management will now follow ' + mode + ' mode rules.');
+                        // Don't reload, just update the UI
+                    } else {
+                        alert('❌ Error: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('❌ Error saving mode: ' + error.message);
+                });
+        }
+    </script>
+
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.teacher', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/grades/settings.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.teacher', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/grades/settings.blade.php ENDPATH**/ ?>

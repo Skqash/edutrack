@@ -436,7 +436,7 @@
                             <i class="fas fa-flag-checkered"></i>
                             Final
                         </a>
-                        <a href="{{ route('teacher.grades.results') }}?class_id={{ $class->id }}"
+                        <a href="{{ route('teacher.grades.summary.detailed') }}?class_id={{ $class->id }}"
                             class="btn-modern btn-info-modern">
                             <i class="fas fa-chart-bar"></i>
                             Summary

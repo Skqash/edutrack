@@ -29,6 +29,7 @@ class KsaSetting extends Model
         'passing_grade',
         'minimum_attendance',
         'include_attendance_in_attitude',
+        'enable_attendance_ksa',
         'auto_calculate',
         'custom_settings',
         'is_locked',
@@ -44,6 +45,7 @@ class KsaSetting extends Model
         'use_weighted_average' => 'boolean',
         'round_final_grade' => 'boolean',
         'include_attendance_in_attitude' => 'boolean',
+        'enable_attendance_ksa' => 'boolean',
         'auto_calculate' => 'boolean',
         'is_locked' => 'boolean',
         'custom_settings' => 'array',
@@ -71,7 +73,7 @@ class KsaSetting extends Model
     /**
      * Get or create default KSA settings for a class/term
      */
-    public static function getOrCreateDefault(int $classId, string $term, int $teacherId = null): self
+    public static function getOrCreateDefault(int $classId, string $term, ?int $teacherId = null): self
     {
         if (!$teacherId) {
             $teacherId = auth()->id();
@@ -91,6 +93,7 @@ class KsaSetting extends Model
                 'passing_grade' => 75.00,
                 'minimum_attendance' => 75.00,
                 'include_attendance_in_attitude' => true,
+                'enable_attendance_ksa' => true,
                 'auto_calculate' => true,
             ]
         );

@@ -31,6 +31,46 @@
             </div>
         @endif
 
+        <!-- Summary Statistics Card -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users text-primary mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-1">{{ $students->count() }}</h4>
+                        <p class="text-muted mb-0">Total Students</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-calendar-check text-info mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-1">{{ $students->sum(fn($s) => $s->attendance->count()) }}</h4>
+                        <p class="text-muted mb-0">Total Attendance Records</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line text-success mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-1">{{ $students->sum(fn($s) => $s->grades->count()) }}</h4>
+                        <p class="text-muted mb-0">Total Grade Entries</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-percentage text-warning mb-2" style="font-size: 2rem;"></i>
+                        <h4 class="mb-1">{{ $students->filter(fn($s) => $s->grades->count() > 0)->count() }}</h4>
+                        <p class="text-muted mb-0">Students with Grades</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Students Table Card -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
@@ -54,6 +94,8 @@
                                         <th class="d-none d-md-table-cell">Email</th>
                                         <th class="d-none d-md-table-cell">Grade Year</th>
                                         <th class="d-none d-md-table-cell">Section</th>
+                                        <th class="d-none d-md-table-cell">Attendance</th>
+                                        <th class="d-none d-md-table-cell">Grades</th>
                                         <th style="width: 150px;">Actions</th>
                                     </tr>
                                 </thead>
@@ -76,10 +118,26 @@
                         <td class="d-none d-md-table-cell">
                             <span class="badge bg-secondary">{{ $student->section ?? 'N/A' }}</span>
                         </td>
+                        <td class="d-none d-md-table-cell">
+                            <span class="badge bg-info">
+                                <i class="fas fa-calendar-check me-1"></i>{{ $student->attendance->count() }}
+                            </span>
+                        </td>
+                        <td class="d-none d-md-table-cell">
+                            <span class="badge bg-success">
+                                <i class="fas fa-chart-line me-1"></i>{{ $student->grades->count() }}
+                            </span>
+                        </td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
-                                <a href="{{ route('teacher.students.edit', $student->id) }}" class="btn btn-outline-warning" title="Edit">
+                                <a href="{{ route('students.edit', $student->id) }}" class="btn btn-outline-warning" title="Edit">
                                     <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ route('attendance.manage', $class->id) }}?student_id={{ $student->id }}" class="btn btn-outline-info" title="View Attendance">
+                                    <i class="fas fa-calendar-check"></i>
+                                </a>
+                                <a href="{{ route('grades.entry.dynamic', ['classId' => $class->id, 'term' => 'midterm']) }}?student_id={{ $student->id }}" class="btn btn-outline-success" title="View Grades">
+                                    <i class="fas fa-chart-line"></i>
                                 </a>
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" 
                                     data-bs-target="#deleteStudentModal{{ $student->id }}" title="Delete">
@@ -127,7 +185,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <form action="{{ route('teacher.students.destroy', $student->id) }}" method="POST" class="d-inline">
+                        <form action="{{ route('students.destroy', $student->id) }}" method="POST" class="d-inline">
                             @csrf
                             @method('DELETE')
                             <input type="hidden" name="class_id" value="{{ $class->id }}">
@@ -141,18 +199,23 @@
         </div>
     @endforeach
 
-    @push('scripts')
-        <script>
-            // Simple search functionality
-            document.getElementById('searchInput')?.addEventListener('keyup', function() {
-                const filter = this.value.toLowerCase();
-                const rows = document.querySelectorAll('.studentRow');
-                
-                rows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(filter) ? '' : 'none';
-                });
+    @endsection
+
+@push('scripts')
+    <script>
+        // Debug information
+        console.log('Total students: {{ $students->count() }}');
+        console.log('Class ID: {{ $class->id }}');
+        
+        // Simple search functionality
+        document.getElementById('searchInput')?.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('.studentRow');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
             });
-        </script>
-    @endpush
-@endsection
+        });
+    </script>
+@endpush

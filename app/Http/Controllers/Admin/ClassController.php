@@ -8,8 +8,9 @@ use App\Models\Course;
 use App\Models\Department;
 use App\Models\Student;
 use App\Models\Subject;
+use App\Models\Teacher;
+use App\Models\Admin;
 use App\Models\TeacherAssignment;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,14 +19,15 @@ class ClassController extends Controller
 {
     public function index()
     {
+        /** @var Admin $admin */
         $admin = Auth::user();
-        $adminCampus = $admin->campus;
+        $adminSchoolId = $admin->school_id;
         
-        // Apply campus filtering for campus admins
+        // Apply school filtering for admins
         $query = ClassModel::with(['teacher', 'course', 'subject', 'school']);
         
-        if ($adminCampus) {
-            $query->where('campus', $adminCampus);
+        if ($adminSchoolId) {
+            $query->where('school_id', $adminSchoolId);
         }
         
         $classes = $query->get();
@@ -35,15 +37,15 @@ class ClassController extends Controller
             return $class->course ? $class->course->program_name : 'No Course Assigned';
         });
         
-        // Get statistics with campus filtering
-        $totalStudents = Student::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))->count();
-        $totalTeachers = User::where('role', 'teacher')
-            ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+        // Get statistics with school filtering
+        $totalStudents = Student::when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))->count();
+        $totalTeachers = Teacher::query()
+            ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
             ->count();
-        $totalClasses = ClassModel::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))->count();
-        $totalSubjects = Subject::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))->count();
+        $totalClasses = ClassModel::when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))->count();
+        $totalSubjects = Subject::when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))->count();
         
-        $courses = Course::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+        $courses = Course::when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
             ->orderBy('program_name')
             ->get();
 
@@ -66,30 +68,27 @@ class ClassController extends Controller
             'totalSubjects', 
             'courses',
             'departments',
-            'adminCampus'
+            'adminSchoolId'
         ));
     }
 
     public function create()
     {
+        /** @var Admin $admin */
         $admin = Auth::user();
-        $adminCampus = $admin->campus;
         $adminSchoolId = $admin->school_id;
         
-        // Filter data by campus for campus admins
-        $teachers = User::where('role', 'teacher')
-            ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+        // Filter data by school for admins
+        $teachers = Teacher::query()
             ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
             ->get();
             
         $courses = Course::with('department')
-            ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
             ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
             ->orderBy('program_name')
             ->get();
             
         $subjects = Subject::with('program')
-            ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
             ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
             ->get();
         
@@ -248,7 +247,7 @@ class ClassController extends Controller
 
     public function edit(ClassModel $class)
     {
-        $teachers = User::where('role', 'teacher')->get();
+        $teachers = Teacher::all();
         $courses = Course::with('department')->orderBy('program_name')->get();
         $subjects = Subject::with('course')->get();
         $departments = Department::orderBy('department_name')->pluck('department_name');
@@ -379,7 +378,7 @@ class ClassController extends Controller
     public function show(ClassModel $class)
     {
         $class->load('students.user', 'course.department');
-        $teachers = User::where('role', 'teacher')->get();
+        $teachers = Teacher::all();
         $courses = Course::with('department')->orderBy('program_name')->get();
         $departments = Department::orderBy('department_name')->pluck('department_name');
 
@@ -391,17 +390,14 @@ class ClassController extends Controller
 
     public function getStudents(Request $request)
     {
+        /** @var Admin $admin */
         $admin = Auth::user();
-        $adminCampus = $admin->campus;
         $adminSchoolId = $admin->school_id;
         
         // Fast query - get students with their class/course info
         $query = Student::with(['class.course']);
         
-        // Apply campus isolation - CRITICAL
-        if ($adminCampus) {
-            $query->where('campus', $adminCampus);
-        }
+        // Apply school isolation
         if ($adminSchoolId) {
             $query->where('school_id', $adminSchoolId);
         }

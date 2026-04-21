@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
-use App\Models\User;
+use App\Models\Teacher;
 use App\Services\AdminStudentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,7 +45,7 @@ class StudentController extends Controller
 
         // Get campus-specific counts
         $totalStudents = $statistics['total'];
-        $totalTeachers = User::where('role', 'teacher')
+        $totalTeachers = Teacher::query()
             ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
             ->when($adminSchoolId, fn($q) => $q->where('school_id', $adminSchoolId))
             ->count();

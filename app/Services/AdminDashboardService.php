@@ -8,7 +8,7 @@ use App\Models\CourseAccessRequest;
 use App\Models\Grade;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\User;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -40,7 +40,7 @@ class AdminDashboardService
 
             // Approval statistics
             $stats['pending_approvals'] = [
-                'campus_approvals' => User::where('role', 'teacher')
+                'campus_approvals' => \App\Models\User::where('role', 'teacher')
                     ->where('campus_status', 'pending')
                     ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
                     ->count(),
@@ -53,7 +53,7 @@ class AdminDashboardService
 
             // Activity statistics
             $stats['recent_activity'] = [
-                'new_registrations_today' => User::whereDate('created_at', today())
+                'new_registrations_today' => Teacher::whereDate('created_at', today())
                     ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
                     ->count(),
                 'grades_updated_today' => Grade::whereDate('updated_at', today())
@@ -75,7 +75,8 @@ class AdminDashboardService
      */
     private function getTeacherStats(?string $adminCampus): array
     {
-        $baseQuery = User::where('role', 'teacher');
+        // Query users table with role='teacher' since campus_status is in users table
+        $baseQuery = \App\Models\User::where('role', 'teacher');
         
         if ($adminCampus) {
             $baseQuery->where('campus', $adminCampus);
@@ -86,7 +87,7 @@ class AdminDashboardService
             'approved' => (clone $baseQuery)->where('campus_status', 'approved')->count(),
             'pending' => (clone $baseQuery)->where('campus_status', 'pending')->count(),
             'rejected' => (clone $baseQuery)->where('campus_status', 'rejected')->count(),
-            'independent' => User::where('role', 'teacher')->whereNull('campus')->count(),
+            'independent' => \App\Models\User::where('role', 'teacher')->whereNull('campus')->count(),
         ];
     }
 
@@ -95,11 +96,10 @@ class AdminDashboardService
      */
     public function getPendingApprovals(?string $adminCampus): array
     {
-        // Campus approvals
-        $campusApprovals = User::where('role', 'teacher')
+        // Campus approvals - query users table with role='teacher'
+        $campusApprovals = \App\Models\User::where('role', 'teacher')
             ->where('campus_status', 'pending')
             ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
-            ->with(['approvedBy'])
             ->latest()
             ->limit(5)
             ->get();
@@ -127,17 +127,17 @@ class AdminDashboardService
     {
         $activities = [];
 
-        // Recent user registrations
-        $newUsers = User::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+        // Recent teacher registrations
+        $newTeachers = Teacher::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
             ->latest()
             ->limit(5)
             ->get()
-            ->map(function ($user) {
+            ->map(function ($teacher) {
                 return [
-                    'type' => 'user_registered',
-                    'message' => "{$user->name} registered as {$user->role}",
-                    'timestamp' => $user->created_at,
-                    'user' => $user,
+                    'type' => 'teacher_registered',
+                    'message' => $teacher->first_name . ' ' . $teacher->last_name . " registered as teacher",
+                    'timestamp' => $teacher->created_at,
+                    'user' => $teacher,
                 ];
             });
 
@@ -157,7 +157,7 @@ class AdminDashboardService
             });
 
         // Merge and sort activities
-        $activities = $newUsers->concat($newClasses)
+        $activities = $newTeachers->concat($newClasses)
             ->sortByDesc('timestamp')
             ->take(10)
             ->values();
@@ -210,8 +210,8 @@ class AdminDashboardService
                 END'))
                 ->get();
 
-            // Monthly registrations
-            $monthlyRegistrations = User::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
+            // Monthly teacher registrations
+            $monthlyRegistrations = Teacher::when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
                 ->selectRaw('MONTH(created_at) as month, COUNT(*) as count')
                 ->whereYear('created_at', date('Y'))
                 ->groupBy('month')

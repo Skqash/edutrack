@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Subject;
-use App\Models\User;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
@@ -19,7 +19,7 @@ class CourseController extends Controller
 
     public function create()
     {
-        $heads = User::where('role', 'teacher')->get();
+        $heads = Teacher::all();
         $departments = \App\Models\Department::orderBy('department_name')->pluck('department_name', 'id');
 
         return view('admin.courses.create', compact('heads', 'departments'));
@@ -44,7 +44,7 @@ class CourseController extends Controller
 
     public function edit(Course $course)
     {
-        $heads = User::where('role', 'teacher')->get();
+        $heads = Teacher::all();
         $departments = \App\Models\Department::orderBy('department_name')->pluck('department_name', 'id');
 
         return view('admin.courses.edit', compact('course', 'heads', 'departments'));

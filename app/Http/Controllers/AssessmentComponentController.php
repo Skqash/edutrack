@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ClassModel;
 use App\Models\AssessmentComponent;
 use App\Models\ComponentEntry;
+use App\Models\GradingScaleSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,101 @@ class AssessmentComponentController extends Controller
         'Skills' => ['Output', 'Project', 'Assignment', 'Activity', 'Participation', 'Presentation'],
         'Attitude' => ['Behavior', 'Attendance', 'Awareness', 'Collaboration', 'Punctuality'],
     ];
+
+    /**
+     * Redistribute weights among components in a category OR subcategory
+     * 
+     * @param int $classId
+     * @param string $category (Knowledge, Skills, Attitude)
+     * @param string|null $subcategory (Quiz, Exam, Output, etc.) - if provided, only redistribute within subcategory
+     * @param int|null $excludeComponentId - component to exclude from redistribution
+     */
+    private function redistributeWeights($classId, $category, $subcategory = null, $excludeComponentId = null)
+    {
+        if ($subcategory !== null) {
+            // SUBCATEGORY-LEVEL REDISTRIBUTION
+            // Get all components in this subcategory
+            $subcategoryComponents = AssessmentComponent::where('class_id', $classId)
+                ->where('category', $category)
+                ->where('subcategory', $subcategory)
+                ->where('is_active', true)
+                ->when($excludeComponentId, function ($query) use ($excludeComponentId) {
+                    return $query->where('id', '!=', $excludeComponentId);
+                })
+                ->get();
+
+            if ($subcategoryComponents->isEmpty()) {
+                return;
+            }
+
+            // Calculate the total weight allocated to this subcategory
+            // This is the sum of current weights of components in this subcategory
+            $subcategoryTotalWeight = $subcategoryComponents->sum('weight');
+            
+            // If subcategory total is 0, we need to allocate some weight
+            // Get total weight used by OTHER subcategories in this category
+            $otherSubcategoriesWeight = AssessmentComponent::where('class_id', $classId)
+                ->where('category', $category)
+                ->where('subcategory', '!=', $subcategory)
+                ->where('is_active', true)
+                ->sum('weight');
+            
+            // Available weight for this subcategory
+            $availableWeight = 100 - $otherSubcategoriesWeight;
+            
+            // If no weight available or negative, set all to 0
+            if ($availableWeight <= 0) {
+                foreach ($subcategoryComponents as $component) {
+                    $component->update(['weight' => 0]);
+                }
+                return;
+            }
+            
+            // Distribute available weight equally among components in this subcategory
+            $componentCount = $subcategoryComponents->count();
+            $equalWeight = round($availableWeight / $componentCount, 2);
+            $totalWeight = $equalWeight * $componentCount;
+
+            // Handle rounding differences
+            $remainder = round(($availableWeight - $totalWeight) * 100) / 100;
+
+            foreach ($subcategoryComponents as $index => $component) {
+                $weight = $equalWeight;
+                if ($index < $remainder * 100) {
+                    $weight += 0.01;
+                }
+                $component->update(['weight' => $weight]);
+            }
+        } else {
+            // CATEGORY-LEVEL REDISTRIBUTION (original behavior)
+            $components = AssessmentComponent::where('class_id', $classId)
+                ->where('category', $category)
+                ->where('is_active', true)
+                ->when($excludeComponentId, function ($query) use ($excludeComponentId) {
+                    return $query->where('id', '!=', $excludeComponentId);
+                })
+                ->get();
+
+            if ($components->isEmpty()) {
+                return;
+            }
+
+            $totalComponents = $components->count();
+            $equalWeight = round(100 / $totalComponents, 2);
+            $totalWeight = $equalWeight * $totalComponents;
+
+            // Handle rounding differences
+            $remainder = round((100 - $totalWeight) * 100) / 100;
+
+            foreach ($components as $index => $component) {
+                $weight = $equalWeight;
+                if ($index < $remainder * 100) {
+                    $weight += 0.01;
+                }
+                $component->update(['weight' => $weight]);
+            }
+        }
+    }
 
     /**
      * Get all components for a class (categorized by KSA)
@@ -110,6 +206,82 @@ class AssessmentComponentController extends Controller
             'passing_score' => 'nullable|numeric|min:0|max:100',
         ]);
 
+        // Get the grading settings to check weight mode
+        $settings = GradingScaleSetting::where('class_id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->first();
+
+        $weightMode = $settings->component_weight_mode ?? 'semi-auto';
+
+        // AUTO MODE: Redistribute only within the same subcategory
+        if ($weightMode === 'auto') {
+            $validated['class_id'] = $classId;
+            $validated['teacher_id'] = $teacherId;
+            $validated['is_active'] = true;
+            $validated['order'] = AssessmentComponent::where('class_id', $classId)
+                ->where('category', $validated['category'])
+                ->max('order') + 1;
+
+            try {
+                $component = AssessmentComponent::create($validated);
+
+                // Redistribute weights ONLY among components with the same subcategory
+                $this->redistributeWeights($classId, $validated['category'], $validated['subcategory']);
+
+                // Fetch updated component
+                $updatedComponent = AssessmentComponent::find($component->id);
+                
+                // Get count of components in this subcategory
+                $subcategoryCount = AssessmentComponent::where('class_id', $classId)
+                    ->where('category', $validated['category'])
+                    ->where('subcategory', $validated['subcategory'])
+                    ->where('is_active', true)
+                    ->count();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "✅ Auto Mode: {$component->name} added! All {$subcategoryCount} {$validated['subcategory']} components now have equal weights.",
+                    'component' => $updatedComponent->load('entries'),
+                ], 201);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error adding component: ' . $e->getMessage(),
+                ], 400);
+            }
+        }
+
+        // MANUAL & SEMI-AUTO MODES: Validate weight doesn't exceed 100% at category level
+        $existingWeights = AssessmentComponent::where('class_id', $classId)
+            ->where('category', $validated['category'])
+            ->where('is_active', true)
+            ->sum('weight');
+
+        $totalWeight = $existingWeights + $validated['weight'];
+
+        // Check if weight would exceed 100%
+        if ($totalWeight > 100) {
+            return response()->json([
+                'success' => false,
+                'message' => "❌ Cannot add component. Weight validation failed:\n\n" .
+                           "Existing weight: {$existingWeights}%\n" .
+                           "New weight: {$validated['weight']}%\n" .
+                           "Total would be: {$totalWeight}%\n\n" .
+                           "Maximum weight available: " . (100 - $existingWeights) . "%\n\n" .
+                           "Please adjust the weight to be ≤ " . (100 - $existingWeights) . "%",
+            ], 400);
+        }
+
+        // If there are existing components, prevent setting weight to 100%
+        if ($existingWeights > 0 && $validated['weight'] >= 100) {
+            return response()->json([
+                'success' => false,
+                'message' => "❌ Cannot set component weight to 100% when other components exist.\n\n" .
+                           "Please set weight to maximum: " . (100 - $existingWeights) . "%\n\n" .
+                           "Other components in this category need space for their weights.",
+            ], 400);
+        }
+
         $validated['class_id'] = $classId;
         $validated['teacher_id'] = $teacherId;
         $validated['is_active'] = true;
@@ -120,10 +292,32 @@ class AssessmentComponentController extends Controller
         try {
             $component = AssessmentComponent::create($validated);
 
+            // SEMI-AUTO MODE: Redistribute only within the same subcategory
+            if ($weightMode === 'semi-auto') {
+                $this->redistributeWeights($classId, $validated['category'], $validated['subcategory']);
+                
+                // Get count of components in this subcategory
+                $subcategoryCount = AssessmentComponent::where('class_id', $classId)
+                    ->where('category', $validated['category'])
+                    ->where('subcategory', $validated['subcategory'])
+                    ->where('is_active', true)
+                    ->count();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => "✅ Semi-Auto Mode: {$component->name} added! All {$subcategoryCount} {$validated['subcategory']} components redistributed.",
+                    'component' => $updatedComponent->load('entries'),
+                ], 201);
+            }
+
+            // Fetch updated components to return accurate weights
+            $updatedComponent = AssessmentComponent::find($component->id);
+
+            // MANUAL MODE: No redistribution
             return response()->json([
                 'success' => true,
-                'message' => "✅ {$component->name} added successfully!",
-                'component' => $component->load('entries'),
+                'message' => "✅ Manual Mode: {$component->name} added with {$validated['weight']}% weight. No automatic redistribution.",
+                'component' => $updatedComponent->load('entries'),
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
@@ -149,9 +343,17 @@ class AssessmentComponentController extends Controller
 
         $componentName = $component->name;
         $category = $component->category;
+        $subcategory = $component->subcategory;
         $order = $component->order;
 
         try {
+            // Get the grading settings to check weight mode
+            $settings = GradingScaleSetting::where('class_id', $classId)
+                ->where('teacher_id', $teacherId)
+                ->first();
+
+            $weightMode = $settings->component_weight_mode ?? 'semi-auto';
+
             // Delete all associated entries
             ComponentEntry::where('component_id', $componentId)->delete();
 
@@ -165,9 +367,42 @@ class AssessmentComponentController extends Controller
                 ->where('is_active', true)
                 ->decrement('order');
 
+            // AUTO MODE: Redistribute weights ONLY within the same subcategory
+            if ($weightMode === 'auto') {
+                $this->redistributeWeights($classId, $category, $subcategory);
+                
+                $remainingCount = AssessmentComponent::where('class_id', $classId)
+                    ->where('category', $category)
+                    ->where('subcategory', $subcategory)
+                    ->where('is_active', true)
+                    ->count();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "🗑️ Auto Mode: {$componentName} deleted! Remaining {$remainingCount} {$subcategory} components redistributed equally.",
+                ], 200);
+            }
+
+            // SEMI-AUTO MODE: Redistribute weights ONLY within the same subcategory
+            if ($weightMode === 'semi-auto') {
+                $this->redistributeWeights($classId, $category, $subcategory);
+                
+                $remainingCount = AssessmentComponent::where('class_id', $classId)
+                    ->where('category', $category)
+                    ->where('subcategory', $subcategory)
+                    ->where('is_active', true)
+                    ->count();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "🗑️ Semi-Auto Mode: {$componentName} deleted! Remaining {$remainingCount} {$subcategory} components redistributed.",
+                ], 200);
+            }
+
+            // MANUAL MODE: No redistribution - teacher has full control
             return response()->json([
                 'success' => true,
-                'message' => "🗑️ {$componentName} deleted successfully!",
+                'message' => "🗑️ Manual Mode: {$componentName} deleted. No automatic weight redistribution.",
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -178,7 +413,7 @@ class AssessmentComponentController extends Controller
     }
 
     /**
-     * Update component details
+     * Update component details with mode-based weight distribution
      */
     public function updateComponent(Request $request, $classId, $componentId)
     {
@@ -200,14 +435,190 @@ class AssessmentComponentController extends Controller
         ]);
 
         try {
-            $component->update($validated);
+            // First, update non-weight fields (name, max_score, passing_score, subcategory)
+            $nonWeightFields = array_diff_key($validated, ['weight' => null]);
+            if (!empty($nonWeightFields)) {
+                $component->update($nonWeightFields);
+            }
 
+            // Get the grading settings to check weight mode
+            $settings = GradingScaleSetting::where('class_id', $classId)
+                ->where('teacher_id', $teacherId)
+                ->first();
+
+            $weightMode = $settings->component_weight_mode ?? 'semi-auto';
+
+            // If weight is being updated, apply mode-specific logic
+            if (isset($validated['weight'])) {
+                $category = $component->category;
+                $newWeight = $validated['weight'];
+
+                // Get all other components in the same category
+                $otherComponents = AssessmentComponent::where('class_id', $classId)
+                    ->where('category', $category)
+                    ->where('is_active', true)
+                    ->where('id', '!=', $componentId)
+                    ->get();
+
+                $componentCount = $otherComponents->count() + 1; // +1 for current component
+
+                // MANUAL MODE: No auto-distribution, just validate total <= 100%
+                if ($weightMode === 'manual') {
+                    $otherTotalWeight = $otherComponents->sum('weight');
+                    $totalWeight = $otherTotalWeight + $newWeight;
+
+                    if ($totalWeight > 100) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "❌ Manual Mode: Total weight exceeds 100%.\n\n" .
+                                       "Other components: {$otherTotalWeight}%\n" .
+                                       "This component: {$newWeight}%\n" .
+                                       "Total would be: {$totalWeight}%\n\n" .
+                                       "Please adjust weights so total = 100%.",
+                        ], 400);
+                    }
+                    // Update weight
+                    $component->update(['weight' => $newWeight]);
+                    return response()->json([
+                        'success' => true,
+                        'message' => "✅ Component updated. Manual mode - no auto-distribution applied.",
+                        'component' => $component->fresh()->load('entries'),
+                    ], 200);
+                }
+
+                // AUTO MODE: All components in the same SUBCATEGORY get the same weight
+                if ($weightMode === 'auto') {
+                    // Get components in the same subcategory
+                    $subcategoryComponents = AssessmentComponent::where('class_id', $classId)
+                        ->where('category', $category)
+                        ->where('subcategory', $component->subcategory)
+                        ->where('is_active', true)
+                        ->get();
+                    
+                    $subcategoryCount = $subcategoryComponents->count();
+                    
+                    if ($subcategoryCount < 2) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "❌ Auto Mode requires at least 2 components in the same subcategory.\n\n" .
+                                       "Current {$component->subcategory} components: {$subcategoryCount}\n" .
+                                       "Auto mode distributes weights equally within subcategories.\n\n" .
+                                       "Switch to Manual or Semi-Auto mode to configure with 1 component.",
+                        ], 400);
+                    }
+
+                    // Redistribute weights ONLY within the same subcategory
+                    // This respects the available weight for this subcategory
+                    $this->redistributeWeights($classId, $category, $component->subcategory);
+                    
+                    // Get the actual weight after redistribution
+                    $actualWeight = $component->fresh()->weight;
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => "✅ Auto Mode: All {$subcategoryCount} {$component->subcategory} components now have {$actualWeight}% weight each.",
+                        'component' => $component->fresh()->load('entries'),
+                    ], 200);
+                }
+
+                // SEMI-AUTO MODE: Change one within subcategory → others in same subcategory auto-adjust
+                if ($weightMode === 'semi-auto') {
+                    // Get components in the same SUBCATEGORY (not entire category)
+                    $subcategoryComponents = AssessmentComponent::where('class_id', $classId)
+                        ->where('category', $category)
+                        ->where('subcategory', $component->subcategory)
+                        ->where('is_active', true)
+                        ->where('id', '!=', $componentId)
+                        ->get();
+                    
+                    $subcategoryCount = $subcategoryComponents->count() + 1; // +1 for current component
+                    
+                    // Get total weight used by OTHER subcategories
+                    $otherSubcategoriesWeight = AssessmentComponent::where('class_id', $classId)
+                        ->where('category', $category)
+                        ->where('subcategory', '!=', $component->subcategory)
+                        ->where('is_active', true)
+                        ->sum('weight');
+                    
+                    // Available weight for this subcategory
+                    $availableWeight = 100 - $otherSubcategoriesWeight;
+                    
+                    // Validate that new weight doesn't exceed available weight for this subcategory
+                    if ($newWeight > $availableWeight) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "❌ Semi-Auto Mode: Cannot set {$component->name} to {$newWeight}%.\n\n" .
+                                       "Other subcategories use: {$otherSubcategoriesWeight}%\n" .
+                                       "Available for {$component->subcategory}: {$availableWeight}%\n\n" .
+                                       "Please set weight to ≤ {$availableWeight}%",
+                        ], 400);
+                    }
+                    
+                    if ($subcategoryCount < 2) {
+                        // Single component in subcategory - allow any weight up to available
+                        if ($newWeight > $availableWeight) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "❌ Component weight cannot exceed {$availableWeight}% (available for this subcategory).",
+                            ], 400);
+                        }
+
+                        $component->update(['weight' => $newWeight]);
+                        return response()->json([
+                            'success' => true,
+                            'message' => "✅ Semi-Auto Mode: Component updated (single {$component->subcategory} component).",
+                            'component' => $component->fresh()->load('entries'),
+                        ], 200);
+                    }
+
+                    // Multiple components in subcategory: distribute remaining weight proportionally WITHIN SUBCATEGORY
+                    $otherSubcategoryTotalWeight = $subcategoryComponents->sum('weight');
+                    
+                    // Update current component weight
+                    $component->update(['weight' => $newWeight]);
+
+                    // Redistribute remaining weight among other components in SAME SUBCATEGORY proportionally
+                    $remainingWeight = $availableWeight - $newWeight;
+                    if ($subcategoryComponents->count() > 0 && $remainingWeight > 0) {
+                        // Calculate proportional distribution based on current weights
+                        foreach ($subcategoryComponents as $otherComponent) {
+                            $proportion = $otherSubcategoryTotalWeight > 0 ? ($otherComponent->weight / $otherSubcategoryTotalWeight) : (1 / $subcategoryComponents->count());
+                            $newOtherWeight = round($remainingWeight * $proportion, 2);
+                            $otherComponent->update(['weight' => $newOtherWeight]);
+                        }
+                        
+                        // Ensure total is exactly equal to available weight (fix rounding errors)
+                        $actualTotal = $newWeight + $subcategoryComponents->sum('weight');
+                        if (abs($actualTotal - $availableWeight) > 0.01) {
+                            $diff = $availableWeight - $actualTotal;
+                            $lastComponent = $subcategoryComponents->last();
+                            $lastComponent->update(['weight' => $lastComponent->weight + $diff]);
+                        }
+                    } elseif ($remainingWeight <= 0) {
+                        // If no remaining weight, set all others in subcategory to 0
+                        foreach ($subcategoryComponents as $otherComponent) {
+                            $otherComponent->update(['weight' => 0]);
+                        }
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => "✅ Semi-Auto Mode: {$component->name} updated to {$newWeight}%. Other {$component->subcategory} components adjusted proportionally.",
+                        'component' => $component->fresh()->load('entries'),
+                        'adjustedComponents' => $subcategoryComponents->fresh()->pluck('weight', 'name'),
+                    ], 200);
+                }
+            }
+
+            // If no weight update, just return success
             return response()->json([
                 'success' => true,
-                'message' => '✏️ Component updated successfully!',
-                'component' => $component,
+                'message' => '✅ Component updated successfully!',
+                'component' => $component->fresh()->load('entries'),
             ], 200);
+
         } catch (\Exception $e) {
+            Log::error('Error updating component', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating component: ' . $e->getMessage(),
@@ -517,6 +928,42 @@ class AssessmentComponentController extends Controller
                 'success' => false,
                 'message' => 'Failed to update component weights: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Toggle attendance affects grade setting
+     */
+    public function toggleAttendanceAffectsGrade(Request $request, $classId)
+    {
+        $teacherId = Auth::id();
+        $class = ClassModel::where('id', $classId)
+            ->where('teacher_id', $teacherId)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'attendance_affects_grade' => 'required|boolean',
+            'term' => 'sometimes|string|in:midterm,final',
+        ]);
+
+        $term = $validated['term'] ?? 'midterm';
+
+        try {
+            $settings = GradingScaleSetting::getOrCreateDefault($classId, $teacherId, $term);
+            $settings->update(['attendance_affects_grade' => $validated['attendance_affects_grade']]);
+
+            $status = $validated['attendance_affects_grade'] ? 'enabled' : 'disabled';
+
+            return response()->json([
+                'success' => true,
+                'message' => "📊 Attendance grade inclusion {$status} successfully!",
+                'attendance_affects_grade' => $validated['attendance_affects_grade'],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating attendance setting: ' . $e->getMessage(),
+            ], 400);
         }
     }
 }

@@ -423,6 +423,7 @@
             <!-- Sidebar Navigation -->
             <nav class="sidebar-nav">
                 @php
+                    // Query users table for campus_status since it's in users, not teachers table
                     $pendingCampusApprovals = \App\Models\User::where('role', 'teacher')
                         ->where('campus_status', 'pending')
                         ->whereNotNull('campus')
@@ -501,13 +502,13 @@
 
                 <!-- Approvals Section -->
                 <div class="nav-section-title">Approvals</div>
-                
+
                 <div class="nav-item">
                     <a href="{{ route('admin.teachers.campus-approvals') }}"
                         class="nav-link {{ request()->routeIs('admin.teachers.campus-approvals') ? 'active' : '' }}">
                         <i class="fas fa-building"></i>
                         <span>Campus Approvals</span>
-                        @if($pendingCampusApprovals > 0)
+                        @if ($pendingCampusApprovals > 0)
                             <span class="badge bg-warning text-dark ms-auto">{{ $pendingCampusApprovals }}</span>
                         @endif
                     </a>
@@ -518,7 +519,7 @@
                         class="nav-link {{ request()->routeIs('admin.teachers.course-access-requests') ? 'active' : '' }}">
                         <i class="fas fa-graduation-cap"></i>
                         <span>Course Access</span>
-                        @if($pendingCourseRequests > 0)
+                        @if ($pendingCourseRequests > 0)
                             <span class="badge bg-info ms-auto">{{ $pendingCourseRequests }}</span>
                         @endif
                     </a>
@@ -593,7 +594,7 @@
                                             </div>
                                             <div class="notification-text">
                                                 <div
-                                                    class="notification-title {{ $notification->isRead() ? 'text-muted' : '' }}">
+                                                    class="notification-title {{ isset($notification->read_at) && $notification->read_at ? 'text-muted' : '' }}">
                                                     {{ $notification->title }}
                                                 </div>
                                                 <div class="notification-meta">

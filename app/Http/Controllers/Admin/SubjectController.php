@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Subject;
-use App\Models\User;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,8 +42,7 @@ class SubjectController extends Controller
             ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
             ->get();
             
-        $instructors = User::where('role', 'teacher')
-            ->orWhere('role', 'instructor')
+        $instructors = Teacher::query()
             ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
             ->get();
             
@@ -131,7 +130,7 @@ class SubjectController extends Controller
     public function edit(Subject $subject)
     {
         $courses = Course::active()->get();
-        $instructors = User::where('role', 'teacher')->orWhere('role', 'instructor')->get();
+        $instructors = Teacher::get();
         $categories = [
             'Programming' => 'Programming',
             'Mathematics' => 'Mathematics',

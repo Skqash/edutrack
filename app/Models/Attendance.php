@@ -16,8 +16,12 @@ class Attendance extends Model
         'status',
         'term',
         'notes',
+        'remarks',
         'campus',
         'school_id',
+        'e_signature',
+        'signature_type',
+        'signature_timestamp',
     ];
 
     protected $casts = [

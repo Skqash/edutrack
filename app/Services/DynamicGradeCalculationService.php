@@ -10,6 +10,7 @@ class DynamicGradeCalculationService
 {
     /**
      * Calculate all category averages for a student using flexible KSA percentages
+     * Includes attendance integration based on settings
      */
     public static function calculateCategoryAverages($studentId, $classId, $term)
     {
@@ -25,6 +26,8 @@ class DynamicGradeCalculationService
                 'skills_average' => 0,
                 'attitude_average' => 0,
                 'final_grade' => 0,
+                'attendance_score' => 0,
+                'attendance_applied' => false,
             ];
         }
 
@@ -49,6 +52,33 @@ class DynamicGradeCalculationService
         $sPercent = ($ksaSetting->skills_weight    ?? 50) / 100;
         $aPercent = ($ksaSetting->attitude_weight  ?? 10) / 100;
 
+        // Apply attendance if enabled
+        $attendanceScore = 0;
+        $attendanceApplied = false;
+        
+        if ($ksaSetting && $ksaSetting->enable_attendance_ksa) {
+            $attendanceService = new \App\Services\AttendanceCalculationService();
+            $attendanceData = $attendanceService->calculateAttendanceScore($studentId, $classId, $term);
+            $attendanceScore = $attendanceData['attendance_score'];
+            
+            // Get attendance weight and target category
+            $attendanceWeight = ($ksaSetting->attendance_weight ?? 10) / 100;
+            $attendanceCategory = $ksaSetting->attendance_category ?? 'skills';
+            
+            // Apply attendance to the specified category
+            // Formula: (Category Average × (1 - Attendance Weight)) + (Attendance Score × Attendance Weight)
+            if ($attendanceCategory === 'knowledge') {
+                $knowledgeAvg = ($knowledgeAvg * (1 - $attendanceWeight)) + ($attendanceScore * $attendanceWeight);
+                $attendanceApplied = true;
+            } elseif ($attendanceCategory === 'skills') {
+                $skillsAvg = ($skillsAvg * (1 - $attendanceWeight)) + ($attendanceScore * $attendanceWeight);
+                $attendanceApplied = true;
+            } elseif ($attendanceCategory === 'attitude') {
+                $attitudeAvg = ($attitudeAvg * (1 - $attendanceWeight)) + ($attendanceScore * $attendanceWeight);
+                $attendanceApplied = true;
+            }
+        }
+
         // Calculate final grade using flexible percentages
         $finalGrade = ($knowledgeAvg * $kPercent) + ($skillsAvg * $sPercent) + ($attitudeAvg * $aPercent);
 
@@ -57,6 +87,8 @@ class DynamicGradeCalculationService
             'skills_average' => round($skillsAvg, 2),
             'attitude_average' => round($attitudeAvg, 2),
             'final_grade' => round($finalGrade, 2),
+            'attendance_score' => round($attendanceScore, 2),
+            'attendance_applied' => $attendanceApplied,
         ];
     }
 

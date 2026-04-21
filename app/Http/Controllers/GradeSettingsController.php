@@ -17,10 +17,13 @@ class GradeSettingsController extends Controller
     public function index(Request $request, $classId)
     {
         $class = ClassModel::findOrFail($classId);
-        $term = $request->get('term', 'midterm');
+        $term = $request->input('term', 'midterm');
 
         // Get or create KSA settings
         $ksaSettings = KsaSetting::getOrCreateDefault($classId, $term, auth()->id());
+
+        // Get or create GradingScaleSetting to retrieve component_weight_mode
+        $gradingScaleSettings = \App\Models\GradingScaleSetting::getOrCreateDefault($classId, auth()->id(), $term);
 
         // Get components grouped by lowercase category key for view compatibility
         $rawComponents = GradeComponent::where('class_id', $classId)
@@ -33,7 +36,7 @@ class GradeSettingsController extends Controller
             'attitude'  => $rawComponents->where('category', 'Attitude')->values(),
         ];
 
-        return view('teacher.grades.settings', compact('class', 'term', 'ksaSettings', 'components'));
+        return view('teacher.grades.settings', compact('class', 'term', 'ksaSettings', 'gradingScaleSettings', 'components'));
     }
 
     /**
@@ -43,10 +46,13 @@ class GradeSettingsController extends Controller
     {
         $class = ClassModel::findOrFail($classId);
 
-        // Get or create KSA settings
+        // Get or create KSA settings (original, working model)
         $ksaSettings = KsaSetting::getOrCreateDefault($classId, $term, auth()->id());
 
-        // Get components grouped by lowercase category key for view compatibility
+        // Get or create GradingScaleSetting to retrieve component_weight_mode
+        $gradingScaleSettings = GradingScaleSetting::getOrCreateDefault($classId, auth()->id(), $term);
+
+        // Get components grouped by category key for view compatibility
         $rawComponents = GradeComponent::where('class_id', $classId)
             ->where('is_active', true)
             ->ordered()
@@ -57,7 +63,7 @@ class GradeSettingsController extends Controller
             'attitude'  => $rawComponents->where('category', 'Attitude')->values(),
         ];
 
-        return view('teacher.grades.settings', compact('class', 'term', 'ksaSettings', 'components'));
+        return view('teacher.grades.settings', compact('class', 'term', 'ksaSettings', 'gradingScaleSettings', 'components'));
     }
 
     /**
@@ -66,6 +72,9 @@ class GradeSettingsController extends Controller
     public function getSettings($classId, $term)
     {
         $ksaSettings = KsaSetting::getOrCreateDefault($classId, $term, auth()->id());
+        
+        // Get grading scale settings for component weight mode
+        $gradingScaleSettings = \App\Models\GradingScaleSetting::getOrCreateDefault($classId, auth()->id(), $term);
 
         $rawComponents = GradeComponent::where('class_id', $classId)
             ->where('is_active', true)
@@ -79,6 +88,7 @@ class GradeSettingsController extends Controller
 
         return response()->json([
             'ksaSettings' => $ksaSettings,
+            'gradingScaleSettings' => $gradingScaleSettings,
             'components' => $components,
         ]);
     }
@@ -245,6 +255,51 @@ class GradeSettingsController extends Controller
         $component->delete();
 
         return $this->redirectToSettings($classId, $term, 'Component "'.$name.'" deleted successfully!');
+    }
+
+    /**
+     * Update component weight automation mode
+     */
+    public function updateWeightMode(Request $request, $classId, $term)
+    {
+        $validated = $request->validate([
+            'component_weight_mode' => 'required|in:manual,semi-auto,auto',
+        ]);
+
+        try {
+            // Find or create the settings for this class and term
+            $settings = \App\Models\GradingScaleSetting::where('class_id', $classId)
+                ->where('teacher_id', auth()->id())
+                ->where('term', $term)
+                ->first();
+
+            if (!$settings) {
+                // Create if doesn't exist
+                $settings = \App\Models\GradingScaleSetting::create([
+                    'class_id' => $classId,
+                    'teacher_id' => auth()->id(),
+                    'term' => $term,
+                    'knowledge_percentage' => 40,
+                    'skills_percentage' => 50,
+                    'attitude_percentage' => 10,
+                    'component_weight_mode' => $validated['component_weight_mode'],
+                ]);
+            } else {
+                $settings->update(['component_weight_mode' => $validated['component_weight_mode']]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Component weight automation mode updated successfully!',
+                'mode' => $validated['component_weight_mode'],
+                'term' => $term,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating automation mode: ' . $e->getMessage(),
+            ], 400);
+        }
     }
 
     /**
@@ -449,6 +504,9 @@ class GradeSettingsController extends Controller
             'attendance_category' => 'required|in:knowledge,skills,attitude',
         ]);
 
+        // Checkbox: if present and 'on', it's true; otherwise false
+        $enableAttendance = $request->input('enable_attendance_ksa') === 'on';
+
         $ksaSettings = KsaSetting::updateOrCreate(
             ['class_id' => $classId, 'term' => $validated['term']],
             [
@@ -456,14 +514,15 @@ class GradeSettingsController extends Controller
                 'total_meetings' => $validated['total_meetings'],
                 'attendance_weight' => $validated['attendance_weight'],
                 'attendance_category' => $validated['attendance_category'],
+                'enable_attendance_ksa' => $enableAttendance,
             ]
         );
 
         return $this->redirectToSettings(
             $classId,
             $validated['term'],
-            'Attendance settings updated successfully! Attendance will now affect '
-                .ucfirst($validated['attendance_category']).' category with '.$validated['attendance_weight'].'% weight.'
+            'Attendance settings updated successfully! Attendance is ' . ($enableAttendance ? 'ENABLED' : 'DISABLED') . 
+            ' and will affect ' . ucfirst($validated['attendance_category']) . ' category with ' . $validated['attendance_weight'] . '% weight.'
         );
     }
 }

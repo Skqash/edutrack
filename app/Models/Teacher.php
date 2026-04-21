@@ -2,63 +2,97 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Teacher extends Model
+class Teacher extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $table = 'teachers';
-    protected $primaryKey = 'id';
 
     protected $fillable = [
         'user_id',
-        'employee_id',
+        'teacher_id',
+        'first_name',
+        'last_name',
+        'email',
+        'password',
+        'phone',
         'qualification',
-        'connected_school',
-        'campus',
-        'school_id',
-        'bio',
         'specialization',
         'department',
-        'status'
+        'school_id',
+        'status',
+        'bio',
+        'connected_school',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     /**
-     * Relationship with User
+     * Get the teacher's full name
      */
-    public function user()
+    public function getNameAttribute()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return trim($this->first_name . ' ' . $this->last_name);
     }
 
     /**
-     * Relationship with School
+     * Get the teacher's role
+     */
+    public function getRoleAttribute()
+    {
+        return 'teacher';
+    }
+
+    /**
+     * Get campus status from related user
+     */
+    public function getCampusStatusAttribute()
+    {
+        return $this->user->campus_status ?? 'pending';
+    }
+
+    /**
+     * Get campus from related user
+     */
+    public function getCampusAttribute()
+    {
+        return $this->user->campus ?? null;
+    }
+
+    /**
+     * Get the school this teacher belongs to
      */
     public function school()
     {
-        return $this->belongsTo(School::class, 'school_id');
+        return $this->belongsTo(School::class);
     }
 
     /**
-     * Scope: Filter by campus
+     * Get the user account for this teacher
      */
-    public function scopeByCampus($query, $campus)
+    public function user()
     {
-        return $query->where('campus', $campus);
+        return $this->belongsTo(User::class);
     }
 
     /**
-     * Scope: Filter by school
+     * Get classes taught by this teacher
      */
-    public function scopeBySchool($query, $schoolId)
+    public function classes()
     {
-        return $query->where('school_id', $schoolId);
+        return $this->hasMany(ClassModel::class);
     }
 }

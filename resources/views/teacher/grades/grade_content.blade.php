@@ -624,9 +624,76 @@
                 <!-- TAB 2: Settings & Components -->
                 <div class="tab-pane fade" id="settings-pane" role="tabpanel">
                     <div class="mb-4">
-                        <h5><i class="fas fa-cog me-2"></i>Component Management</h5>
-                        <p class="text-muted">Add, edit, and organize assessment components for each KSA category</p>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5><i class="fas fa-cog me-2"></i>Component Management</h5>
+                                <p class="text-muted mb-0">Add, edit, and organize assessment components for each KSA category</p>
+                            </div>
+                            <div>
+                                @php
+                                    $gradingSettings = \App\Models\GradingScaleSetting::where('class_id', $class->id)
+                                        ->where('term', $term)
+                                        ->first();
+                                    $currentMode = $gradingSettings->component_weight_mode ?? 'semi-auto';
+                                    $badgeClass = $currentMode === 'manual' ? 'bg-primary' : ($currentMode === 'auto' ? 'bg-warning text-dark' : 'bg-success');
+                                    $badgeText = $currentMode === 'manual' ? '🎯 Manual Mode' : ($currentMode === 'auto' ? '🤖 Auto Mode' : '🔄 Semi-Auto Mode');
+                                @endphp
+                                <span id="currentModeIndicator" class="badge {{ $badgeClass }} fs-6 px-3 py-2">
+                                    {{ $badgeText }}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Mode Status Alert -->
+                        <div id="modeStatusAlert" class="alert alert-dismissible fade show {{ $currentMode === 'manual' ? 'alert-primary border-primary' : ($currentMode === 'auto' ? 'alert-warning border-warning' : 'alert-success border-success') }}" role="alert">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="fas fa-info-circle fa-2x"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading mb-1" id="modeStatusTitle">
+                                        @if($currentMode === 'manual')
+                                            <i class="fas fa-hand-paper me-2"></i>Manual Mode Active
+                                        @elseif($currentMode === 'auto')
+                                            <i class="fas fa-robot me-2"></i>Auto Mode Active
+                                        @else
+                                            <i class="fas fa-magic me-2"></i>Semi-Auto Mode Active (Recommended)
+                                        @endif
+                                    </h6>
+                                    <p class="mb-0" id="modeStatusDescription">
+                                        @if($currentMode === 'manual')
+                                            You have <strong>full control</strong> over component weights. Set each weight manually and ensure they sum to 100% per category.
+                                        @elseif($currentMode === 'auto')
+                                            <strong>Weights are automatically managed</strong> within each subcategory and distributed equally. Quizzes adjust independently from Exams, Outputs from Activities, etc.
+                                        @else
+                                            System suggests equal weights within each subcategory, but you can <strong>override any component</strong>. Other weights in the same subcategory adjust proportionally to maintain 100%.
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- Component Update Notice -->
+                    <div class="alert alert-info border-info mb-4" role="alert">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <i class="fas fa-lightbulb fa-lg"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading mb-1">
+                                    <i class="fas fa-sync-alt me-2"></i>Component Updates
+                                </h6>
+                                <p class="mb-0 small">
+                                    When you <strong>add, edit, or delete</strong> components, the page will automatically reload to update the Grade Entry table headers with your changes. 
+                                    This ensures max scores, passing scores, and weights are always current.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden input to store current mode for JavaScript -->
+                    <input type="hidden" id="currentComponentMode" value="{{ $currentMode }}">
 
                     <!-- Quick Actions -->
                     <div class="row mb-4">
@@ -821,6 +888,9 @@
     </div>
 </div>
 
+<!-- Mode-Aware Component Management Script -->
+<script src="{{ asset('js/mode-aware-component-management.js') }}"></script>
+
 <script>
 let componentsData = {};
 const classId = {{ $class->id }};
@@ -886,6 +956,13 @@ function updateSubcategoryOptions() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('[DOMContentLoaded] Initializing...');
     
+    // Initialize mode-aware system
+    const classId = {{ $class->id }};
+    const term = '{{ $term }}';
+    if (typeof initializeModeAwareSystem === 'function') {
+        initializeModeAwareSystem(classId, term);
+    }
+    
     // Initialize category dropdown change handler
     const categorySelect = document.getElementById('componentCategory');
     if (categorySelect) {
@@ -949,7 +1026,23 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('Response data:', data); // Debug
                 if (data.success) {
-                    showNotification(data.message, 'success');
+                    // Show success message with reload notice
+                    showNotification(data.message + ' - Refreshing page to show changes...', 'success');
+                    
+                    // Show loading overlay
+                    const loadingOverlay = document.createElement('div');
+                    loadingOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+                    loadingOverlay.innerHTML = `
+                        <div class="text-center text-white">
+                            <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h5>Updating Grade Entry Table...</h5>
+                            <p>Please wait while we refresh the component data</p>
+                        </div>
+                    `;
+                    document.body.appendChild(loadingOverlay);
+                    
                     addComponentForm.reset();
                     delete addComponentForm.dataset.editId; // Clear edit mode
                     
@@ -960,8 +1053,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('componentManagerModal'));
                     if (modal) modal.hide();
                     
-                    // Reload page to show updated component
-                    setTimeout(() => location.reload(), 500);
+                    // Force hard reload with cache bypass to ensure updated data is loaded
+                    // Increased delay to ensure database transaction is committed
+                    setTimeout(() => {
+                        // Use location.reload(true) to force cache bypass
+                        window.location.reload(true);
+                    }, 1200);
                 } else {
                     showNotification(data.message || 'Failed to save component', 'error');
                     submitBtn.disabled = false;
@@ -1095,6 +1192,20 @@ function deleteComponent(componentId, componentName) {
         return;
     }
     
+    // Show loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+    loadingOverlay.innerHTML = `
+        <div class="text-center text-white">
+            <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5>Deleting Component...</h5>
+            <p>Please wait</p>
+        </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+    
     fetch(`/teacher/components/${classId}/${componentId}`, {
         method: 'DELETE',
         headers: {
@@ -1104,16 +1215,21 @@ function deleteComponent(componentId, componentName) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification(data.message, 'success');
-            loadComponentsForManagement();
-            loadComponentsForSettings();
-            // Reload the grade entry page to show updated components
-            location.reload();
+            showNotification(data.message + ' - Refreshing page to show changes...', 'success');
+            // Update loading message
+            loadingOverlay.querySelector('h5').textContent = 'Updating Grade Entry Table...';
+            loadingOverlay.querySelector('p').textContent = 'Please wait while we refresh the component data';
+            // Force hard reload with increased delay
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1200);
         } else {
+            document.body.removeChild(loadingOverlay);
             showNotification(data.message || 'Failed to delete component', 'error');
         }
     })
     .catch(error => {
+        document.body.removeChild(loadingOverlay);
         console.error('Error deleting component:', error);
         showNotification('Error deleting component', 'error');
     });

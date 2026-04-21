@@ -423,6 +423,7 @@
             <!-- Sidebar Navigation -->
             <nav class="sidebar-nav">
                 <?php
+                    // Query users table for campus_status since it's in users, not teachers table
                     $pendingCampusApprovals = \App\Models\User::where('role', 'teacher')
                         ->where('campus_status', 'pending')
                         ->whereNotNull('campus')
@@ -501,7 +502,7 @@
 
                 <!-- Approvals Section -->
                 <div class="nav-section-title">Approvals</div>
-                
+
                 <div class="nav-item">
                     <a href="<?php echo e(route('admin.teachers.campus-approvals')); ?>"
                         class="nav-link <?php echo e(request()->routeIs('admin.teachers.campus-approvals') ? 'active' : ''); ?>">
@@ -593,7 +594,7 @@
                                             </div>
                                             <div class="notification-text">
                                                 <div
-                                                    class="notification-title <?php echo e($notification->isRead() ? 'text-muted' : ''); ?>">
+                                                    class="notification-title <?php echo e(isset($notification->read_at) && $notification->read_at ? 'text-muted' : ''); ?>">
                                                     <?php echo e($notification->title); ?>
 
                                                 </div>

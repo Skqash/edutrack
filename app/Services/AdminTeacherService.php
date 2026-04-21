@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Course;
 use App\Models\CourseAccessRequest;
 use App\Models\Subject;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,21 +20,23 @@ class AdminTeacherService
      */
     public function getFilteredTeachers(array $filters): LengthAwarePaginator
     {
-        $query = User::where('role', 'teacher')
-            ->with(['approvedBy', 'subjects', 'classes']);
+        $query = Teacher::with(['subjects', 'classes', 'user']);
 
         // Apply filters
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
         if (!empty($filters['campus'])) {
-            $query->where('campus', $filters['campus']);
+            // Query through user relationship for campus
+            $query->whereHas('user', function($q) use ($filters) {
+                $q->where('campus', $filters['campus']);
+            });
         }
 
         if (!empty($filters['status'])) {
@@ -41,7 +44,10 @@ class AdminTeacherService
         }
 
         if (!empty($filters['approval_status'])) {
-            $query->where('campus_status', $filters['approval_status']);
+            // Query through user relationship for campus_status
+            $query->whereHas('user', function($q) use ($filters) {
+                $q->where('campus_status', $filters['approval_status']);
+            });
         }
 
         return $query->orderBy('created_at', 'desc')->paginate(20);
@@ -52,6 +58,7 @@ class AdminTeacherService
      */
     public function getTeacherStatistics(?string $adminCampus): array
     {
+        // Query users with role='teacher' since campus_status is in users table
         $baseQuery = User::where('role', 'teacher');
         
         if ($adminCampus) {
@@ -94,15 +101,16 @@ class AdminTeacherService
     /**
      * Create new teacher
      */
-    public function createTeacher(array $data, int $adminId): User
+    public function createTeacher(array $data, int $adminId): Teacher
     {
+        // Split name into first and last
+        $nameParts = explode(' ', $data['name'] ?? '', 2);
         $teacherData = [
-            'name' => $data['name'],
+            'first_name' => $nameParts[0] ?? '',
+            'last_name' => $nameParts[1] ?? '',
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => 'teacher',
             'phone' => $data['phone'] ?? null,
-            'campus' => $data['campus'] ?? null,
             'school_id' => $data['school_id'] ?? null,
             'employee_id' => $data['employee_id'] ?? null,
             'qualification' => $data['qualification'] ?? null,
@@ -111,32 +119,24 @@ class AdminTeacherService
             'status' => 'Active',
         ];
 
-        // Auto-approve if admin chooses or if independent teacher
-        if (isset($data['auto_approve']) && $data['auto_approve']) {
-            $teacherData['campus_status'] = 'approved';
-            $teacherData['campus_approved_at'] = now();
-            $teacherData['campus_approved_by'] = $adminId;
-        } elseif (empty($data['campus'])) {
-            // Independent teachers are automatically approved
-            $teacherData['campus_status'] = 'approved';
-            $teacherData['campus_approved_at'] = now();
-            $teacherData['campus_approved_by'] = $adminId;
-        } else {
-            $teacherData['campus_status'] = 'pending';
-        }
-
-        return User::create($teacherData);
+        return Teacher::create($teacherData);
     }
 
     /**
      * Update teacher
      */
-    public function updateTeacher(User $teacher, array $data): User
+    public function updateTeacher(Teacher $teacher, array $data): Teacher
     {
-        $updateData = [
-            'name' => $data['name'],
+        // Split name into first and last if provided
+        $updateData = [];
+        if (isset($data['name'])) {
+            $nameParts = explode(' ', $data['name'], 2);
+            $updateData['first_name'] = $nameParts[0] ?? '';
+            $updateData['last_name'] = $nameParts[1] ?? '';
+        }
+        
+        $updateData = array_merge($updateData, [
             'email' => $data['email'],
-            'campus' => $data['campus'] ?? null,
             'school_id' => $data['school_id'] ?? null,
             'phone' => $data['phone'] ?? null,
             'employee_id' => $data['employee_id'] ?? null,
@@ -144,25 +144,10 @@ class AdminTeacherService
             'specialization' => $data['specialization'] ?? null,
             'department' => $data['department'] ?? null,
             'status' => $data['status'],
-        ];
+        ]);
 
         if (!empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);
-        }
-
-        // If campus changed, reset approval status
-        if ($teacher->campus !== $data['campus']) {
-            if (empty($data['campus'])) {
-                // Becoming independent - auto-approve
-                $updateData['campus_status'] = 'approved';
-                $updateData['campus_approved_at'] = now();
-                $updateData['campus_approved_by'] = auth()->id();
-            } else {
-                // Changing to a campus - needs approval
-                $updateData['campus_status'] = 'pending';
-                $updateData['campus_approved_at'] = null;
-                $updateData['campus_approved_by'] = null;
-            }
         }
 
         $teacher->update($updateData);
@@ -172,7 +157,7 @@ class AdminTeacherService
     /**
      * Delete teacher
      */
-    public function deleteTeacher(User $teacher): bool
+    public function deleteTeacher(Teacher $teacher): bool
     {
         return DB::transaction(function () use ($teacher) {
             // Remove subject assignments
@@ -191,29 +176,37 @@ class AdminTeacherService
      */
     public function getCampusApprovals(?string $adminCampus): array
     {
-        $baseQuery = User::where('role', 'teacher')
-            ->whereNotNull('campus');
+        // Query through user relationship since campus_status is in users table
+        $baseQuery = Teacher::with('user')->whereHas('user', function($q) {
+            $q->whereNotNull('campus');
+        });
 
         if ($adminCampus) {
-            $baseQuery->where('campus', $adminCampus);
+            $baseQuery->whereHas('user', function($q) use ($adminCampus) {
+                $q->where('campus', $adminCampus);
+            });
         }
 
         $pendingTeachers = (clone $baseQuery)
-            ->where('campus_status', 'pending')
+            ->whereHas('user', function($q) {
+                $q->where('campus_status', 'pending');
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
         $approvedTeachers = (clone $baseQuery)
-            ->where('campus_status', 'approved')
-            ->with('approvedBy')
-            ->orderBy('campus_approved_at', 'desc')
+            ->whereHas('user', function($q) {
+                $q->where('campus_status', 'approved');
+            })
+            ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get();
 
         $rejectedTeachers = (clone $baseQuery)
-            ->where('campus_status', 'rejected')
-            ->with('approvedBy')
-            ->orderBy('campus_approved_at', 'desc')
+            ->whereHas('user', function($q) {
+                $q->where('campus_status', 'rejected');
+            })
+            ->orderBy('created_at', 'desc')
             ->limit(20)
             ->get();
 
@@ -230,13 +223,21 @@ class AdminTeacherService
     /**
      * Approve campus affiliation
      */
-    public function approveCampusAffiliation(User $teacher, int $adminId): array
+    public function approveCampusAffiliation(Teacher $teacher, int $adminId): array
     {
         try {
+            // Update the user record, not the teacher record
+            if ($teacher->user) {
+                $teacher->user->update([
+                    'campus_status' => 'approved',
+                    'campus_approved_at' => now(),
+                    'campus_approved_by' => $adminId,
+                    'status' => 'Active'
+                ]);
+            }
+            
+            // Also update teacher status
             $teacher->update([
-                'campus_status' => 'approved',
-                'campus_approved_at' => now(),
-                'campus_approved_by' => $adminId,
                 'status' => 'Active'
             ]);
 
@@ -255,15 +256,17 @@ class AdminTeacherService
     /**
      * Reject campus affiliation
      */
-    public function rejectCampusAffiliation(User $teacher, int $adminId, ?string $reason = null): array
+    public function rejectCampusAffiliation(Teacher $teacher, int $adminId, ?string $reason = null): array
     {
         try {
-            $teacher->update([
-                'campus_status' => 'rejected',
-                'campus_approved_at' => now(),
-                'campus_approved_by' => $adminId,
-                'rejection_reason' => $reason
-            ]);
+            // Update the user record, not the teacher record
+            if ($teacher->user) {
+                $teacher->user->update([
+                    'campus_status' => 'rejected',
+                    'campus_approved_at' => now(),
+                    'campus_approved_by' => $adminId,
+                ]);
+            }
 
             return [
                 'success' => true,
@@ -280,15 +283,17 @@ class AdminTeacherService
     /**
      * Revoke campus affiliation
      */
-    public function revokeCampusAffiliation(User $teacher): array
+    public function revokeCampusAffiliation(Teacher $teacher): array
     {
         try {
-            $teacher->update([
-                'campus_status' => 'pending',
-                'campus_approved_at' => null,
-                'campus_approved_by' => null,
-                'rejection_reason' => null
-            ]);
+            // Update the user record, not the teacher record
+            if ($teacher->user) {
+                $teacher->user->update([
+                    'campus_status' => 'pending',
+                    'campus_approved_at' => null,
+                    'campus_approved_by' => null,
+                ]);
+            }
 
             return [
                 'success' => true,
@@ -394,7 +399,7 @@ class AdminTeacherService
     /**
      * Get teacher detail statistics
      */
-    public function getTeacherDetailStatistics(User $teacher): array
+    public function getTeacherDetailStatistics(Teacher $teacher): array
     {
         return [
             'total_classes' => $teacher->classes()->count(),
@@ -412,7 +417,7 @@ class AdminTeacherService
     /**
      * Get teacher subjects with campus filtering
      */
-    public function getTeacherSubjects(User $teacher, ?string $adminCampus): array
+    public function getTeacherSubjects(Teacher $teacher, ?string $adminCampus): array
     {
         $assignedSubjects = $teacher->subjects()
             ->wherePivot('status', 'active')
@@ -449,7 +454,7 @@ class AdminTeacherService
     /**
      * Assign subjects to teacher
      */
-    public function assignSubjects(User $teacher, array $subjectIds, ?string $adminCampus): array
+    public function assignSubjects(Teacher $teacher, array $subjectIds, ?string $adminCampus): array
     {
         try {
             // Verify subjects belong to admin's campus
@@ -490,7 +495,7 @@ class AdminTeacherService
     /**
      * Remove subject from teacher
      */
-    public function removeSubject(User $teacher, Subject $subject): array
+    public function removeSubject(Teacher $teacher, Subject $subject): array
     {
         try {
             $teacher->subjects()->detach($subject->id);
@@ -510,16 +515,16 @@ class AdminTeacherService
     /**
      * Perform bulk actions on teachers
      */
-    public function performBulkAction(string $action, array $teacherIds, User $admin, ?string $reason = null): array
+    public function performBulkAction(string $action, array $teacherIds, ?string $adminCampus = null, ?string $reason = null): array
     {
         try {
-            $adminCampus = $admin->campus;
-            
-            // Get teachers with campus restriction
-            $teachers = User::whereIn('id', $teacherIds)
-                ->where('role', 'teacher')
+            // Get teachers with campus restriction - load user relationship
+            $teachers = Teacher::with('user')
+                ->whereIn('id', $teacherIds)
                 ->when($adminCampus, function ($q) use ($adminCampus) {
-                    $q->where('campus', $adminCampus);
+                    $q->whereHas('user', function($uq) use ($adminCampus) {
+                        $uq->where('campus', $adminCampus);
+                    });
                 })
                 ->get();
 
@@ -534,24 +539,24 @@ class AdminTeacherService
             foreach ($teachers as $teacher) {
                 switch ($action) {
                     case 'approve_campus':
-                        if ($teacher->campus_status === 'pending') {
-                            $teacher->update([
+                        if ($teacher->user && $teacher->user->campus_status === 'pending') {
+                            $teacher->user->update([
                                 'campus_status' => 'approved',
                                 'campus_approved_at' => now(),
-                                'campus_approved_by' => $admin->id,
+                                'campus_approved_by' => auth()->id(),
                                 'status' => 'Active'
                             ]);
+                            $teacher->update(['status' => 'Active']);
                             $count++;
                         }
                         break;
                     
                     case 'reject_campus':
-                        if ($teacher->campus_status === 'pending') {
-                            $teacher->update([
+                        if ($teacher->user && $teacher->user->campus_status === 'pending') {
+                            $teacher->user->update([
                                 'campus_status' => 'rejected',
                                 'campus_approved_at' => now(),
-                                'campus_approved_by' => $admin->id,
-                                'rejection_reason' => $reason
+                                'campus_approved_by' => auth()->id(),
                             ]);
                             $count++;
                         }
@@ -560,6 +565,9 @@ class AdminTeacherService
                     case 'activate':
                         if ($teacher->status !== 'Active') {
                             $teacher->update(['status' => 'Active']);
+                            if ($teacher->user) {
+                                $teacher->user->update(['status' => 'Active']);
+                            }
                             $count++;
                         }
                         break;
@@ -567,6 +575,9 @@ class AdminTeacherService
                     case 'deactivate':
                         if ($teacher->status !== 'Inactive') {
                             $teacher->update(['status' => 'Inactive']);
+                            if ($teacher->user) {
+                                $teacher->user->update(['status' => 'Inactive']);
+                            }
                             $count++;
                         }
                         break;

@@ -6,7 +6,7 @@ use App\Models\ClassModel;
 use App\Models\Grade;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\User;
+use App\Models\Teacher;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
@@ -38,7 +38,7 @@ class AdminGradeController extends Controller
 
         // Get total counts
         $totalStudents = Student::count();
-        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalTeachers = Teacher::count();
         $totalClasses = ClassModel::count();
         $totalSubjects = Subject::count();
 

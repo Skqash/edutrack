@@ -435,7 +435,7 @@
                             <i class="fas fa-flag-checkered"></i>
                             Final
                         </a>
-                        <a href="<?php echo e(route('teacher.grades.results')); ?>?class_id=<?php echo e($class->id); ?>"
+                        <a href="<?php echo e(route('teacher.grades.summary.detailed')); ?>?class_id=<?php echo e($class->id); ?>"
                             class="btn-modern btn-info-modern">
                             <i class="fas fa-chart-bar"></i>
                             Summary
@@ -511,4 +511,4 @@
     </script>
 <?php $__env->stopSection(); ?>
 
-<?php echo $__env->make('layouts.teacher', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/grades/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.teacher', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/grades/index.blade.php ENDPATH**/ ?>

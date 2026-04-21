@@ -8,6 +8,7 @@ const ComponentManager = {
     classId: null,
     baseUrl: '/teacher/components',
     currentComponents: [],
+    editingComponentId: null, // Track if we're editing
     subcategoryOptions: {
         Knowledge: ['Quiz', 'Exam', 'Test', 'Pre-test'],
         Skills: ['Output', 'Project', 'Assignment', 'Activity', 'Participation', 'Presentation'],
@@ -17,22 +18,22 @@ const ComponentManager = {
     /**
      * Initialize ComponentManager with class ID
      */
-    init: function(classId) {
+    init: function (classId) {
         this.classId = classId;
         console.log('🔧 Initializing ComponentManager for class:', classId);
-        
+
         this.setupEventListeners();
         this.loadComponents(); // Load immediately on init
-        
+
         console.log('✅ Component Manager initialized successfully');
     },
 
     /**
      * Setup event listeners for component manager
      */
-    setupEventListeners: function() {
+    setupEventListeners: function () {
         console.log('📌 Setting up event listeners...');
-        
+
         // Add Component Form Submit
         const addForm = document.getElementById('addComponentForm');
         if (addForm) {
@@ -83,7 +84,7 @@ const ComponentManager = {
     /**
      * Update subcategory options based on selected category
      */
-    updateSubcategoryOptions: function(category) {
+    updateSubcategoryOptions: function (category) {
         const subcategorySelect = document.getElementById('componentSubcategory');
         if (!subcategorySelect) return;
 
@@ -103,10 +104,10 @@ const ComponentManager = {
     /**
      * Load all components from server
      */
-    loadComponents: async function() {
+    loadComponents: async function () {
         try {
             console.log(`🔄 Loading components for class: ${this.classId}`);
-            
+
             const response = await fetch(`${this.baseUrl}/${this.classId}`, {
                 method: 'GET',
                 headers: {
@@ -146,13 +147,13 @@ const ComponentManager = {
 
             console.log(`✅ Loaded ${this.currentComponents.length} components`);
             this.renderComponentsList();
-            
+
             // Also trigger grade table update if available
             if (typeof updateGradeTable === 'function') {
                 console.log('🔄 Updating grade table with new components...');
                 updateGradeTable();
             }
-            
+
         } catch (error) {
             console.error('❌ Error loading components:', error);
             this.showToast(`Failed to load components: ${error.message}`, 'danger');
@@ -162,7 +163,7 @@ const ComponentManager = {
     /**
      * Render components list in the Manage tab
      */
-    renderComponentsList: function() {
+    renderComponentsList: function () {
         const container = document.getElementById('componentsListContainer');
         if (!container) return;
 
@@ -206,7 +207,7 @@ const ComponentManager = {
     /**
      * Render individual component item HTML
      */
-    renderComponentItem: function(comp) {
+    renderComponentItem: function (comp) {
         const categoryColor = {
             Knowledge: '#2196F3',
             Skills: '#4CAF50',
@@ -241,15 +242,16 @@ const ComponentManager = {
     /**
      * Handle add component form submission
      */
-    handleAddComponent: async function() {
+    handleAddComponent: async function () {
         console.log('➕ Adding new component...');
-        
+
         const formData = {
             name: document.getElementById('componentName')?.value?.trim(),
             category: document.getElementById('componentCategory')?.value,
             subcategory: document.getElementById('componentSubcategory')?.value,
             max_score: parseInt(document.getElementById('componentMaxScore')?.value) || 100,
             weight: parseFloat(document.getElementById('componentWeight')?.value) || 10,
+            auto_redistribute: true, // Enable automatic redistribution
         };
 
         console.log('📝 Form data:', formData);
@@ -275,12 +277,44 @@ const ComponentManager = {
             return;
         }
 
+        // Check if weight would exceed 100% for the category
+        if (!this.editingComponentId) {
+            const categoryComponents = this.currentComponents.filter(c => c.category === formData.category);
+            const currentTotalWeight = categoryComponents.reduce((sum, c) => sum + parseFloat(c.weight), 0);
+            const newTotalWeight = currentTotalWeight + formData.weight;
+
+            if (newTotalWeight > 100) {
+                this.showToast(`❌ Cannot add component. Total weight would exceed 100% (Current: ${currentTotalWeight}%, Adding: ${formData.weight}%, Total: ${newTotalWeight}%). The system will automatically redistribute weights.`, 'warning');
+                // Allow the addition but let the backend handle redistribution
+            }
+        } else {
+            // For updates, validate against other components
+            const categoryComponents = this.currentComponents.filter(c => c.category === formData.category && c.id != this.editingComponentId);
+            const otherTotalWeight = categoryComponents.reduce((sum, c) => sum + parseFloat(c.weight), 0);
+            const newTotalWeight = otherTotalWeight + formData.weight;
+
+            if (newTotalWeight > 100) {
+                this.showToast(`❌ Cannot update weight. Total would exceed 100% (Other components: ${otherTotalWeight}%, New weight: ${formData.weight}%, Total: ${newTotalWeight}%). Please adjust other weights first.`, 'error');
+                return;
+            }
+        }
+
         try {
-            const url = `${this.baseUrl}/${this.classId}`;
-            console.log(`🚀 POST to: ${url}`);
-            
+            let url, method;
+            if (this.editingComponentId) {
+                // Update existing component
+                url = `${this.baseUrl}/${this.classId}/${this.editingComponentId}`;
+                method = 'PUT';
+            } else {
+                // Add new component
+                url = `${this.baseUrl}/${this.classId}`;
+                method = 'POST';
+            }
+
+            console.log(`🚀 ${method} to: ${url}`);
+
             const response = await fetch(url, {
-                method: 'POST',
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': this.getCsrfToken(),
@@ -293,11 +327,17 @@ const ComponentManager = {
             console.log('Response data:', data);
 
             if (response.ok) {
-                this.showToast(`✅ Component "${formData.name}" added successfully!`, 'success');
+                const action = this.editingComponentId ? 'updated' : 'added';
+                this.showToast(`✅ Component "${formData.name}" ${action} successfully! ${!this.editingComponentId ? 'Weights redistributed automatically.' : ''}`, 'success');
                 this.resetForm();
                 this.loadComponents(); // Refresh the list
+
+                // Trigger grade table update if in grade entry context
+                if (typeof updateGradeTable === 'function') {
+                    updateGradeTable();
+                }
             } else {
-                this.showToast(data.message || 'Error adding component', 'danger');
+                this.showToast(data.message || `Error ${this.editingComponentId ? 'updating' : 'adding'} component`, 'danger');
                 console.error('Server errors:', data.errors || data);
             }
         } catch (error) {
@@ -307,14 +347,17 @@ const ComponentManager = {
     },
 
     /**
-     * Edit component (placeholder - can expand later)
+     * Edit component
      */
-    editComponent: function(componentId) {
+    editComponent: function (componentId) {
         const comp = this.findComponent(componentId);
         if (!comp) {
             this.showToast('Component not found', 'danger');
             return;
         }
+
+        // Set editing flag
+        this.editingComponentId = componentId;
 
         // Populate form with component data
         document.getElementById('componentName').value = comp.name;
@@ -323,25 +366,34 @@ const ComponentManager = {
         document.getElementById('componentSubcategory').value = comp.subcategory;
         document.getElementById('componentMaxScore').value = comp.max_score;
         document.getElementById('componentWeight').value = comp.weight;
+        document.getElementById('componentPassingScore').value = comp.passing_score || 75;
+
+        // Update form button text
+        const submitBtn = document.querySelector('#addComponentForm button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Component';
+        }
 
         // Switch to Add tab
-        const addTab = document.querySelector('[href="#addTab"]');
-        if (addTab) addTab.click();
+        const addTab = document.getElementById('addComponentTab');
+        if (addTab) {
+            addTab.click();
+        }
 
-        this.showToast('Edit component and save (currently shows as new)', 'info');
+        this.showToast(`Editing "${comp.name}" - weights will be validated automatically`, 'info');
     },
 
     /**
      * Delete component with confirmation
      */
-    deleteComponent: async function(componentId) {
+    deleteComponent: async function (componentId) {
         const comp = this.findComponent(componentId);
         if (!comp) {
             this.showToast('Component not found', 'danger');
             return;
         }
 
-        if (!confirm(`Delete component "${comp.name}"? This will delete all associated scores.`)) {
+        if (!confirm(`Delete component "${comp.name}"? This will delete all associated scores and automatically redistribute weights among remaining components.`)) {
             return;
         }
 
@@ -355,8 +407,13 @@ const ComponentManager = {
             });
 
             if (response.ok) {
-                this.showToast(`✅ Component "${comp.name}" deleted!`, 'success');
+                this.showToast(`✅ Component "${comp.name}" deleted! Weights redistributed automatically.`, 'success');
                 this.loadComponents();
+
+                // Trigger grade table update if in grade entry context
+                if (typeof updateGradeTable === 'function') {
+                    updateGradeTable();
+                }
             } else {
                 const data = await response.json();
                 this.showToast(data.message || 'Error deleting component', 'danger');
@@ -370,7 +427,7 @@ const ComponentManager = {
     /**
      * Duplicate component
      */
-    duplicateComponent: async function(componentId) {
+    duplicateComponent: async function (componentId) {
         const comp = this.findComponent(componentId);
         if (!comp) {
             this.showToast('Component not found', 'danger');
@@ -404,7 +461,7 @@ const ComponentManager = {
     /**
      * Apply pre-built template
      */
-    applyTemplate: async function(e) {
+    applyTemplate: async function (e) {
         const templateName = e.target.closest('[data-template]')?.getAttribute('data-template');
         if (!templateName) return;
 
@@ -439,25 +496,34 @@ const ComponentManager = {
     /**
      * Find component by ID
      */
-    findComponent: function(componentId) {
+    findComponent: function (componentId) {
         return this.currentComponents.find(c => c.id == componentId);
     },
 
     /**
      * Reset form to initial state
      */
-    resetForm: function() {
+    resetForm: function () {
         const form = document.getElementById('addComponentForm');
         if (form) form.reset();
 
         document.getElementById('componentCategory').value = '';
         document.getElementById('componentSubcategory').innerHTML = '<option value="">Select Subcategory</option>';
+
+        // Reset editing state
+        this.editingComponentId = null;
+
+        // Reset button text
+        const submitBtn = document.querySelector('#addComponentForm button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Add Component';
+        }
     },
 
     /**
      * Show toast notification
      */
-    showToast: function(message, type = 'info') {
+    showToast: function (message, type = 'info') {
         const toastDiv = document.createElement('div');
         toastDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
         toastDiv.setAttribute('role', 'alert');
@@ -478,14 +544,14 @@ const ComponentManager = {
     /**
      * Get CSRF token from meta tag
      */
-    getCsrfToken: function() {
+    getCsrfToken: function () {
         return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
     }
 };
 
 // Auto-initialize if DOM is already loaded
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Will be initialized via inline script in the view
     });
 }

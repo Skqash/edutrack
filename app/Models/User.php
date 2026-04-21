@@ -45,6 +45,7 @@ class User extends Authenticatable
         'grading_scheme',
         'grading_weights',
         'school_id', // Add school_id
+        'settings',
     ];
 
     /**
@@ -66,6 +67,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'grading_weights' => 'array',
+        'settings' => 'array',
         'campus_approved_at' => 'datetime',
     ];
 
@@ -80,6 +82,16 @@ class User extends Authenticatable
     public function admin()
     {
         return $this->hasOne(Admin::class, 'user_id');
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'user_id');
+    }
+
+    public function superAdmin()
+    {
+        return $this->hasOne(SuperAdmin::class, 'user_id');
     }
 
     public function notifications()
@@ -113,6 +125,19 @@ class User extends Authenticatable
         return $this->hasMany(ClassModel::class, 'teacher_id');
     }
 
+    public function getFirstNameAttribute()
+    {
+        $parts = preg_split('/\s+/', trim($this->name));
+        return $parts[0] ?? '';
+    }
+
+    public function getLastNameAttribute()
+    {
+        $parts = preg_split('/\s+/', trim($this->name));
+        array_shift($parts);
+        return count($parts) ? implode(' ', $parts) : ($this->name ?? '');
+    }
+
     /**
      * Get the subjects assigned to this teacher.
      *
@@ -136,5 +161,16 @@ class User extends Authenticatable
     public function courseAccessRequests()
     {
         return $this->hasMany(CourseAccessRequest::class, 'teacher_id');
+    }
+
+    /**
+     * Check if user has an e-signature (for students)
+     */
+    public function hasESignature()
+    {
+        if ($this->role === 'student' && $this->student) {
+            return !empty($this->student->e_signature);
+        }
+        return false;
     }
 }

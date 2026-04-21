@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Department;
-use App\Models\User;
+use App\Models\Teacher;
 use App\Services\AdminCourseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -55,9 +55,9 @@ class OptimizedCourseController extends Controller
         $adminCampus = $admin->campus;
         
         $departments = Department::orderBy('department_name')->get();
-        $heads = User::where('role', 'teacher')
+        $heads = Teacher::query()
             ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
-            ->orderBy('name')
+            ->orderBy('last_name')
             ->get();
 
         return view('admin.courses.create', compact('departments', 'heads', 'adminCampus'));
@@ -130,9 +130,9 @@ class OptimizedCourseController extends Controller
         $adminCampus = $admin->campus;
         
         $departments = Department::orderBy('department_name')->get();
-        $heads = User::where('role', 'teacher')
+        $heads = Teacher::query()
             ->when($adminCampus, fn($q) => $q->where('campus', $adminCampus))
-            ->orderBy('name')
+            ->orderBy('last_name')
             ->get();
 
         return view('admin.courses.edit', compact('course', 'departments', 'heads', 'adminCampus'));

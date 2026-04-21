@@ -332,12 +332,12 @@
                                         ['id' => 'Language', 'name' => 'Language', 'description' => 'Language and literature'],
                                         ['id' => 'Business', 'name' => 'Business', 'description' => 'Business and management'],
                                         ['id' => 'Other', 'name' => 'Other', 'description' => 'Other subjects']
-                                    ],'createNew' => true,'createNewText' => '+ Add Custom Category','createNewValue' => 'custom','class' => 'form-control']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+                                    ],'createNew' => true,'createNewText' => '+ Add Custom Category','createNewValue' => 'custom','class' => 'form-control']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('searchable-dropdown'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
-<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['name' => 'category','id' => 'category','placeholder' => 'Select category...','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
                                         ['id' => 'Core', 'name' => 'Core', 'description' => 'Essential course subjects'],
@@ -373,12 +373,12 @@
                                         ['id' => '2', 'name' => '2nd Year', 'description' => 'Second year students'],
                                         ['id' => '3', 'name' => '3rd Year', 'description' => 'Third year students'],
                                         ['id' => '4', 'name' => '4th Year', 'description' => 'Fourth year students']
-                                    ],'selected' => '1','class' => 'form-control']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+                                    ],'selected' => '1','class' => 'form-control']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('searchable-dropdown'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
-<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['name' => 'year_level','id' => 'year_level','placeholder' => 'Select year level...','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
                                         ['id' => '1', 'name' => '1st Year', 'description' => 'First year students'],
@@ -405,12 +405,12 @@
 <?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.searchable-dropdown','data' => ['name' => 'semester','id' => 'semester','placeholder' => 'Select semester...','options' => [
                                         ['id' => '1', 'name' => '1st Semester', 'description' => 'First semester of academic year'],
                                         ['id' => '2', 'name' => '2nd Semester', 'description' => 'Second semester of academic year']
-                                    ],'selected' => '1','required' => 'true','class' => 'form-control']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
+                                    ],'selected' => '1','required' => 'true','class' => 'form-control']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('searchable-dropdown'); ?>
 <?php if ($component->shouldRender()): ?>
 <?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
-<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
 <?php endif; ?>
 <?php $component->withAttributes(['name' => 'semester','id' => 'semester','placeholder' => 'Select semester...','options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute([
                                         ['id' => '1', 'name' => '1st Semester', 'description' => 'First semester of academic year'],
@@ -489,4 +489,4 @@
         });
     </script>
 <?php $__env->stopSection(); ?>
-<?php echo $__env->make('layouts.teacher', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/subjects/index.blade.php ENDPATH**/ ?>
+<?php echo $__env->make('layouts.teacher', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\laragon\www\edutrack\resources\views/teacher/subjects/index.blade.php ENDPATH**/ ?>

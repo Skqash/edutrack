@@ -71,11 +71,7 @@
                                     </th>
                                 @endif
                                 
-                                @if($ksaSettings->total_meetings > 0)
-                                    <th class="text-center bg-info text-white">
-                                        <i class="fas fa-calendar-check me-1"></i>Attendance
-                                    </th>
-                                @endif
+                                {{-- Attendance removed - managed separately in Attendance module --}}
                                 
                                 <th class="text-center">{{ ucfirst($term) }} Grade</th>
                                 <th class="text-center">Status</th>
@@ -193,12 +189,7 @@
                                     <strong>A Ave</strong>
                                 </th>
                                 
-                                @if($ksaSettings->total_meetings > 0)
-                                    <th class="text-center bg-info bg-opacity-25">
-                                        <strong>Att. Score</strong><br>
-                                        <small>({{ $ksaSettings->attendance_weight }}% of {{ ucfirst($ksaSettings->attendance_category ?? 'N/A') }})</small>
-                                    </th>
-                                @endif
+                                {{-- Attendance header removed - managed separately --}}
                                 
                                 <th></th>
                                 <th></th>
@@ -446,28 +437,7 @@
                                         <span class="badge bg-warning attitude-ave">0.00</span>
                                     </td>
                                     
-                                    <!-- Attendance Score -->
-                                    @if($ksaSettings->total_meetings > 0)
-                                        <td class="text-center">
-                                            @php
-                                                $attData = $attendanceData[$student->id] ?? null;
-                                                $attScore = $attData['attendance_score'] ?? 0;
-                                                $attCount = $attData['attendance_count'] ?? 0;
-                                                $totalMeetings = $attData['total_meetings'] ?? $ksaSettings->total_meetings;
-                                                $attPercentage = $attData['attendance_percentage'] ?? 0;
-                                            @endphp
-                                            <div class="d-flex flex-column align-items-center">
-                                                <span class="badge bg-info attendance-score" 
-                                                      data-score="{{ $attScore }}"
-                                                      data-weight="{{ $ksaSettings->attendance_weight }}"
-                                                      data-category="{{ $ksaSettings->attendance_category }}"
-                                                      title="Attendance: {{ $attCount }}/{{ $totalMeetings }} ({{ number_format($attPercentage, 1) }}%)">
-                                                    {{ number_format($attScore, 2) }}
-                                                </span>
-                                                <small class="text-muted mt-1">{{ $attCount }}/{{ $totalMeetings }}</small>
-                                            </div>
-                                        </td>
-                                    @endif
+                                    {{-- Attendance Score removed - managed separately in Attendance module --}}
                                     
                                     <!-- Calculated Grade -->
                                     <td class="text-center">
@@ -1232,35 +1202,8 @@ function calculateAllGrades() {
         const passingGrade = {{ $ksaSettings->passing_grade ?? 74 }};
         let finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
         
-        // Apply attendance if configured
-        const attendanceScoreElement = row.querySelector('.attendance-score');
-        if (attendanceScoreElement) {
-            const attendanceScore = parseFloat(attendanceScoreElement.dataset.score) || 0;
-            const attendanceWeight = parseFloat(attendanceScoreElement.dataset.weight) || 0;
-            const attendanceCategory = attendanceScoreElement.dataset.category;
-            
-            // Apply attendance to the specified category
-            if (attendanceScore > 0 && attendanceWeight > 0 && attendanceCategory) {
-                const weightDecimal = attendanceWeight / 100;
-                
-                if (attendanceCategory === 'knowledge') {
-                    // Add attendance contribution to knowledge
-                    const attendanceContribution = attendanceScore * weightDecimal;
-                    knowledgeAvg = (knowledgeAvg * (1 - weightDecimal)) + attendanceContribution;
-                    finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
-                } else if (attendanceCategory === 'skills') {
-                    // Add attendance contribution to skills
-                    const attendanceContribution = attendanceScore * weightDecimal;
-                    skillsAvg = (skillsAvg * (1 - weightDecimal)) + attendanceContribution;
-                    finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
-                } else if (attendanceCategory === 'attitude') {
-                    // Add attendance contribution to attitude
-                    const attendanceContribution = attendanceScore * weightDecimal;
-                    attitudeAvg = (attitudeAvg * (1 - weightDecimal)) + attendanceContribution;
-                    finalGrade = (knowledgeAvg * kWeight) + (skillsAvg * sWeight) + (attitudeAvg * aWeight);
-                }
-            }
-        }
+        // Attendance removed - managed separately in Attendance module
+        // Final grade is calculated from K, S, A components only
         
         // Update display
         const gradeDisplay = row.querySelector('.calculated-grade');

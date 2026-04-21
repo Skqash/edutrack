@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * @property int $id
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $address
  * @property date|null $birth_date
  * @property string|null $gender
+ * @property string|null $e_signature Base64 encoded digital signature
  * @property int|null $course_id
  * @property int $year 1, 2, 3, or 4
  * @property int|null $year_level Alias for year field (1-4)
@@ -29,6 +32,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $campus Campus affiliation
  * @property date|null $enrollment_date
  * @property string|null $academic_year
+ * @property int|null $school_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * 
@@ -36,17 +40,13 @@ use Illuminate\Database\Eloquent\Model;
  * @method \Illuminate\Database\Eloquent\Relations\BelongsTo class()
  * @method \Illuminate\Database\Eloquent\Relations\HasMany grades()
  * @method \Illuminate\Database\Eloquent\Relations\HasMany attendance()
- * 
- * @method \Illuminate\Database\Eloquent\Builder byDepartment(string $department) Filter students by department
- * @method \Illuminate\Database\Eloquent\Builder byYearLevel(int $year) Filter students by year level (1-4)
- * @method \Illuminate\Database\Eloquent\Builder byClass(int $classId) Filter students by class
- * @method \Illuminate\Database\Eloquent\Builder byDepartmentYearClass(string $dept, int $year, int $classId) Filter by dept, year, and class
  */
-class Student extends Model
+class Student extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
+        'user_id',
         'student_id',
         'first_name',
         'middle_name',
@@ -58,6 +58,8 @@ class Student extends Model
         'address',
         'birth_date',
         'gender',
+        'e_signature',
+        'signature_date',
         'course_id',
         'year',
         'year_level',
@@ -70,16 +72,18 @@ class Student extends Model
         'campus',
         'enrollment_date',
         'academic_year',
-        'school_id', // Add school_id
+        'school_id',
     ];
 
     protected $hidden = [
         'password',
+        'remember_token',
     ];
 
     protected $casts = [
         'birth_date' => 'date',
         'enrollment_date' => 'date',
+        'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
@@ -100,6 +104,54 @@ class Student extends Model
     }
 
     /**
+     * Get the student's role
+     */
+    public function getRoleAttribute()
+    {
+        return 'student';
+    }
+
+    /**
+     * Get the user account for this student
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Check if student has e-signature
+     */
+    public function hasESignature()
+    {
+        return !empty($this->e_signature);
+    }
+
+    /**
+     * Get attendance records
+     */
+    public function attendance()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Get grades
+     */
+    public function grades()
+    {
+        return $this->hasMany(Grade::class);
+    }
+
+    /**
+     * Get school
+     */
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    /**
      * Get student's name for display (first + last)
      */
     public function getNameAttribute()
@@ -110,29 +162,17 @@ class Student extends Model
     /**
      * Course relationship
      */
+    /**
+     * Course relationship
+     */
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id');
     }
 
     /**
-     * School relationship
+     * Class relationship
      */
-    public function school()
-    {
-        return $this->belongsTo(School::class);
-    }
-
-    public function grades()
-    {
-        return $this->hasMany(Grade::class);
-    }
-
-    public function attendance()
-    {
-        return $this->hasMany(Attendance::class);
-    }
-
     public function class()
     {
         return $this->belongsTo(ClassModel::class, 'class_id');

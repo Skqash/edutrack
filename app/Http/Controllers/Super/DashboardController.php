@@ -10,6 +10,7 @@ use App\Models\Grade;
 use App\Models\Student;
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -29,7 +30,7 @@ class DashboardController extends Controller
     {
         try {
             $totalAdmins = User::where('role', 'admin')->count();
-            $totalTeachers = User::where('role', 'teacher')->count();
+            $totalTeachers = Teacher::count();
             $totalStudents = Student::count();
             $totalUsers = User::count();
 
@@ -351,7 +352,7 @@ class DashboardController extends Controller
     public function createCourse(Request $request)
     {
         if ($request->isMethod('get')) {
-            $teachers = User::where('role', 'teacher')->get();
+            $teachers = Teacher::all();
 
             return view('super.courses.create', compact('teachers'));
         }
@@ -461,7 +462,7 @@ class DashboardController extends Controller
     public function createClass(Request $request)
     {
         if ($request->isMethod('get')) {
-            $teachers = User::where('role', 'teacher')->get();
+            $teachers = Teacher::all();
 
             return view('super.classes.create', compact('teachers'));
         }

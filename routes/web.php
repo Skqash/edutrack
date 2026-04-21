@@ -1,28 +1,27 @@
 <?php
 
 use App\Http\Controllers\Admin\ClassController;
-use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OptimizedCourseController;
 use App\Http\Controllers\Admin\OptimizedDashboardController;
 use App\Http\Controllers\Admin\OptimizedTeacherController;
-use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\TeacherAssignmentController;
-use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\AdminAttendanceController;
 use App\Http\Controllers\AdminGradeController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\StudentController;
 use App\Http\Controllers\Super\DashboardController as SuperDashboardController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /* -------- ROOT REDIRECT -------- */
 Route::get('/', function () {
-    if (auth()->check()) {
-        $user = auth()->user();
+    if (Auth::check()) {
+        $user = Auth::user();
 
         if (in_array($user->role, ['super', 'superadmin'])) {
             return redirect()->route('super.dashboard');
@@ -45,6 +44,7 @@ Route::get('/', function () {
 /* -------- AUTH -------- */
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout.post');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
@@ -137,7 +137,7 @@ Route::middleware(['role:super'])->prefix('super')->name('super.')->group(functi
 });
 
 /* -------- ADMIN (ADMIN + SUPER CAN ACCESS) -------- */
-Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['role:admin,super'])->prefix('admin')->name('admin.')->group(function () {
     // Optimized Dashboard
     Route::get('/dashboard', [OptimizedDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/filtered-data', [OptimizedDashboardController::class, 'getFilteredData'])->name('dashboard.filtered-data');
@@ -175,7 +175,7 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/teachers/bulk-action', [OptimizedTeacherController::class, 'bulkAction'])->name('teachers.bulk-action');
     Route::get('/teachers/export', [OptimizedTeacherController::class, 'export'])->name('teachers.export');
     Route::post('/teachers/import', [OptimizedTeacherController::class, 'import'])->name('teachers.import');
-    
+
     // Campus Approval Routes (Optimized)
     Route::get('/campus-approvals', [OptimizedTeacherController::class, 'campusApprovals'])->name('teachers.campus-approvals');
     Route::post('/teachers/{teacher}/approve-campus', [OptimizedTeacherController::class, 'approveCampus'])->name('teachers.approve-campus');
@@ -215,23 +215,23 @@ Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(functi
 });
 
 /* -------- TEACHER (TEACHER + SUPER CAN ACCESS) -------- */
-Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
+Route::middleware(['role:teacher,super'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\TeacherController::class, 'dashboard'])->name('dashboard');
-    
+
     // Profile Management
     Route::get('/profile', [\App\Http\Controllers\TeacherController::class, 'showProfile'])->name('profile.show');
     Route::get('/profile/edit', [\App\Http\Controllers\TeacherController::class, 'editProfile'])->name('profile.edit');
     Route::put('/profile', [\App\Http\Controllers\TeacherController::class, 'updateProfile'])->name('profile.update');
     Route::get('/profile/change-password', [\App\Http\Controllers\TeacherController::class, 'showChangePassword'])->name('profile.change-password');
     Route::put('/profile/change-password', [\App\Http\Controllers\TeacherController::class, 'updatePassword'])->name('profile.update-password');
-    
+
     // Settings Management
     Route::get('/settings', [\App\Http\Controllers\TeacherController::class, 'showSettings'])->name('settings.index');
     Route::put('/settings', [\App\Http\Controllers\TeacherController::class, 'updateSettings'])->name('settings.update');
-    
+
     // Campus Management
     Route::post('/request/campus-change', [\App\Http\Controllers\TeacherController::class, 'requestCampusChange'])->name('request.campus-change');
-    
+
     Route::get('/classes', [\App\Http\Controllers\TeacherController::class, 'classes'])->name('classes');
     Route::get('/subjects', [\App\Http\Controllers\TeacherController::class, 'subjectsIndex'])->name('subjects');
     Route::post('/subjects/request', [\App\Http\Controllers\TeacherController::class, 'requestSubject'])->name('subjects.request');
@@ -294,6 +294,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/grades/scores/{studentId}/{classId}/{term}', [\App\Http\Controllers\TeacherController::class, 'getStudentScores'])->name('grades.scores');
     Route::get('/grades/analytics/{classId}', [\App\Http\Controllers\TeacherController::class, 'showGradeAnalytics'])->name('grades.analytics');
     Route::get('/grades/results', [\App\Http\Controllers\TeacherController::class, 'gradeResults'])->name('grades.results');
+    Route::get('/grades/summary-detailed', [\App\Http\Controllers\TeacherController::class, 'gradeSummaryDetailed'])->name('grades.summary.detailed');
 
     // Assessment Configuration (Legacy)
     Route::get('/assessment/configure/{classId}', [\App\Http\Controllers\TeacherController::class, 'configureAssessmentRanges'])->name('assessment.configure');
@@ -330,6 +331,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
         Route::post('/{classId}/bulk-delete', [\App\Http\Controllers\AssessmentComponentController::class, 'bulkDelete'])->name('bulk-delete');
         Route::post('/{classId}/{componentId}/duplicate', [\App\Http\Controllers\AssessmentComponentController::class, 'duplicateComponent'])->name('duplicate');
         Route::post('/{classId}/update-weights', [\App\Http\Controllers\AssessmentComponentController::class, 'updateWeights'])->name('update-weights');
+        Route::post('/{classId}/toggle-attendance', [\App\Http\Controllers\AssessmentComponentController::class, 'toggleAttendanceAffectsGrade'])->name('toggle-attendance');
     });
 
     // Dynamic Grade Entry Routes (NEW)
@@ -348,9 +350,10 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
         Route::get('/{classId}/{term}', [\App\Http\Controllers\GradeSettingsController::class, 'show'])->name('show');
         Route::get('/{classId}/{term}/settings', [\App\Http\Controllers\GradeSettingsController::class, 'getSettings'])->name('get');
         Route::post('/{classId}/{term}/percentages', [\App\Http\Controllers\GradeSettingsController::class, 'updatePercentages'])->name('percentages.update');
-        Route::post('/{classId}/components', [\App\Http\Controllers\GradeSettingsController::class, 'addComponent'])->name('components.store');
-        Route::put('/{classId}/components/{componentId}', [\App\Http\Controllers\GradeSettingsController::class, 'updateComponent'])->name('components.update');
-        Route::delete('/{classId}/components/{componentId}', [\App\Http\Controllers\GradeSettingsController::class, 'deleteComponent'])->name('components.destroy');
+        Route::post('/{classId}/{term}/weight-mode', [\App\Http\Controllers\GradeSettingsController::class, 'updateWeightMode'])->name('weight-mode.update');
+        Route::post('/{classId}/components', [\App\Http\Controllers\AssessmentComponentController::class, 'addComponent'])->name('components.store');
+        Route::put('/{classId}/components/{componentId}', [\App\Http\Controllers\AssessmentComponentController::class, 'updateComponent'])->name('components.update');
+        Route::delete('/{classId}/components/{componentId}', [\App\Http\Controllers\AssessmentComponentController::class, 'deleteComponent'])->name('components.destroy');
         Route::post('/{classId}/components/reorder', [\App\Http\Controllers\GradeSettingsController::class, 'reorderComponents'])->name('components.reorder');
     });
 
@@ -358,11 +361,19 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::get('/grades/settings/{classId}/{term?}', [\App\Http\Controllers\GradeSettingsController::class, 'show'])->name('grades.settings');
     Route::get('/grades/entry/{classId}/{term?}', [\App\Http\Controllers\GradeEntryDynamicController::class, 'show'])->name('grades.entry.dynamic');
 
+    // Grading Mode Management (Standard, Manual, Automated, Hybrid)
+    Route::prefix('grades/mode')->name('grades.mode.')->group(function () {
+        Route::get('/{classId}', [\App\Http\Controllers\GradingModeController::class, 'show'])->name('show');
+        Route::post('/{classId}', [\App\Http\Controllers\GradingModeController::class, 'update'])->name('update');
+        Route::get('/{classId}/calculate', [\App\Http\Controllers\GradingModeController::class, 'calculate'])->name('calculate');
+    });
+
     // Attendance Management
     Route::get('/attendance/manage/{classId}', [\App\Http\Controllers\TeacherController::class, 'manageAttendance'])->name('attendance.manage');
     Route::post('/attendance/record/{classId}', [\App\Http\Controllers\TeacherController::class, 'recordAttendance'])->name('attendance.record');
     Route::get('/attendance/settings/{classId}', [\App\Http\Controllers\TeacherController::class, 'attendanceSettings'])->name('attendance.settings');
     Route::put('/attendance/settings/{classId}', [\App\Http\Controllers\TeacherController::class, 'updateAttendanceSettings'])->name('attendance.settings.update');
+    Route::get('/attendance/fetch/{classId}', [\App\Http\Controllers\TeacherController::class, 'fetchAttendance'])->name('attendance.fetch');
 
     // Attendance-Grade Integration
     Route::get('/attendance/grade-integration/{classId}/{term?}', [\App\Http\Controllers\TeacherController::class, 'showGradeIntegration'])->name('attendance.grade-integration');
@@ -370,6 +381,7 @@ Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(
     Route::post('/attendance/sync-grades/{classId}', [\App\Http\Controllers\TeacherController::class, 'syncAttendanceToGrades'])->name('attendance.sync-grades');
     // Attendance History / Search
     Route::get('/attendance/history/{classId}', [\App\Http\Controllers\TeacherController::class, 'attendanceHistory'])->name('attendance.history');
+    Route::get('/attendance/sheet/{classId}', [\App\Http\Controllers\TeacherController::class, 'attendanceSheet'])->name('attendance.sheet');
 
     // Assignment Management
     // TODO: Implement assignment management feature
@@ -418,107 +430,43 @@ Route::middleware(['auth'])->prefix('api')->name('api.')->group(function () {
     // Subject API routes
     Route::get('/subjects', [\App\Http\Controllers\Api\SearchController::class, 'subjects'])->name('subjects');
     Route::get('/subjects/search', [\App\Http\Controllers\Api\SearchController::class, 'searchSubjects'])->name('subjects.search');
-    
+
     // Course API routes
     Route::get('/courses', [\App\Http\Controllers\Api\SearchController::class, 'courses'])->name('courses');
     Route::get('/courses/search', [\App\Http\Controllers\Api\SearchController::class, 'searchCourses'])->name('courses.search');
-    
+
     // Student API routes
     Route::get('/students', [\App\Http\Controllers\Api\SearchController::class, 'students'])->name('students');
     Route::get('/students/search', [\App\Http\Controllers\Api\SearchController::class, 'searchStudents'])->name('students.search');
-    
+
     // Teacher API routes
     Route::get('/teachers', [\App\Http\Controllers\Api\SearchController::class, 'teachers'])->name('teachers');
     Route::get('/teachers/search', [\App\Http\Controllers\Api\SearchController::class, 'searchTeachers'])->name('teachers.search');
-    
+
     // Class API routes
     Route::get('/classes', [\App\Http\Controllers\Api\SearchController::class, 'classes'])->name('classes');
     Route::get('/classes/search', [\App\Http\Controllers\Api\SearchController::class, 'searchClasses'])->name('classes.search');
-    
+
     // Department API routes
     Route::get('/departments', [\App\Http\Controllers\Api\SearchController::class, 'departments'])->name('departments');
     Route::get('/departments/search', [\App\Http\Controllers\Api\SearchController::class, 'searchDepartments'])->name('departments.search');
 });
 
-/* -------- ADMIN (ADMIN + SUPER CAN ACCESS) -------- */
-Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Optimized Dashboard
-    Route::get('/dashboard', [OptimizedDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/filtered-data', [OptimizedDashboardController::class, 'getFilteredData'])->name('dashboard.filtered-data');
-    Route::get('/dashboard/system-health', [OptimizedDashboardController::class, 'getSystemHealth'])->name('dashboard.system-health');
-    Route::get('/dashboard/export', [OptimizedDashboardController::class, 'exportData'])->name('dashboard.export');
-
-    // Optimized Courses Routes
-    Route::resource('courses', OptimizedCourseController::class);
-    Route::get('courses/{course}/subjects', [OptimizedCourseController::class, 'manageSubjects'])->name('courses.manageSubjects');
-    Route::post('/courses/bulk-action', [OptimizedCourseController::class, 'bulkAction'])->name('courses.bulk-action');
-    Route::get('/courses/export', [OptimizedCourseController::class, 'export'])->name('courses.export');
-    Route::get('/api/courses/by-department', [OptimizedCourseController::class, 'getCoursesByDepartment'])->name('courses.by-department');
-    Route::get('/api/courses/search', [OptimizedCourseController::class, 'searchCourses'])->name('courses.search');
-
-    // Subjects Routes
-    Route::resource('subjects', SubjectController::class);
-    Route::post('/subjects/sync', [SubjectController::class, 'syncAll'])->name('subjects.syncAll');
-
-    // Classes Routes
-    Route::resource('classes', ClassController::class);
-    Route::post('/classes/get-students', [ClassController::class, 'getStudents'])->name('classes.get-students');
-    Route::post('/classes/assign-students', [ClassController::class, 'assignStudentsToClass'])->name('classes.assign-students');
-    Route::post('/classes/{class}/add-student-manually', [ClassController::class, 'addStudentManually'])->name('classes.add-student-manually');
-    Route::delete('/classes/{class}/remove-student', [ClassController::class, 'removeStudentFromClass'])->name('classes.remove-student');
-    Route::post('/classes/{class}/import-excel', [ClassController::class, 'importStudentsExcel'])->name('classes.import-excel');
-
-    // Students Routes
-    Route::resource('students', StudentController::class);
-
-    // Optimized Teachers Routes
-    Route::resource('teachers', OptimizedTeacherController::class);
-    Route::get('teachers/{teacher}/subjects', [OptimizedTeacherController::class, 'subjects'])->name('teachers.subjects');
-    Route::post('teachers/{teacher}/assign-subjects', [OptimizedTeacherController::class, 'assignSubjects'])->name('teachers.assign-subjects');
-    Route::delete('teachers/{teacher}/subjects/{subject}', [OptimizedTeacherController::class, 'removeSubject'])->name('teachers.remove-subject');
-    Route::post('/teachers/bulk-action', [OptimizedTeacherController::class, 'bulkAction'])->name('teachers.bulk-action');
-    Route::get('/teachers/export', [OptimizedTeacherController::class, 'export'])->name('teachers.export');
-    Route::post('/teachers/import', [OptimizedTeacherController::class, 'import'])->name('teachers.import');
-    
-    // Campus Approval Routes (Optimized)
-    Route::get('/campus-approvals', [OptimizedTeacherController::class, 'campusApprovals'])->name('teachers.campus-approvals');
-    Route::post('/teachers/{teacher}/approve-campus', [OptimizedTeacherController::class, 'approveCampus'])->name('teachers.approve-campus');
-    Route::post('/teachers/{teacher}/reject-campus', [OptimizedTeacherController::class, 'rejectCampus'])->name('teachers.reject-campus');
-    Route::post('/teachers/{teacher}/revoke-campus', [OptimizedTeacherController::class, 'revokeCampus'])->name('teachers.revoke-campus');
-
-    // Course Access Request Routes (Optimized)
-    Route::get('/course-access-requests', [OptimizedTeacherController::class, 'courseAccessRequests'])->name('teachers.course-access-requests');
-    Route::post('/course-access-requests/{request}/approve', [OptimizedTeacherController::class, 'approveCourseAccess'])->name('teachers.approve-course-access');
-    Route::post('/course-access-requests/{request}/reject', [OptimizedTeacherController::class, 'rejectCourseAccess'])->name('teachers.reject-course-access');
-
-    // Teacher Assignments Routes
-    Route::resource('teacher-assignments', TeacherAssignmentController::class);
-    Route::get('/teacher-assignments/get-students', [TeacherAssignmentController::class, 'getStudentsByFilter'])->name('teacher-assignments.get-students');
-
-    // Attendance Routes
-    Route::resource('attendance', AdminAttendanceController::class);
-    Route::get('/attendance-by-class', [DashboardController::class, 'getAttendanceByClass'])->name('attendance.by-class');
-
-    // Grades Routes
-    Route::resource('grades', AdminGradeController::class);
-    Route::get('/grades-by-class', [DashboardController::class, 'getGradesByClass'])->name('grades.by-class');
-    Route::get('/class/{classId}/details', [DashboardController::class, 'getClassDetails'])->name('class.details');
-    Route::post('/grades/export-class/{classId}', [AdminGradeController::class, 'exportClass'])->name('grades.export-class');
-    Route::get('/grades/print-student/{classId}/{studentId}', [AdminGradeController::class, 'printStudent'])->name('grades.print-student');
-    Route::get('/grades/print-midterm/{classId}/{studentId}', [AdminGradeController::class, 'printMidtermGrades'])->name('grades.print-midterm');
-    Route::get('/grades/print-finals/{classId}/{studentId}', [AdminGradeController::class, 'printFinalGrades'])->name('grades.print-finals');
-    
-    // User Management Routes
-    Route::resource('users', AdminUserController::class);
-
-    // Profile routes
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'showAdminProfile'])->name('profile.show');
-    Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'editAdminProfile'])->name('profile.edit');
-});
-
 /* -------- STUDENT (STUDENT + SUPER CAN ACCESS) -------- */
-Route::middleware(['role:student'])->group(function () {
-    Route::get('/student/dashboard', function () {
-        return view('student.dashboard');
-    })->name('student.dashboard');
+Route::middleware(['role:student,super'])->prefix('student')->name('student.')->group(function () {
+    // Dashboard and Profile
+    Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+    Route::get('/profile', [StudentController::class, 'profile'])->name('profile');
+    Route::put('/profile/update', [StudentController::class, 'updateProfile'])->name('update-profile');
+    Route::post('/change-password', [StudentController::class, 'changePassword'])->name('change-password');
+
+    // Attendance
+    Route::get('/attendance', [StudentController::class, 'getAttendance'])->name('attendance');
+
+    // Grades
+    Route::get('/grades', [StudentController::class, 'getGrades'])->name('grades');
+
+    // E-Signature
+    Route::get('/signature/form', [StudentController::class, 'showSignatureForm'])->name('signature.form');
+    Route::post('/signature/update', [StudentController::class, 'updateSignature'])->name('signature.update');
 });

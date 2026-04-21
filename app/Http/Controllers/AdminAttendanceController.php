@@ -6,7 +6,7 @@ use App\Models\Attendance;
 use App\Models\ClassModel;
 use App\Models\Student;
 use App\Models\Subject;
-use App\Models\User;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 
 class AdminAttendanceController extends Controller
@@ -51,7 +51,7 @@ class AdminAttendanceController extends Controller
 
         // Get total counts
         $totalStudents = Student::count();
-        $totalTeachers = User::where('role', 'teacher')->count();
+        $totalTeachers = Teacher::count();
         $totalClasses  = ClassModel::count();
         $totalSubjects = Subject::count();
 

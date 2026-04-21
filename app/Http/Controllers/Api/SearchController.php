@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Subject;
 use App\Models\Course;
-use App\Models\User;
+use App\Models\Teacher;
 use App\Models\Student;
 use App\Models\ClassModel;
 use Illuminate\Http\Request;
@@ -290,12 +290,12 @@ class SearchController extends Controller
      */
     public function teachers(Request $request)
     {
-        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+        $teachers = Teacher::orderBy('last_name')->get();
 
         return response()->json($teachers->map(function ($teacher) {
             return [
                 'id' => $teacher->id,
-                'name' => $teacher->name,
+                'name' => $teacher->first_name . ' ' . $teacher->last_name,
                 'description' => $teacher->email,
                 'email' => $teacher->email,
                 'department' => $teacher->department ?? 'N/A',
@@ -311,23 +311,23 @@ class SearchController extends Controller
     {
         $query = $request->get('q', '');
         
-        $teachersQuery = User::where('role', 'teacher');
+        $teachersQuery = Teacher::query();
         
         if ($query) {
             $teachersQuery->where(function ($q) use ($query) {
-                $q->where('name', 'LIKE', "%{$query}%")
+                $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$query}%"])
                   ->orWhere('email', 'LIKE', "%{$query}%")
                   ->orWhere('department', 'LIKE', "%{$query}%")
                   ->orWhere('specialization', 'LIKE', "%{$query}%");
             });
         }
         
-        $teachers = $teachersQuery->orderBy('name')->limit(20)->get();
+        $teachers = $teachersQuery->orderBy('last_name')->limit(20)->get();
 
         return response()->json($teachers->map(function ($teacher) {
             return [
                 'id' => $teacher->id,
-                'name' => $teacher->name,
+                'name' => $teacher->first_name . ' ' . $teacher->last_name,
                 'description' => $teacher->email,
                 'email' => $teacher->email,
                 'department' => $teacher->department ?? 'N/A',
